@@ -1,0 +1,38 @@
+plugins {
+  id 'application'
+}
+
+dependencies {
+  implementation project(':hermes-core')
+  implementation project(':sample-game')
+  implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+  implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+
+  constraints {
+    implementation("org.lwjgl:lwjgl:$lwjgl3Version")
+    implementation("org.lwjgl:lwjgl-glfw:$lwjgl3Version")
+    implementation("org.lwjgl:lwjgl-jemalloc:$lwjgl3Version")
+    implementation("org.lwjgl:lwjgl-openal:$lwjgl3Version")
+    implementation("org.lwjgl:lwjgl-opengl:$lwjgl3Version")
+    implementation("org.lwjgl:lwjgl-stb:$lwjgl3Version")
+  }
+}
+
+application {
+  mainClass = 'dev.hermes.launcher.desktop.Lwjgl3Launcher'
+}
+
+def os = System.properties['os.name'].toLowerCase(Locale.ROOT)
+
+tasks.named('run', JavaExec).configure {
+  workingDir = rootProject.file('assets')
+  // Use jvmArgs(...) to append; jvmArgs.add(...) mutates an unmodifiable list on recent Gradle.
+  jvmArgs('--enable-native-access=ALL-UNNAMED')
+  if (os.contains('mac')) {
+    jvmArgs('-XstartOnFirstThread')
+  }
+}
+
+tasks.withType(JavaExec).configureEach {
+  environment('__GL_THREADED_OPTIMIZATIONS', '0')
+}
