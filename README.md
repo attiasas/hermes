@@ -63,7 +63,7 @@ rg 'com\.badlogicgames\.gdx' sample-game/src
 
 ### CI and releases
 
-- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `./gradlew clean build` on **every push** (any branch) and **every pull request** (JDK 11 and 17 on Ubuntu).
+- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `./gradlew clean build` on **every push** (any branch). `pull_request` runs only for **fork** PRs (same-repo PRs use the branch push, so CI does not run twice). JDK 17 on Ubuntu.
 - **Releases:** [`.github/workflows/release.yml`](.github/workflows/release.yml) builds artifacts on tag `v*` or manual dispatch; tag pushes also create a GitHub Release with **auto-generated notes** driven by [`.github/release.yml`](.github/release.yml). Label PRs (for example `feature`, `bug`, `documentation`) so notes are grouped; use `ignore-for-release` or `skip-changelog` to omit a PR from the changelog.
 
 ### References
