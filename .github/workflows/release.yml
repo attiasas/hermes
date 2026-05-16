@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: ./gradlew clean build --no-daemon --stacktrace
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-build-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            hermes-launcher-desktop/build/distributions/*.zip
+            hermes-launcher-desktop/build/libs/*.jar
+            hermes-api/build/libs/*.jar
+            hermes-core/build/libs/*.jar
+            sample-game/build/libs/*.jar
+
+      # Release notes use .github/release.yml (label → section mapping) via GitHub's API.
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            hermes-launcher-desktop/build/distributions/*.zip
+            hermes-launcher-desktop/build/libs/*.jar
+            hermes-api/build/libs/*.jar
+            hermes-core/build/libs/*.jar
+            sample-game/build/libs/*.jar
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
