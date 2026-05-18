@@ -1,0 +1,15 @@
+plugins {
+  id 'dev.hermes'
+}
+
+hermes {
+  applicationClass = '{{APPLICATION_CLASS}}'
+  debug = true
+  platforms {
+    desktop {
+      width = 640
+      height = 480
+      title = '{{PROJECT_NAME}}'
+    }
+  }
+}

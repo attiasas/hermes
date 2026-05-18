@@ -27,6 +27,58 @@ Implement `dev.hermes.api.Component`, register the type, and add a `System` that
 
 ---
 
+## Phase 3 — templates, CLI, and doctor
+
+### Prerequisites for new projects
+
+Publish engine artifacts to Maven local once (from this repo):
+
+```bash
+./gradlew publishToMavenLocal
+```
+
+From the Hermes engine repo, publish artifacts and the Gradle plugin once:
+
+```bash
+./gradlew publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal
+```
+
+`hermes new` creates only the **`game`** module; the desktop launcher is synced under `.hermes/platforms/`. Engine JARs and the Hermes Gradle plugin resolve from **Maven local** (`hermes.engineVersion`) — no `includeBuild`, so IntelliJ does not show `hermes-gradle-plugin` as a module.
+
+### CLI
+
+```bash
+./gradlew :hermes-cli:installDist
+export PATH="$PWD/hermes-cli/build/install/hermes/bin:$PATH"
+
+hermes new my-game --name MyGame --package dev.hermes.mygame
+cd my-game
+hermes doctor
+./gradlew :game:hermesRunDesktop
+```
+
+| Command | Description |
+|---------|-------------|
+| `hermes new <dir>` | Copy the empty template (`--template empty`) |
+| `hermes doctor [dir]` | Run `./gradlew :game:hermesDoctor` in a project, or standalone checks |
+| `hermes --version` | CLI / engine version |
+
+Release tags attach `hermes-cli-*-{linux,macos,windows}-*.zip` per OS (see [`.github/workflows/release.yml`](.github/workflows/release.yml)).
+
+### Gradle doctor
+
+```bash
+./gradlew :game:hermesDoctor
+```
+
+Fails the build if `com.badlogicgames.gdx` appears under `game/src/`. Sync platform stubs: `./gradlew hermesSyncPlatforms`.
+
+### Empty template
+
+Source: [`hermes-templates/empty`](hermes-templates/empty) — minimal scene, `PulseMarker` SPI example, desktop-only platforms by default in `settings.gradle`.
+
+---
+
 ## Phase 1 — run from `:game`
 
 ### Prerequisites
@@ -115,6 +167,8 @@ Then sync Gradle and run:
 | `hermesRunHtml` | TeaVM dev server (when `hermes-launcher-html` is included) |
 | `hermesRunAndroid` | Install debug APK and launch (when Android launcher is included) |
 | `validateHermesJson` | Parse `hermes.json`; unknown keys log a warning |
+| `hermesDoctor` | Validate setup, toolchains, and forbidden libGDX imports |
+| `hermesSyncPlatforms` | Copy launcher stubs into `.hermes/platforms/` for standalone projects |
 | `generateAssetList` | Regenerate `build/generated/hermes-assets/assets.txt` from the assets directory |
 
 ### Module graph
@@ -127,7 +181,7 @@ Then sync Gradle and run:
 Verify no direct libGDX in game sources:
 
 ```bash
-rg 'com\.badlogicgames\.gdx' game/src
+./gradlew :game:hermesDoctor
 ```
 
 ### Template provenance

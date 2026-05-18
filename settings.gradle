@@ -28,4 +28,4 @@ hermes {
   }
 }
 
-include 'hermes-api', 'hermes-core', 'game'
+include 'hermes-api', 'hermes-core', 'hermes-tooling', 'game', 'hermes-cli'

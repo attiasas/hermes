@@ -1,0 +1,39 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+    google()
+    mavenLocal()
+  }
+}
+
+plugins {
+  id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+  id 'dev.hermes.settings' version '{{ENGINE_VERSION}}'
+}
+
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+    google()
+  }
+}
+
+rootProject.name = '{{ROOT_PROJECT_NAME}}'
+
+hermes {
+  platforms {
+    desktop {
+      enabled = true
+    }
+    html {
+      enabled = false
+    }
+    android {
+      enabled = false
+    }
+  }
+}
+
+include 'game'

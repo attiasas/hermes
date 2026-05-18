@@ -1,0 +1,19 @@
+{
+  "entities": [
+    {
+      "id": "main-camera",
+      "components": {
+        "Transform": { "x": 320, "y": 240, "z": 0 },
+        "Camera": { "projection": "orthographic", "active": true, "zoom": 1 }
+      }
+    },
+    {
+      "id": "logo",
+      "components": {
+        "Transform": { "x": 320, "y": 240 },
+        "Sprite": { "texture": "libgdx.png" },
+        "PulseMarker": { "amplitude": 0.15, "speed": 2.5 }
+      }
+    }
+  ]
+}

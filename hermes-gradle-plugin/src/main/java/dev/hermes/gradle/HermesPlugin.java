@@ -20,8 +20,7 @@ public final class HermesPlugin implements Plugin<Project> {
     HermesExtension extension = new HermesExtension();
     project.getExtensions().add("hermes", extension);
 
-    project.getDependencies().add("api", project.project(":hermes-api"));
-    project.getDependencies().add("runtimeOnly", project.project(":hermes-core"));
+    HermesDependencyResolver.wireGameDependencies(project, extension);
 
     project
         .getTasks()
@@ -37,6 +36,8 @@ public final class HermesPlugin implements Plugin<Project> {
 
     registerAssetListTask(project);
     registerRuntimeConfigTask(project);
+    registerSyncPlatformsTask(project);
+    registerHermesDoctorTask(project);
 
     project.afterEvaluate(
         evaluated -> {
@@ -59,6 +60,41 @@ public final class HermesPlugin implements Plugin<Project> {
 
   private static HermesGameConfig loadGameConfig(Project project) {
     return HermesGameConfigParser.parse(project.file("hermes.json"));
+  }
+
+  private static void registerSyncPlatformsTask(Project gameProject) {
+    Project root = gameProject.getRootProject();
+    if (root.getTasks().findByName("hermesSyncPlatforms") != null) {
+      return;
+    }
+    root.getTasks()
+        .register(
+            "hermesSyncPlatforms",
+            task -> {
+              task.setGroup("hermes");
+              task.setDescription("Sync Hermes launcher platform stubs into .hermes/platforms/");
+              task.doLast(
+                  t -> {
+                    HermesExtension gameExtension =
+                        gameProject.getExtensions().getByType(HermesExtension.class);
+                    String engineVersion = HermesEngineVersion.resolve(gameProject, gameExtension);
+                    File hermesHome = HermesHomeResolver.resolve(gameProject);
+                    HermesPlatformSync.syncAllEnabled(
+                        root.getRootDir(), gameExtension.getPlatforms(), engineVersion, hermesHome);
+                  });
+            });
+  }
+
+  private static void registerHermesDoctorTask(Project project) {
+    project.getTasks()
+        .register(
+            "hermesDoctor",
+            task -> {
+              task.setGroup("hermes");
+              task.setDescription("Validate Hermes project setup, toolchains, and forbidden libGDX imports");
+              task.doLast(t -> HermesDoctor.runGradle(project));
+            });
+    project.getTasks().named("check").configure(t -> t.dependsOn("hermesDoctor"));
   }
 
   private static void registerRuntimeConfigTask(Project project) {
