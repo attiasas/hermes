@@ -46,6 +46,7 @@ public final class HermesPlugin implements Plugin<Project> {
           }
           File assetsDir = HermesAssets.resolve(project, extension);
           project.getExtensions().add("hermesGameConfig", loadGameConfig(project));
+          wireGameAssetResources(project, assetsDir);
           configureAssetListTask(project, assetsDir);
           wireDesktopRun(project, extension, assetsDir);
           wireHtmlRun(project, extension, assetsDir);
@@ -163,9 +164,27 @@ public final class HermesPlugin implements Plugin<Project> {
     }
   }
 
-  private static void wireLauncherAssets(Project root, File assetsDir) {
-    root.getExtensions().getExtraProperties().set("hermesAssetsDir", assetsDir);
+  private static void wireGameAssetResources(Project project, File assetsDir) {
+    File resourcesRoot = project.file("src/main/resources");
+    if (!isUnderDirectory(assetsDir, resourcesRoot)) {
+      project
+          .getExtensions()
+          .getByType(SourceSetContainer.class)
+          .getByName("main")
+          .getResources()
+          .srcDir(assetsDir);
+    }
+  }
 
+  private static boolean isUnderDirectory(File child, File parent) {
+    try {
+      return child.getCanonicalFile().toPath().startsWith(parent.getCanonicalFile().toPath());
+    } catch (java.io.IOException e) {
+      return false;
+    }
+  }
+
+  private static void wireLauncherAssets(Project root, File assetsDir) {
     Project desktop = root.findProject("hermes-launcher-desktop");
     if (desktop != null) {
       desktop.getTasks().named("run", JavaExec.class).configure(task -> task.setWorkingDir(assetsDir));

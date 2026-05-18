@@ -137,10 +137,3 @@ tasks.register('run', Exec) {
   def adb = new File(sdkDir, 'platform-tools/adb').absolutePath
   commandLine adb, 'shell', 'am', 'start', '-n', 'dev.hermes.game/dev.hermes.launcher.android.AndroidLauncher'
 }
-
-gradle.projectsEvaluated {
-  def assetsDir = rootProject.findProperty('hermesAssetsDir')
-  if (assetsDir != null) {
-    android.sourceSets.main.assets.setSrcDirs([assetsDir instanceof File ? assetsDir.absolutePath : assetsDir.toString()])
-  }
-}
