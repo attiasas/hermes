@@ -7,7 +7,6 @@ import java.util.Locale;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -37,6 +36,7 @@ public final class HermesPlugin implements Plugin<Project> {
     project.getTasks().named("compileJava").configure(t -> t.dependsOn("validateHermesJson"));
 
     registerAssetListTask(project);
+    registerRuntimeConfigTask(project);
 
     project.afterEvaluate(
         evaluated -> {
@@ -44,10 +44,16 @@ public final class HermesPlugin implements Plugin<Project> {
             throw new GradleException(
                 "hermes.applicationClass must be set in " + project.getPath() + "/build.gradle");
           }
+          File assetsDir = HermesAssets.resolve(project, extension);
           project.getExtensions().add("hermesGameConfig", loadGameConfig(project));
-          wireDesktopRun(project, extension);
-          wireHtmlRun(project, extension);
+          wireGameAssetResources(project, assetsDir);
+          configureAssetListTask(project, assetsDir);
+          wireDesktopRun(project, extension, assetsDir);
+          wireHtmlRun(project, extension, assetsDir);
           wireAndroidRun(project, extension);
+          project
+              .getGradle()
+              .projectsEvaluated(gradle -> wireLauncherAssets(project.getRootProject(), assetsDir));
         });
   }
 
@@ -55,17 +61,67 @@ public final class HermesPlugin implements Plugin<Project> {
     return HermesGameConfigParser.parse(project.file("hermes.json"));
   }
 
+  private static void registerRuntimeConfigTask(Project project) {
+    File generatedDir = project.file("build/generated/hermes-runtime");
+    project
+        .getExtensions()
+        .getByType(SourceSetContainer.class)
+        .getByName("main")
+        .getResources()
+        .srcDir(generatedDir);
+
+    project
+        .getTasks()
+        .register(
+            "generateHermesRuntimeConfig",
+            task -> {
+              task.setGroup("hermes");
+              task.setDescription("Generate hermes-runtime.properties for all platforms");
+              task.getOutputs().dir(generatedDir);
+              task.doLast(
+                  t -> {
+                    HermesExtension extension = project.getExtensions().getByType(HermesExtension.class);
+                    if (extension.getApplicationClass() == null || extension.getApplicationClass().isBlank()) {
+                      throw new GradleException(
+                          "hermes.applicationClass must be set in " + project.getPath() + "/build.gradle");
+                    }
+                    HermesRuntimeConfigGenerator.write(project, extension, generatedDir);
+                  });
+            });
+
+    project.getTasks().named("processResources").configure(t -> t.dependsOn("generateHermesRuntimeConfig"));
+    project.getTasks().named("compileJava").configure(t -> t.dependsOn("generateHermesRuntimeConfig"));
+  }
+
   private static void registerAssetListTask(Project project) {
-    File assetsDir = project.getRootProject().file("assets");
+    File generatedDir = project.file("build/generated/hermes-assets");
+    project
+        .getExtensions()
+        .getByType(SourceSetContainer.class)
+        .getByName("main")
+        .getResources()
+        .srcDir(generatedDir);
+
     project
         .getTasks()
         .register(
             "generateAssetList",
             task -> {
               task.setGroup("hermes");
-              task.setDescription("Generate assets/assets.txt from the shared assets directory");
+              task.setDescription("Generate assets.txt from the game assets directory");
+            });
+    project.getTasks().named("processResources").configure(t -> t.dependsOn("generateAssetList"));
+  }
+
+  private static void configureAssetListTask(Project project, File assetsDir) {
+    File generatedDir = project.file("build/generated/hermes-assets");
+    File assetsFile = new File(generatedDir, "assets.txt");
+    project
+        .getTasks()
+        .named(
+            "generateAssetList",
+            task -> {
               task.getInputs().dir(assetsDir);
-              File assetsFile = new File(assetsDir, "assets.txt");
               task.getOutputs().file(assetsFile);
               task.doLast(
                   t -> {
@@ -73,8 +129,11 @@ public final class HermesPlugin implements Plugin<Project> {
                       if (!assetsDir.isDirectory()) {
                         return;
                       }
-                      if (assetsFile.exists()) {
-                        assetsFile.delete();
+                      if (!generatedDir.exists() && !generatedDir.mkdirs()) {
+                        throw new GradleException("Could not create " + generatedDir.getAbsolutePath());
+                      }
+                      if (assetsFile.exists() && !assetsFile.delete()) {
+                        throw new GradleException("Could not delete " + assetsFile.getAbsolutePath());
                       }
                       collectAssetPaths(assetsDir, assetsDir, assetsFile);
                     } catch (java.io.IOException e) {
@@ -82,7 +141,6 @@ public final class HermesPlugin implements Plugin<Project> {
                     }
                   });
             });
-    project.getTasks().named("processResources").configure(t -> t.dependsOn("generateAssetList"));
   }
 
   private static void collectAssetPaths(File root, File current, File assetsFile) throws java.io.IOException {
@@ -106,7 +164,34 @@ public final class HermesPlugin implements Plugin<Project> {
     }
   }
 
-  private static void wireDesktopRun(Project project, HermesExtension extension) {
+  private static void wireGameAssetResources(Project project, File assetsDir) {
+    File resourcesRoot = project.file("src/main/resources");
+    if (!isUnderDirectory(assetsDir, resourcesRoot)) {
+      project
+          .getExtensions()
+          .getByType(SourceSetContainer.class)
+          .getByName("main")
+          .getResources()
+          .srcDir(assetsDir);
+    }
+  }
+
+  private static boolean isUnderDirectory(File child, File parent) {
+    try {
+      return child.getCanonicalFile().toPath().startsWith(parent.getCanonicalFile().toPath());
+    } catch (java.io.IOException e) {
+      return false;
+    }
+  }
+
+  private static void wireLauncherAssets(Project root, File assetsDir) {
+    Project desktop = root.findProject("hermes-launcher-desktop");
+    if (desktop != null) {
+      desktop.getTasks().named("run", JavaExec.class).configure(task -> task.setWorkingDir(assetsDir));
+    }
+  }
+
+  private static void wireDesktopRun(Project project, HermesExtension extension, File assetsDir) {
     Project root = project.getRootProject();
     Project launcher = root.findProject("hermes-launcher-desktop");
     if (launcher == null) {
@@ -130,7 +215,7 @@ public final class HermesPlugin implements Plugin<Project> {
               SourceSet gameMain =
                   project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
               task.setClasspath(launcherMain.getRuntimeClasspath().plus(gameMain.getRuntimeClasspath()));
-              task.setWorkingDir(root.file("assets"));
+              task.setWorkingDir(assetsDir);
               applyDesktopJvmArgs(task, project, extension);
               String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
               if (os.contains("mac")) {
@@ -155,7 +240,7 @@ public final class HermesPlugin implements Plugin<Project> {
     task.setJvmArgs(jvmArgs);
   }
 
-  private static void wireHtmlRun(Project project, HermesExtension extension) {
+  private static void wireHtmlRun(Project project, HermesExtension extension, File assetsDir) {
     Project root = project.getRootProject();
     Project launcher = root.findProject("hermes-launcher-html");
     if (launcher == null) {
@@ -170,7 +255,7 @@ public final class HermesPlugin implements Plugin<Project> {
       return;
     }
     registerGenerateTeaLauncher(project, extension, launcher);
-    wireHtmlBuildTasks(project, extension, launcher);
+    wireHtmlBuildTasks(project, extension, launcher, assetsDir);
     project
         .getTasks()
         .register(
@@ -192,24 +277,23 @@ public final class HermesPlugin implements Plugin<Project> {
               task.setClasspath(launcherMain.getRuntimeClasspath().plus(gameMain.getRuntimeClasspath()));
               task.setWorkingDir(launcher.getProjectDir());
               task.args("run");
-              applyHtmlSystemProperties(task, project, extension);
+              applyHtmlSystemProperties(task, project, extension, assetsDir);
             });
   }
 
   private static void wireHtmlBuildTasks(
-      Project gameProject, HermesExtension extension, Project htmlLauncher) {
+      Project gameProject, HermesExtension extension, Project htmlLauncher, File assetsDir) {
     htmlLauncher
         .getTasks()
         .withType(JavaExec.class)
         .configureEach(
             task -> {
-              // mainClass is unset during configuration for tasks.register(..., JavaExec)
               String name = task.getName();
               if (!name.equals("buildRelease") && !name.equals("runRelease") && !name.equals("runDebug")) {
                 return;
               }
               task.dependsOn(gameProject.getTasks().named("generateTeaLauncher"));
-              applyHtmlSystemProperties(task, gameProject, extension);
+              applyHtmlSystemProperties(task, gameProject, extension, assetsDir);
             });
   }
 
@@ -245,13 +329,15 @@ public final class HermesPlugin implements Plugin<Project> {
                     .configure(t -> t.dependsOn(gameProject.getTasks().named("generateTeaLauncher"))));
   }
 
-  private static void applyHtmlSystemProperties(JavaExec task, Project gameProject, HermesExtension extension) {
+  private static void applyHtmlSystemProperties(
+      JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
     PlatformSpec html = extension.getPlatforms().getHtml();
     task.systemProperty("hermes.applicationClass", extension.getApplicationClass());
     task.systemProperty("hermes.debug", String.valueOf(extension.isDebug()));
     task.systemProperty("hermes.window.width", String.valueOf(html.getWidth()));
     task.systemProperty("hermes.window.height", String.valueOf(html.getHeight()));
     task.systemProperty("hermes.window.title", html.getTitle());
+    task.systemProperty("hermes.assets.dir", assetsDir.getAbsolutePath());
     HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
     task.systemProperty("hermes.game.name", config.getName());
     task.systemProperty("hermes.game.scene", config.getScene());

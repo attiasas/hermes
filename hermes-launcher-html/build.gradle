@@ -5,8 +5,6 @@ plugins {
 def generatedTeaSources = layout.buildDirectory.dir('generated-tea-sources')
 sourceSets.main.java.srcDirs += generatedTeaSources
 
-sourceSets.main.resources.srcDirs += [rootProject.file('assets').path]
-
 tasks.named('processResources').configure {
   dependsOn ':game:generateAssetList'
 }

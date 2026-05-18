@@ -1,2 +1,0 @@
-libgdx.png
-scenes/main.json
