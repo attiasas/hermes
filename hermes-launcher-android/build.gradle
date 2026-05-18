@@ -60,10 +60,6 @@ android {
   }
 }
 
-repositories {
-  google()
-}
-
 configurations {
   natives
 }

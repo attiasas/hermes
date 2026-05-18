@@ -10,6 +10,8 @@ import org.gradle.api.Project;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
+import org.gradle.jvm.toolchain.JavaToolchainService;
 
 /** Project plugin for the user {@code :game} module. */
 public final class HermesPlugin implements Plugin<Project> {
@@ -17,6 +19,7 @@ public final class HermesPlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
     project.getPlugins().apply("java-library");
+    HermesJavaToolchain.applyJava11(project);
     HermesExtension extension = new HermesExtension();
     project.getExtensions().add("hermes", extension);
 
@@ -252,7 +255,11 @@ public final class HermesPlugin implements Plugin<Project> {
                   project.getExtensions().getByType(SourceSetContainer.class).getByName("main");
               task.setClasspath(launcherMain.getRuntimeClasspath().plus(gameMain.getRuntimeClasspath()));
               task.setWorkingDir(assetsDir);
-              applyDesktopJvmArgs(task, project, extension);
+              JavaToolchainService toolchains = project.getExtensions().getByType(JavaToolchainService.class);
+              task.getJavaLauncher()
+                  .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(11))));
+              applyDesktopJvmArgs(task);
+              applyDesktopSystemProperties(task, project, extension);
               String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
               if (os.contains("mac")) {
                 task.jvmArgs("-XstartOnFirstThread");
@@ -261,11 +268,21 @@ public final class HermesPlugin implements Plugin<Project> {
             });
   }
 
-  private static void applyDesktopJvmArgs(JavaExec task, Project gameProject, HermesExtension extension) {
+  private static void applyDesktopJvmArgs(JavaExec task) {
+    task.doFirst(
+        t -> {
+          List<String> args = new ArrayList<>(task.getJvmArgs());
+          HermesJvmArgs.stripNativeAccess(args);
+          task.setJvmArgs(args);
+        });
+  }
+
+  private static void applyDesktopSystemProperties(
+      JavaExec task, Project gameProject, HermesExtension extension) {
     PlatformSpec desktop = extension.getPlatforms().getDesktop();
     HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
-    jvmArgs.add("--enable-native-access=ALL-UNNAMED");
+    HermesJvmArgs.stripNativeAccess(jvmArgs);
     jvmArgs.add("-Dhermes.applicationClass=" + extension.getApplicationClass());
     jvmArgs.add("-Dhermes.debug=" + extension.isDebug());
     jvmArgs.add("-Dhermes.window.width=" + desktop.getWidth());
@@ -374,6 +391,7 @@ public final class HermesPlugin implements Plugin<Project> {
     task.systemProperty("hermes.window.height", String.valueOf(html.getHeight()));
     task.systemProperty("hermes.window.title", html.getTitle());
     task.systemProperty("hermes.assets.dir", assetsDir.getAbsolutePath());
+    task.systemProperty("hermes.game.sources.dir", gameProject.file("src/main/java").getAbsolutePath());
     HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
     task.systemProperty("hermes.game.name", config.getName());
     task.systemProperty("hermes.game.scene", config.getScene());

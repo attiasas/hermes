@@ -66,6 +66,56 @@ class HermesPluginIntegrationTest {
         "desktop launcher must be synced under .hermes/platforms");
   }
 
+  @Test
+  void templateProject_androidLauncherConfigures(@TempDir Path tempDir) throws IOException {
+    Path projectDir = materializeTemplate(tempDir.resolve("android-demo"));
+    String settings = Files.readString(projectDir.resolve("settings.gradle"), StandardCharsets.UTF_8);
+    settings =
+        settings
+            .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
+            .replace("android {\n      enabled = false", "android {\n      enabled = true");
+    Files.writeString(projectDir.resolve("settings.gradle"), settings, StandardCharsets.UTF_8);
+
+    BuildResult configure =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments("projects", "-q")
+            .build();
+    assertTrue(configure.getOutput().contains("hermes-launcher-android"));
+    assertTrue(
+        projectDir.resolve(".hermes/platforms/hermes-launcher-android/build.gradle").toFile().exists());
+    String launcherBuild =
+        Files.readString(
+            projectDir.resolve(".hermes/platforms/hermes-launcher-android/build.gradle"),
+            StandardCharsets.UTF_8);
+    assertTrue(
+        launcherBuild.contains("com.android.tools.build:gradle:"),
+        "synced Android launcher must use buildscript for AGP resolution");
+    assertFalse(
+        launcherBuild.contains("repositories {\n  google()"),
+        "synced Android launcher must not declare google-only project repositories");
+  }
+
+  @Test
+  void templateProject_htmlLauncherResolvesGameWithJava11(@TempDir Path tempDir) throws IOException {
+    Path projectDir = materializeTemplate(tempDir.resolve("html-demo"));
+    String settings = Files.readString(projectDir.resolve("settings.gradle"), StandardCharsets.UTF_8);
+    settings =
+        settings
+            .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
+            .replace("html {\n      enabled = false", "html {\n      enabled = true");
+    Files.writeString(projectDir.resolve("settings.gradle"), settings, StandardCharsets.UTF_8);
+
+    BuildResult compile =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments(":hermes-launcher-html:compileJava", "-q")
+            .build();
+    assertEquals(SUCCESS, compile.task(":hermes-launcher-html:compileJava").getOutcome());
+  }
+
   private static File locateHermesRoot() {
     Path cwd = Path.of(System.getProperty("user.dir")).toAbsolutePath().normalize();
     if (cwd.getFileName().toString().equals("hermes-gradle-plugin")) {
@@ -85,6 +135,7 @@ class HermesPluginIntegrationTest {
         lwjgl3Version=3.4.1
         gdxTeaVMVersion=1.5.5
         android.useAndroidX=true
+        hermes.androidGradlePluginVersion=8.9.3
         """;
     Files.writeString(targetDir.resolve("gradle.properties"), props, StandardCharsets.UTF_8);
     return targetDir;

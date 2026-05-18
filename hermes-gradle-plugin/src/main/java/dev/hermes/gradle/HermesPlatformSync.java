@@ -63,7 +63,126 @@ public final class HermesPlatformSync {
         extractLauncherFromPlugin(rootDir, moduleName, engineVersion);
       }
     }
-    patchLauncherForMaven(launcherDir(rootDir, moduleName), engineVersion);
+    File launcherDir = launcherDir(rootDir, moduleName);
+    patchLauncherForMaven(launcherDir, engineVersion);
+    patchLauncherJava11(launcherDir);
+    patchLauncherForStandaloneGame(launcherDir);
+    patchAndroidPluginDeclaration(rootDir, launcherDir);
+    stripAndroidProjectRepositories(launcherDir);
+    stripNativeAccessFromLauncherBuild(launcherDir);
+  }
+
+  /** Project-level repos override {@code dependencyResolutionManagement}; use root repos for gdx/hermes. */
+  private static void stripAndroidProjectRepositories(File launcherDir) {
+    if (!"hermes-launcher-android".equals(launcherDir.getName())) {
+      return;
+    }
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = Files.readString(buildFile.toPath());
+      String patched =
+          content
+              .replace("\nrepositories {\n  google()\n}\n", "\n")
+              .replace("\nrepositories {\n    google()\n}\n", "\n");
+      if (!patched.equals(content)) {
+        Files.writeString(buildFile.toPath(), patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to strip project repositories from " + buildFile.getAbsolutePath(), e);
+    }
+  }
+
+  private static void patchAndroidPluginDeclaration(File rootDir, File launcherDir) {
+    if (!"hermes-launcher-android".equals(launcherDir.getName())) {
+      return;
+    }
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String agpVersion = resolveAndroidGradlePluginVersion(rootDir);
+      String androidHeader = androidBuildscriptBlock(agpVersion);
+      String content = Files.readString(buildFile.toPath());
+      if (content.startsWith("buildscript {") && content.contains("com.android.tools.build:gradle")) {
+        return;
+      }
+      // buildscript header already present; stripAndroidProjectRepositories handles repos separately
+      String patched =
+          content.replaceFirst(
+              "(?s)^plugins \\{[^}]*com\\.android\\.application[^}]*\\}\\s*",
+              androidHeader + "\n");
+      if (patched.equals(content)
+          && (content.contains("apply plugin: 'com.android.application'")
+              || content.contains("apply plugin: \"com.android.application\""))) {
+        patched =
+            patched
+                .replace("apply plugin: 'com.android.application'\n\n", androidHeader + "\n")
+                .replace("apply plugin: \"com.android.application\"\n\n", androidHeader + "\n")
+                .replace("apply plugin: 'com.android.application'\n", androidHeader + "\n")
+                .replace("apply plugin: \"com.android.application\"\n", androidHeader + "\n");
+      }
+      if (!patched.equals(content)) {
+        Files.writeString(buildFile.toPath(), patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to patch Android plugin declaration in " + buildFile.getAbsolutePath(), e);
+    }
+  }
+
+  private static String androidBuildscriptBlock(String agpVersion) {
+    return """
+        buildscript {
+          repositories {
+            google()
+            mavenCentral()
+          }
+          dependencies {
+            classpath 'com.android.tools.build:gradle:%s'
+          }
+        }
+        apply plugin: 'com.android.application'
+        """
+        .formatted(agpVersion)
+        .stripLeading();
+  }
+
+  private static String resolveAndroidGradlePluginVersion(File rootDir) {
+    File propsFile = new File(rootDir, "gradle.properties");
+    if (propsFile.isFile()) {
+      try {
+        java.util.Properties props = new java.util.Properties();
+        try (java.io.InputStream in = Files.newInputStream(propsFile.toPath())) {
+          props.load(in);
+        }
+        String version = props.getProperty(HermesAndroidGradlePlugin.VERSION_PROPERTY);
+        if (version != null && !version.isBlank()) {
+          return version.trim();
+        }
+      } catch (IOException ignored) {
+        // fall through
+      }
+    }
+    return HermesAndroidGradlePlugin.DEFAULT_VERSION;
+  }
+
+  private static void stripNativeAccessFromLauncherBuild(File launcherDir) {
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = Files.readString(buildFile.toPath());
+      String patched = stripNativeAccessJvmArg(content);
+      if (!patched.equals(content)) {
+        Files.writeString(buildFile.toPath(), patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to strip JVM args from " + buildFile.getAbsolutePath(), e);
+    }
   }
 
   private static void patchLauncherForMaven(File launcherDir, String engineVersion) {
@@ -84,6 +203,72 @@ public final class HermesPlatformSync {
     } catch (IOException e) {
       throw new GradleException("Failed to patch " + buildFile.getAbsolutePath(), e);
     }
+  }
+
+  private static void patchLauncherForStandaloneGame(File launcherDir) {
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = Files.readString(buildFile.toPath());
+      String patched = content;
+      if (content.contains("implementation project(':game')")) {
+        patched =
+            patched
+                .replace("implementation project(':game')", "compileOnly project(':game')")
+                .replace("implementation(project(':game'))", "compileOnly(project(':game'))");
+      }
+      if (!patched.equals(content)) {
+        Files.writeString(buildFile.toPath(), patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to patch standalone HTML launcher " + buildFile.getAbsolutePath(), e);
+    }
+  }
+
+  private static void patchLauncherJava11(File launcherDir) {
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = Files.readString(buildFile.toPath());
+      String patched = stripNativeAccessJvmArg(content);
+      boolean hasToolchain =
+          patched.contains("languageVersion") && patched.contains("JavaLanguageVersion.of(11)");
+      if (!hasToolchain) {
+        String toolchainBlock =
+            """
+            java {
+              toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+              }
+            }
+
+            """;
+        if (patched.contains("java {")) {
+          patched =
+              patched.replaceFirst(
+                  "java \\{",
+                  "java {\n  toolchain {\n    languageVersion = JavaLanguageVersion.of(11)\n  }");
+        } else {
+          patched = patched.replaceFirst("(?m)^plugins \\{[^}]+}", "$0\n\n" + toolchainBlock.trim());
+        }
+      }
+      if (!patched.equals(content)) {
+        Files.writeString(buildFile.toPath(), patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to patch Java toolchain in " + buildFile.getAbsolutePath(), e);
+    }
+  }
+
+  private static String stripNativeAccessJvmArg(String content) {
+    return content
+        .replace("  jvmArgs('--enable-native-access=ALL-UNNAMED')\n", "")
+        .replace("  jvmArgs(\"--enable-native-access=ALL-UNNAMED\")\n", "")
+        .replace("\n  jvmArgs('--enable-native-access=ALL-UNNAMED')", "");
   }
 
   public static void syncIfNeeded(Settings settings, String moduleName, String engineVersion) {

@@ -13,7 +13,9 @@ tasks.register('bundleHermesPlatforms', Copy) {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   into layout.buildDirectory.dir('generated/hermes-platforms-resources/hermes-platforms')
   ['hermes-launcher-desktop', 'hermes-launcher-html', 'hermes-launcher-android'].each { module ->
-    from("../${module}") {
+    def moduleDir = file("../${module}")
+    inputs.dir(moduleDir).withPropertyName("${module}-sources")
+    from(moduleDir) {
       into module
       exclude 'build/**', '.gradle/**', 'bin/**'
     }
@@ -21,7 +23,8 @@ tasks.register('bundleHermesPlatforms', Copy) {
 }
 
 sourceSets.main.resources.srcDir(bundledPlatformsResources)
-processResources.dependsOn bundleHermesPlatforms
+tasks.named('processResources') { dependsOn bundleHermesPlatforms }
+tasks.named('jar') { dependsOn bundleHermesPlatforms }
 
 repositories {
   mavenCentral()

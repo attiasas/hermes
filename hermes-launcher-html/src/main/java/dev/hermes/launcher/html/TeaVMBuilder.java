@@ -50,9 +50,6 @@ public final class TeaVMBuilder {
     writeRuntimeProperties(
         runtimeConfigDir, applicationClass, debug, title, width, height, gameName, gameScene);
 
-    File gameSources = new File("../game/src/main/java");
-    File apiSources = new File("../hermes-api/src/main/java");
-    File coreSources = new File("../hermes-core/src/main/java");
     File launcherSources = new File("src/main/java");
     TeaCompiler compiler =
         new TeaCompiler(
@@ -71,12 +68,33 @@ public final class TeaVMBuilder {
             .setDebugInformationGenerated(debug)
             .setSourceMapsFileGenerated(debug)
             .setSourceFilePolicy(TeaVMSourceFilePolicy.COPY)
-            .addSourceFileProvider(new DirectorySourceFileProvider(launcherSources))
-            .addSourceFileProvider(new DirectorySourceFileProvider(gameSources))
-            .addSourceFileProvider(new DirectorySourceFileProvider(coreSources))
-            .addSourceFileProvider(new DirectorySourceFileProvider(apiSources));
+            .addSourceFileProvider(new DirectorySourceFileProvider(launcherSources));
+
+    addSourcesIfPresent(compiler, sourcesDir("hermes.game.sources.dir", "../../game/src/main/java", "../game/src/main/java"));
+    addSourcesIfPresent(compiler, sourcesDir("hermes.engine.core.sources.dir", "../../hermes-core/src/main/java", "../hermes-core/src/main/java"));
+    addSourcesIfPresent(compiler, sourcesDir("hermes.engine.api.sources.dir", "../../hermes-api/src/main/java", "../hermes-api/src/main/java"));
 
     compiler.build(new File("build/dist"));
+  }
+
+  private static File sourcesDir(String property, String... candidates) {
+    String fromProperty = System.getProperty(property);
+    if (fromProperty != null && !fromProperty.isBlank()) {
+      return new File(fromProperty);
+    }
+    for (String candidate : candidates) {
+      File dir = new File(candidate);
+      if (dir.isDirectory()) {
+        return dir;
+      }
+    }
+    return new File(candidates[0]);
+  }
+
+  private static void addSourcesIfPresent(TeaCompiler compiler, File dir) {
+    if (dir.isDirectory()) {
+      compiler.addSourceFileProvider(new DirectorySourceFileProvider(dir));
+    }
   }
 
   private static void writeRuntimeProperties(

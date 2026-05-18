@@ -10,6 +10,8 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
   @Override
   public void apply(Settings settings) {
     AndroidSdkResolver.resolve(settings);
+    // Maven-first game projects have no root buildscript; AGP must be in pluginManagement.
+    HermesAndroidGradlePlugin.register(settings);
     HermesSettingsExtension extension = new HermesSettingsExtension();
     settings.getExtensions().add("hermes", extension);
     settings

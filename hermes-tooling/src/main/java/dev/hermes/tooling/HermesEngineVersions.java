@@ -15,12 +15,14 @@ public final class HermesEngineVersions {
     "lwjgl3Version",
     "gdxTeaVMVersion",
     "android.useAndroidX",
+    "hermes.androidGradlePluginVersion",
   };
 
   private static final String DEFAULT_GDX_VERSION = "1.14.0";
   private static final String DEFAULT_LWJGL3_VERSION = "3.4.1";
   private static final String DEFAULT_GDX_TEAVM_VERSION = "1.5.5";
   private static final String DEFAULT_ANDROID_USE_ANDROIDX = "true";
+  private static final String DEFAULT_ANDROID_GRADLE_PLUGIN_VERSION = "8.9.3";
 
   private HermesEngineVersions() {}
 
@@ -30,6 +32,7 @@ public final class HermesEngineVersions {
     props.setProperty("lwjgl3Version", DEFAULT_LWJGL3_VERSION);
     props.setProperty("gdxTeaVMVersion", DEFAULT_GDX_TEAVM_VERSION);
     props.setProperty("android.useAndroidX", DEFAULT_ANDROID_USE_ANDROIDX);
+    props.setProperty("hermes.androidGradlePluginVersion", DEFAULT_ANDROID_GRADLE_PLUGIN_VERSION);
     return props;
   }
 

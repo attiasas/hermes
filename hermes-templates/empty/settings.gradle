@@ -5,6 +5,9 @@ pluginManagement {
     google()
     mavenLocal()
   }
+  plugins {
+    id 'com.android.application' version '8.9.3' apply false
+  }
 }
 
 plugins {
@@ -17,6 +20,8 @@ dependencyResolutionManagement {
     mavenCentral()
     mavenLocal()
     google()
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://teavm.org/maven/repository/' }
   }
 }
 
