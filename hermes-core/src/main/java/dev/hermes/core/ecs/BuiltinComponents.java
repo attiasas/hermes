@@ -1,5 +1,6 @@
 package dev.hermes.core.ecs;
 
+import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
@@ -8,6 +9,7 @@ final class BuiltinComponents {
 
   static final String TRANSFORM = "Transform";
   static final String SPRITE = "Sprite";
+  static final String CAMERA = "Camera";
 
   private BuiltinComponents() {}
 
@@ -36,5 +38,31 @@ final class BuiltinComponents {
           sprite.setTexture(data.getString("texture", ""));
           return sprite;
         });
+    registry.register(
+        CAMERA,
+        Camera.class,
+        data -> {
+          Camera camera = new Camera();
+          camera.setProjection(parseProjection(data.getString("projection", "orthographic")));
+          camera.setActive(data.getBoolean("active", true));
+          camera.setZoom(data.getFloat("zoom", 1f));
+          camera.setFieldOfView(data.getFloat("fieldOfView", 67f));
+          camera.setNear(data.getFloat("near", 0.1f));
+          camera.setFar(data.getFloat("far", 3000f));
+          camera.setViewportWidth(data.getFloat("viewportWidth", 0f));
+          camera.setViewportHeight(data.getFloat("viewportHeight", 0f));
+          return camera;
+        });
+  }
+
+  private static Camera.Projection parseProjection(String value) {
+    if (value == null) {
+      return Camera.Projection.ORTHOGRAPHIC;
+    }
+    String normalized = value.trim().toLowerCase();
+    if ("perspective".equals(normalized) || "3d".equals(normalized)) {
+      return Camera.Projection.PERSPECTIVE;
+    }
+    return Camera.Projection.ORTHOGRAPHIC;
   }
 }

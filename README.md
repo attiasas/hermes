@@ -8,7 +8,7 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Use
 
 ## Phase 2 — JSON scenes + ECS
 
-Scenes under `assets/` drive entities at startup. The sample scene [`assets/scenes/main.json`](assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` components. See [docs/scene-format-v1.md](docs/scene-format-v1.md).
+Scenes under `assets/` drive entities at startup. The sample scene [`assets/scenes/main.json`](assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`, orthographic or perspective). See [docs/scene-format-v1.md](docs/scene-format-v1.md).
 
 ### Custom components
 

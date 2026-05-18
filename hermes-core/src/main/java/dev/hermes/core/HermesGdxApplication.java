@@ -30,13 +30,13 @@ public final class HermesGdxApplication implements ApplicationListener {
     renderSystem = new RenderSystem(batch);
 
     application.onCreate(engine);
-    application.create();
 
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {
       engine.loadScene(scenePath);
     }
 
+    renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     engine.addSystem(renderSystem);
 
     application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -44,6 +44,9 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void resize(int width, int height) {
+    if (renderSystem != null) {
+      renderSystem.resize(width, height);
+    }
     application.resize(width, height);
   }
 

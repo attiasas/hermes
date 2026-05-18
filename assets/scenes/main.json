@@ -1,6 +1,13 @@
 {
   "entities": [
     {
+      "id": "main-camera",
+      "components": {
+        "Transform": { "x": 320, "y": 240, "z": 0 },
+        "Camera": { "projection": "orthographic", "active": true, "zoom": 1 }
+      }
+    },
+    {
       "id": "logo",
       "components": {
         "Transform": { "x": 420, "y": 240 },

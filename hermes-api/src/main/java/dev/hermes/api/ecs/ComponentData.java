@@ -12,4 +12,6 @@ public interface ComponentData {
   int getInt(String key, int defaultValue);
 
   String getString(String key, String defaultValue);
+
+  boolean getBoolean(String key, boolean defaultValue);
 }

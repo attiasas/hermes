@@ -32,6 +32,7 @@ Scene files describe entities and their components. They live under the shared `
 |------|------------|-------------|
 | `Transform` | See below | Position, rotation (degrees), and scale. All fields optional. |
 | `Sprite` | `texture` (string) | Asset path relative to `assets/` (or internal libGDX path). |
+| `Camera` | See below | View/projection settings; pair with `Transform` on the same entity. |
 
 ### Transform properties
 
@@ -41,7 +42,7 @@ Scene files describe entities and their components. They live under the shared `
 | `rotationX`, `rotationY`, `rotationZ` | `0` | Euler rotation in degrees. `rotationZ` is used for 2D sprite drawing. |
 | `scaleX`, `scaleY`, `scaleZ` | `1` | Scale per axis. `scaleX` / `scaleY` affect sprite size; `scaleZ` is stored for future 3D rendering. |
 
-2D rendering sorts by `z` (ascending) and maps world position to screen as `(x, y - z)`. Higher `z` draws on top.
+Sprites are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity) defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
 
 Example with 3D fields:
 
@@ -55,6 +56,33 @@ Example with 3D fields:
   "scaleY": 0.5
 }
 ```
+
+### Camera properties
+
+**Required:** a `Transform` on the same entity (camera position and rotation). Camera entities are never drawn, even if they also have a `Sprite`.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `projection` | `"orthographic"` | `"orthographic"` (2D) or `"perspective"` (3D) |
+| `active` | `true` | When multiple cameras exist, the first active one is used |
+| `zoom` | `1` | Orthographic zoom |
+| `fieldOfView` | `67` | Perspective vertical FOV in degrees |
+| `near`, `far` | `0.1`, `3000` | Clip planes |
+| `viewportWidth`, `viewportHeight` | `0` | `0` = match window size |
+
+Example:
+
+```json
+{
+  "id": "main-camera",
+  "components": {
+    "Transform": { "x": 320, "y": 240, "z": 0 },
+    "Camera": { "projection": "orthographic", "active": true, "zoom": 1 }
+  }
+}
+```
+
+Orthographic mode sorts drawables by world `z`. Perspective mode sorts by distance from the camera (farther first).
 
 ## Custom components
 

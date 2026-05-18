@@ -2,10 +2,7 @@ package dev.hermes.api.ecs;
 
 import dev.hermes.api.Component;
 
-/**
- * Position, rotation, and scale for an entity. Supports 2D scenes ({@code x}, {@code y}) and 3D ({@code z},
- * rotations, scale). Omitted JSON fields use defaults: position 0, scale 1, rotation 0 (degrees).
- */
+/** World-space position, rotation (degrees), and scale for an entity. */
 public final class Transform implements Component {
 
   private float x;
@@ -54,7 +51,6 @@ public final class Transform implements Component {
     this.z = z;
   }
 
-  /** Rotation around the X axis in degrees. */
   public float rotationX() {
     return rotationX;
   }
@@ -63,7 +59,6 @@ public final class Transform implements Component {
     this.rotationX = rotationX;
   }
 
-  /** Rotation around the Y axis in degrees. */
   public float rotationY() {
     return rotationY;
   }
@@ -72,7 +67,6 @@ public final class Transform implements Component {
     this.rotationY = rotationY;
   }
 
-  /** Rotation around the Z axis in degrees (typical 2D spin). */
   public float rotationZ() {
     return rotationZ;
   }
@@ -103,18 +97,5 @@ public final class Transform implements Component {
 
   public void setScaleZ(float scaleZ) {
     this.scaleZ = scaleZ;
-  }
-
-  /** Screen-space X for orthographic 2D rendering (currently equals {@link #x()}). */
-  public float screenX() {
-    return x;
-  }
-
-  /**
-   * Screen-space Y for orthographic 2D rendering. Subtracts {@link #z()} so higher world-Z draws higher on screen
-   * until full 3D projection is implemented.
-   */
-  public float screenY() {
-    return y - z;
   }
 }

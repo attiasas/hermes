@@ -84,7 +84,6 @@ final class SceneParserTest {
     assertEquals(2f, transform.scaleX());
     assertEquals(2f, transform.scaleY());
     assertEquals(2f, transform.scaleZ());
-    assertEquals(-1f, transform.screenY());
   }
 
   @Test

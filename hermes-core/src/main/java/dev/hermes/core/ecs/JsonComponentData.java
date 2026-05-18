@@ -38,4 +38,19 @@ final class JsonComponentData implements ComponentData {
     JsonValue value = object.get(key);
     return value == null || value.isNull() ? defaultValue : value.asString();
   }
+
+  @Override
+  public boolean getBoolean(String key, boolean defaultValue) {
+    JsonValue value = object.get(key);
+    if (value == null || value.isNull()) {
+      return defaultValue;
+    }
+    if (value.isBoolean()) {
+      return value.asBoolean();
+    }
+    if (value.isNumber()) {
+      return value.asInt() != 0;
+    }
+    return Boolean.parseBoolean(value.asString());
+  }
 }

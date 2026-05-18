@@ -9,16 +9,13 @@ import dev.hermes.api.ecs.Transform;
 /**
  * Internal sample; compiles only against {@code hermes-api} (no libGDX imports).
  *
- * <p>Scene entities come from {@code assets/scenes/main.json}. The {@link #spawnCodeEntity()} entity below is
- * created in Java for documentation — same components, no JSON entry.
+ * <p>Scene entities come from {@code assets/scenes/main.json}. {@link #spawnCodeEntity(HermesEngine)} adds one
+ * entity from Java before the scene file is loaded.
  */
 public final class SampleHermesGame implements HermesApplication {
 
-  private HermesEngine engine;
-
   @Override
   public void onCreate(HermesEngine engine) {
-    this.engine = engine;
     engine
         .registry()
         .register(
@@ -31,18 +28,10 @@ public final class SampleHermesGame implements HermesApplication {
               return bounce;
             });
     engine.addSystem(new BounceMarkerSystem());
+    spawnCodeEntity(engine);
   }
 
-  @Override
-  public void create() {
-    spawnCodeEntity();
-  }
-
-  /**
-   * Spawns an entity entirely from code (not listed in the scene JSON). Runs in {@link #create()}, before the scene
-   * file is loaded, so both JSON and code entities coexist in the world.
-   */
-  private void spawnCodeEntity() {
+  private static void spawnCodeEntity(HermesEngine engine) {
     Entity marker = engine.world().createEntity("code-marker");
     Transform transform = new Transform(80f, 80f, 2f);
     transform.setRotationZ(15f);
