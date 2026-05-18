@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.Copy;
 
 final class HermesIconsConfigurer {
 
@@ -54,23 +53,5 @@ final class HermesIconsConfigurer {
     } catch (ReflectiveOperationException e) {
       throw new GradleException("Failed to wire generated Android icon res", e);
     }
-  }
-
-  static Copy registerHtmlFaviconCopy(
-      Project gameProject, Project htmlLauncher, File distDir, HermesExtension extension) {
-    File favicon = HermesIcons.webFavicon(gameProject, extension);
-    return gameProject
-        .getTasks()
-        .register(
-            "copyHermesHtmlFavicon",
-            Copy.class,
-            copy -> {
-              copy.setGroup("hermes");
-              copy.setDescription("Copy favicon into HTML export output");
-              copy.from(favicon);
-              copy.into(distDir);
-              copy.rename(s -> "favicon.png");
-            })
-        .get();
   }
 }

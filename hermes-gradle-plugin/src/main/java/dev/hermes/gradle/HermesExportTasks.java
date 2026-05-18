@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Locale;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -125,8 +124,6 @@ final class HermesExportTasks {
               copy.doLast(t -> HermesHtmlExportBundle.writeInto(staging));
             });
 
-    Copy favicon =
-        HermesIconsConfigurer.registerHtmlFaviconCopy(gameProject, launcher, staging, config.getGame());
     Zip zip =
         HermesZipExport.register(
             gameProject,
@@ -142,10 +139,8 @@ final class HermesExportTasks {
             task -> {
               task.setGroup("hermes");
               task.setDescription("Build and zip the HTML/TeaVM distribution");
-              task.dependsOn(favicon, zip);
+              task.dependsOn(zip);
             });
-    favicon.mustRunAfter("stageHermesExportHtml");
-    zip.dependsOn(favicon);
     zip.dependsOn("stageHermesExportHtml");
   }
 
@@ -290,13 +285,10 @@ final class HermesExportTasks {
     launcher.getExtensions().getExtraProperties().set("hermesProjectVersion", HermesExportNaming.version(gameProject));
 
     wireDesktopLauncherGameDependency(gameProject, launcher);
-
   }
 
-  /** Ensures the Construo fat JAR contains game classes, assets, and {@code hermes-runtime.properties}. */
+  /** Ensures desktop export packages game classes and resources into the Construo fat JAR. */
   private static void wireDesktopLauncherGameDependency(Project gameProject, Project launcher) {
-    DependencyHandler dependencies = launcher.getDependencies();
-    dependencies.add("implementation", gameProject);
     launcher
         .getTasks()
         .matching(task -> task.getName().equals("jar") || task.getName().startsWith("package"))

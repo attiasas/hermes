@@ -14,6 +14,11 @@ public final class Lwjgl3Launcher {
     if (StartupHelper.startNewJvmIfRequired()) {
       return;
     }
+    try {
+      MacOsDockIcon.install();
+    } catch (Throwable ignored) {
+      // Dock icon must never prevent launch.
+    }
     createApplication();
   }
 
