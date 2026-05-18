@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.AndroidSdkValidator;
 import dev.hermes.tooling.HermesDoctorSupport;
 import java.io.File;
 import java.io.IOException;
@@ -195,7 +196,7 @@ public final class HermesDoctor {
     Project root = gameProject.getRootProject();
     if (root.findProject(":hermes-launcher-android") != null) {
       File sdk = resolveAndroidSdk(root);
-      if (sdk == null || !sdk.isDirectory()) {
+      if (!AndroidSdkValidator.isValidSdk(sdk)) {
         results.add(
             new CheckResult(
                 "android-sdk",
@@ -217,7 +218,10 @@ public final class HermesDoctor {
           if (line.startsWith("sdk.dir=")) {
             String path = line.substring("sdk.dir=".length()).trim();
             if (!path.isBlank()) {
-              return new File(path);
+              File sdk = new File(path);
+              if (AndroidSdkValidator.isValidSdk(sdk)) {
+                return sdk;
+              }
             }
           }
         }
@@ -230,7 +234,10 @@ public final class HermesDoctor {
       fromEnv = System.getenv("ANDROID_HOME");
     }
     if (fromEnv != null && !fromEnv.isBlank()) {
-      return new File(fromEnv);
+      File sdk = new File(fromEnv);
+      if (AndroidSdkValidator.isValidSdk(sdk)) {
+        return sdk;
+      }
     }
     return null;
   }

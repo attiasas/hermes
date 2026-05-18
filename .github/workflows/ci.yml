@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu, windows, macos ]
+        os: [ubuntu, windows, macos]
 
     steps:
       - name: Checkout
@@ -26,8 +26,27 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build and test
         run: ./gradlew clean build publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal :hermes-gradle-plugin:test :hermes-cli:test --no-daemon --stacktrace
+
+      - name: Publish test summary
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: python3 scripts/ci-test-summary.py .
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: |
+            **/build/test-results/test/
+            **/build/reports/tests/
+          if-no-files-found: ignore

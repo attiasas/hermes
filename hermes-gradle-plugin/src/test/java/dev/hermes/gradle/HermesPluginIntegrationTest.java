@@ -69,12 +69,7 @@ class HermesPluginIntegrationTest {
   @Test
   void templateProject_androidLauncherConfigures(@TempDir Path tempDir) throws IOException {
     Path projectDir = materializeTemplate(tempDir.resolve("android-demo"));
-    String settings = Files.readString(projectDir.resolve("settings.gradle"), StandardCharsets.UTF_8);
-    settings =
-        settings
-            .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
-            .replace("android {\n      enabled = false", "android {\n      enabled = true");
-    Files.writeString(projectDir.resolve("settings.gradle"), settings, StandardCharsets.UTF_8);
+    enableOnlyPlatform(projectDir, "android");
 
     BuildResult configure =
         GradleRunner.create()
@@ -100,12 +95,7 @@ class HermesPluginIntegrationTest {
   @Test
   void templateProject_htmlLauncherResolvesGameWithJava11(@TempDir Path tempDir) throws IOException {
     Path projectDir = materializeTemplate(tempDir.resolve("html-demo"));
-    String settings = Files.readString(projectDir.resolve("settings.gradle"), StandardCharsets.UTF_8);
-    settings =
-        settings
-            .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
-            .replace("html {\n      enabled = false", "html {\n      enabled = true");
-    Files.writeString(projectDir.resolve("settings.gradle"), settings, StandardCharsets.UTF_8);
+    enableOnlyPlatform(projectDir, "html");
 
     BuildResult compile =
         GradleRunner.create()
@@ -114,6 +104,20 @@ class HermesPluginIntegrationTest {
             .withArguments(":hermes-launcher-html:compileJava", "-q")
             .build();
     assertEquals(SUCCESS, compile.task(":hermes-launcher-html:compileJava").getOutcome());
+  }
+
+  private static void enableOnlyPlatform(Path projectDir, String platform) throws IOException {
+    Path settingsFile = projectDir.resolve("settings.gradle");
+    String settings = Files.readString(settingsFile, StandardCharsets.UTF_8).replace("\r\n", "\n");
+    settings =
+        settings
+            .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
+            .replace("html {\n      enabled = false", "html {\n      enabled = false")
+            .replace("android {\n      enabled = false", "android {\n      enabled = false");
+    settings =
+        settings.replace(
+            platform + " {\n      enabled = false", platform + " {\n      enabled = true");
+    Files.writeString(settingsFile, settings, StandardCharsets.UTF_8);
   }
 
   private static File locateHermesRoot() {
