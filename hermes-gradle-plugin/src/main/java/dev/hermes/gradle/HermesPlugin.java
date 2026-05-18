@@ -41,6 +41,7 @@ public final class HermesPlugin implements Plugin<Project> {
     registerRuntimeConfigTask(project);
     registerSyncPlatformsTask(project);
     registerHermesDoctorTask(project);
+    HermesExportTasks.register(project);
 
     project.afterEvaluate(
         evaluated -> {
@@ -80,11 +81,11 @@ public final class HermesPlugin implements Plugin<Project> {
                   t -> {
                     HermesExtension gameExtension =
                         gameProject.getExtensions().getByType(HermesExtension.class);
-                    String engineVersion = HermesEngineVersion.resolve(gameProject, gameExtension);
+                    String engineVersion = HermesConfig.resolveEngineVersion(gameProject);
                     File hermesHome = HermesHomeResolver.resolve(gameProject);
                     HermesPlatformSync.syncAllEnabled(
                         root.getRootDir(),
-                        HermesPlatforms.resolve(gameProject),
+                        HermesConfig.resolveSettingsPlatforms(gameProject),
                         engineVersion,
                         hermesHome);
                   });
@@ -193,6 +194,9 @@ public final class HermesPlugin implements Plugin<Project> {
     java.util.Arrays.sort(children, java.util.Comparator.comparing(File::getName));
     for (File child : children) {
       if (child.getName().equals("assets.txt")) {
+        continue;
+      }
+      if (child.getName().equals("icons")) {
         continue;
       }
       if (child.isDirectory()) {
@@ -403,6 +407,15 @@ public final class HermesPlugin implements Plugin<Project> {
     task.systemProperty("hermes.game.sources.dir", gameProject.file("src/main/java").getAbsolutePath());
     task.systemProperty("hermes.game.title", config.getTitle());
     task.systemProperty("hermes.game.scene", config.getScene());
+  }
+
+  static void registerMissingLauncherTaskStatic(
+      Project project,
+      String taskName,
+      String platformName,
+      String launcherModule,
+      String settingsFile) {
+    registerMissingLauncherTask(project, taskName, platformName, launcherModule, settingsFile);
   }
 
   private static void registerMissingLauncherTask(

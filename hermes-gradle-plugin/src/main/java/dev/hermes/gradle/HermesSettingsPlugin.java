@@ -21,15 +21,20 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
               String engineVersion = HermesEngineVersion.resolve(settings, extension);
               File hermesHome = HermesHomeResolver.resolve(settings);
               HermesEnginePropertyPropagator.apply(settings, hermesHome);
-              PlatformsExtension platforms = extension.getPlatforms();
+              SettingsPlatformsExtension platforms = extension.getPlatforms();
               settings
                   .getGradle()
                   .beforeProject(
-                      project ->
-                          project
-                              .getExtensions()
-                              .getExtraProperties()
-                              .set(HermesPlatforms.PROJECT_EXTRA_PROPERTY, platforms));
+                      project -> {
+                        project
+                            .getExtensions()
+                            .getExtraProperties()
+                            .set(HermesConfig.SETTINGS_PLATFORMS_PROPERTY, platforms);
+                        project
+                            .getExtensions()
+                            .getExtraProperties()
+                            .set(HermesConfig.ENGINE_VERSION_PROPERTY, engineVersion);
+                      });
               includeLauncher(settings, extension, "hermes-launcher-desktop", platforms.getDesktop().isEnabled(), engineVersion);
               includeLauncher(settings, extension, "hermes-launcher-html", platforms.getHtml().isEnabled(), engineVersion);
               includeLauncher(

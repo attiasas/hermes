@@ -65,8 +65,12 @@ class TemplateSupportTest {
         "must declare repositories for synced launcher modules");
     assertFalse(settings.contains("includeBuild"), "must not composite-include hermes-gradle-plugin in IDE");
     assertTrue(settings.contains("enabled = true"), "desktop should be enabled by default");
-    assertTrue(settings.contains("devServerPort"), "settings.gradle should document html options");
-    assertTrue(settings.contains("screenOrientation"), "settings.gradle should document android options");
+    String gameBuild = Files.readString(target.resolve("game/build.gradle"), StandardCharsets.UTF_8);
+    assertTrue(gameBuild.contains("devServerPort"), "game/build.gradle should configure html options");
+    assertTrue(gameBuild.contains("screenOrientation"), "game/build.gradle should configure android options");
+    assertTrue(gameBuild.contains("platforms {"), "game/build.gradle should own platform details");
+    assertTrue(gameBuild.contains("assetsDirectory"), "game/build.gradle should set assetsDirectory");
+    assertTrue(gameBuild.contains("icons {"), "game/build.gradle should declare icons DSL");
   }
 
   @Test

@@ -78,15 +78,19 @@ Then connect a device or emulator and run:
 
 `title` is used for the desktop window title, HTML page title, and Android app label.
 
-### `settings.gradle` (platforms)
+### `settings.gradle` (platform toggles)
 
-All platforms are listed below with defaults so you can see what is configurable. Set `enabled = true` for the platforms you use.
+Only `enabled` per platform — controls which launcher modules are included.
+
+### `game/build.gradle` (build / run / export)
 
 | Platform | Settings |
 |----------|----------|
-| **desktop** | `enabled`, `width`, `height`, `vsync`, `resizable`, `foregroundFps` (0 = display refresh + 1) |
-| **html** | `enabled`, `width`, `height`, `devServerPort`, `webAssembly` |
-| **android** | `enabled`, `applicationId`, `minSdk`, `targetSdk`, `compileSdk`, `versionCode`, `screenOrientation` |
+| **desktop** | `width`, `height`, `vsync`, `resizable`, `foregroundFps`, `bundleId`, `executableName`, `exportTargets` |
+| **html** | `width`, `height`, `devServerPort`, `webAssembly` |
+| **android** | `applicationId`, `minSdk`, `targetSdk`, `compileSdk`, `versionCode`, `screenOrientation` |
+
+Icons live under `src/main/resources/assets/icons/` (replace files to customize app icons).
 
 Artifact **version** for stores and Android `versionName` comes from `version = '…'` in `game/build.gradle`, not from `hermes.json`.
 
@@ -100,6 +104,10 @@ Artifact **version** for stores and Android `versionName` comes from `version = 
 | `hermesDoctor` | Validate setup, JDK, SDK, forbidden libGDX imports in game code |
 | `validateHermesJson` | Parse and validate `hermes.json` |
 | `hermesSyncPlatforms` | Refresh launcher stubs under `.hermes/platforms/` |
+| `hermesExportDesktop` | Native desktop bundles (ZIP per OS) |
+| `hermesExportHtml` | Static HTML/WASM site (ZIP) |
+| `hermesExportAndroid` | Release APK (ZIP, unsigned) |
+| `hermesExport` | All enabled exports |
 
 Root task: `./gradlew hermesSyncPlatforms` (same sync, run from project root).
 

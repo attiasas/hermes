@@ -193,13 +193,20 @@ public final class HermesDoctorSupport {
                 version,
                 "hermes-api-" + version + ".jar")
             .toFile();
-    if (apiJar.isFile()) {
-      return new CheckResult("maven-local", Status.OK, "Found " + apiJar.getName(), null);
+    if (!apiJar.isFile()) {
+      return new CheckResult(
+          "maven-local",
+          Status.WARN,
+          "hermes-api not in Maven local for version " + version,
+          "From Hermes engine repo run: ./gradlew publishToMavenLocal");
     }
-    return new CheckResult(
-        "maven-local",
-        Status.WARN,
-        "hermes-api not in Maven local for version " + version,
-        "From Hermes engine repo run: ./gradlew publishToMavenLocal");
+    if (!HermesMavenLocal.gradlePluginSupportsIconsDsl(version)) {
+      return new CheckResult(
+          "hermes-gradle-plugin",
+          Status.FAIL,
+          "Published plugin is older than this project (missing icons DSL).",
+          "From Hermes engine repo run: ./gradlew publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal");
+    }
+    return new CheckResult("maven-local", Status.OK, "Found " + apiJar.getName(), null);
   }
 }

@@ -24,7 +24,9 @@ final class HermesRuntimeConfigGenerator {
 
     Properties properties = new Properties();
     properties.setProperty("hermes.applicationClass", extension.getApplicationClass());
-    properties.setProperty("hermes.debug", Boolean.toString(extension.isDebug()));
+    boolean debug =
+        HermesDistributionMode.isDistributionExport(gameProject) ? false : extension.isDebug();
+    properties.setProperty("hermes.debug", Boolean.toString(debug));
     properties.setProperty("hermes.window.width", Integer.toString(desktop.getWidth()));
     properties.setProperty("hermes.window.height", Integer.toString(desktop.getHeight()));
     properties.setProperty("hermes.window.title", gameConfig.getTitle());

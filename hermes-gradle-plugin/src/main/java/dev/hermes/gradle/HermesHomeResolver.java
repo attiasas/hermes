@@ -24,13 +24,6 @@ public final class HermesHomeResolver {
   }
 
   public static File resolve(Project project) {
-    HermesExtension extension = project.getExtensions().findByType(HermesExtension.class);
-    if (extension != null && extension.getHome() != null) {
-      File configured = extension.getHome();
-      if (configured.isDirectory()) {
-        return configured.getAbsoluteFile();
-      }
-    }
     return resolveFromEnvironment(project);
   }
 

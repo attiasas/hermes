@@ -79,6 +79,7 @@ public final class HermesPlatformSync {
     File launcherDir = launcherDir(rootDir, moduleName);
     patchLauncherForMaven(launcherDir, engineVersion);
     patchLauncherJava11(launcherDir);
+    patchDesktopConstruoToolchain(launcherDir);
     patchLauncherForStandaloneGame(launcherDir);
     patchAndroidPluginDeclaration(rootDir, launcherDir);
     stripAndroidProjectRepositories(launcherDir);
@@ -272,6 +273,42 @@ public final class HermesPlatformSync {
     }
   }
 
+  /** Construo jlink must use JDK 17 to match downloaded runtime JDKs; game bytecode stays Java 11. */
+  private static void patchDesktopConstruoToolchain(File launcherDir) {
+    if (!"hermes-launcher-desktop".equals(launcherDir.getName())) {
+      return;
+    }
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = readBuildFile(buildFile);
+      String patched = content;
+      if (patched.contains("JavaLanguageVersion.of(11)")) {
+        patched = patched.replace("JavaLanguageVersion.of(11)", "JavaLanguageVersion.of(17)");
+      }
+      if (!patched.contains("options.release = 11")) {
+        String releaseBlock =
+            """
+            tasks.withType(JavaCompile).configureEach {
+              options.release = 11
+            }
+
+            """;
+        patched = patched.replace("apply plugin: 'io.github.fourlastor.construo'", releaseBlock + "apply plugin: 'io.github.fourlastor.construo'");
+        if (patched.equals(content)) {
+          patched = patched.replaceFirst("(?m)^plugins \\{[^}]+}", "$0\n\n" + releaseBlock.trim());
+        }
+      }
+      if (!patched.equals(content)) {
+        writeBuildFile(buildFile, patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to patch Construo JDK toolchain in " + buildFile.getAbsolutePath(), e);
+    }
+  }
+
   private static String stripNativeAccessJvmArg(String content) {
     return content
         .replace("  jvmArgs('--enable-native-access=ALL-UNNAMED')\n", "")
@@ -283,7 +320,8 @@ public final class HermesPlatformSync {
     syncIfNeeded(settings.getRootDir(), moduleName, engineVersion, HermesHomeResolver.resolve(settings));
   }
 
-  public static void syncAllEnabled(File rootDir, PlatformsExtension platforms, String engineVersion, File hermesHome) {
+  public static void syncAllEnabled(
+      File rootDir, SettingsPlatformsExtension platforms, String engineVersion, File hermesHome) {
     if (platforms.getDesktop().isEnabled()) {
       syncIfNeeded(rootDir, "hermes-launcher-desktop", engineVersion, hermesHome);
     }

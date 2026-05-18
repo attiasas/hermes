@@ -1,5 +1,8 @@
 package dev.hermes.cli;
 
+import dev.hermes.tooling.HermesMavenLocal;
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Set;
@@ -54,6 +57,7 @@ public final class NewCommand implements Runnable {
     Set<String> enabledPlatforms;
     try {
       enabledPlatforms = TemplateSupport.parsePlatforms(platforms);
+      ensureGradlePluginSupportsTemplate(engineVersion);
       TemplateSupport.materializeEmptyTemplate(
           targetDir.toAbsolutePath(), projectName, pkg, engineVersion, enabledPlatforms, androidSdk);
       System.out.println("Created Hermes project at " + targetDir.toAbsolutePath());
@@ -78,5 +82,21 @@ public final class NewCommand implements Runnable {
       throw new picocli.CommandLine.ExecutionException(
           new picocli.CommandLine(NewCommand.class), "Failed to create project", e);
     }
+  }
+
+  private static void ensureGradlePluginSupportsTemplate(String engineVersion) throws IOException {
+    if (HermesMavenLocal.gradlePluginSupportsIconsDsl(engineVersion)) {
+      return;
+    }
+    File jar = HermesMavenLocal.gradlePluginJar(engineVersion);
+    String location = jar.isFile() ? jar.getAbsolutePath() : jar.getAbsolutePath() + " (missing)";
+    throw new IOException(
+        "hermes-gradle-plugin in Maven local is too old for this template (missing icons DSL).\n"
+            + "  Found: "
+            + location
+            + "\n"
+            + "  From the Hermes engine repo run:\n"
+            + "    ./gradlew publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal\n"
+            + "  Then run hermes new again.");
   }
 }

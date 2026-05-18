@@ -96,6 +96,30 @@ class HermesPluginIntegrationTest {
   }
 
   @Test
+  void templateProject_htmlExportProducesZip(@TempDir Path tempDir) throws IOException {
+    Path projectDir = materializeTemplate(tempDir.resolve("html-export"));
+    enableOnlyPlatform(projectDir, "html");
+
+    BuildResult export =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments(":game:hermesExportHtml", "-q")
+            .build();
+    assertEquals(SUCCESS, export.task(":game:hermesExportHtml").getOutcome());
+
+    java.nio.file.Path distDir = projectDir.resolve("game/build/dist/html");
+    try (var zips = Files.list(distDir).filter(p -> p.toString().endsWith("-html.zip"))) {
+      java.nio.file.Path zip = zips.findFirst().orElse(null);
+      assertTrue(zip != null && Files.isRegularFile(zip), "HTML export zip must exist under game/build/dist/html");
+      assertTrue(Files.size(zip) > 512, "HTML export zip must not be empty");
+    }
+    assertTrue(
+        projectDir.resolve("game/src/main/resources/assets/icons/web/favicon.png").toFile().exists(),
+        "template must ship default favicon under assets/icons");
+  }
+
+  @Test
   void templateProject_htmlLauncherResolvesGameWithJava11(@TempDir Path tempDir) throws IOException {
     Path projectDir = materializeTemplate(tempDir.resolve("html-demo"));
     enableOnlyPlatform(projectDir, "html");
@@ -112,16 +136,11 @@ class HermesPluginIntegrationTest {
   private static void enableOnlyPlatform(Path projectDir, String platform) throws IOException {
     Path settingsFile = projectDir.resolve("settings.gradle");
     String settings = Files.readString(settingsFile, StandardCharsets.UTF_8).replace("\r\n", "\n");
-    settings =
-        settings
-            .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
-            .replace("html {\n      enabled = true", "html {\n      enabled = false")
-            .replace("html {\n      enabled = false", "html {\n      enabled = false")
-            .replace("android {\n      enabled = true", "android {\n      enabled = false")
-            .replace("android {\n      enabled = false", "android {\n      enabled = false");
-    settings =
-        settings.replace(
-            platform + " {\n      enabled = false", platform + " {\n      enabled = true");
+    for (String name : new String[] {"desktop", "html", "android"}) {
+      boolean enabled = name.equals(platform);
+      settings = settings.replace(name + " { enabled = true", name + " { enabled = " + enabled);
+      settings = settings.replace(name + " { enabled = false", name + " { enabled = " + enabled);
+    }
     Files.writeString(settingsFile, settings, StandardCharsets.UTF_8);
   }
 

@@ -3,12 +3,12 @@ package dev.hermes.gradle;
 import java.io.File;
 import groovy.lang.Closure;
 
-/** Platform toggles configured in {@code settings.gradle}. */
+/** Engine and platform toggles configured in {@code settings.gradle}. */
 public class HermesSettingsExtension {
 
   private File home;
   private String engineVersion;
-  private final PlatformsExtension platforms = new PlatformsExtension();
+  private final SettingsPlatformsExtension platforms = new SettingsPlatformsExtension();
 
   public File getHome() {
     return home;
@@ -26,7 +26,7 @@ public class HermesSettingsExtension {
     this.engineVersion = engineVersion;
   }
 
-  public PlatformsExtension getPlatforms() {
+  public SettingsPlatformsExtension getPlatforms() {
     return platforms;
   }
 

@@ -26,8 +26,15 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Build engine and publish to Maven local
         run: ./gradlew clean build publishToMavenLocal --no-daemon --stacktrace
+
+      - name: Export game distributions
+        run: |
+          ./gradlew :game:hermesExportHtml :game:hermesExportAndroid :game:zipHermesExportDesktopLinuxX64 --no-daemon --stacktrace
 
       - name: Upload engine artifacts
         uses: actions/upload-artifact@v4
@@ -40,6 +47,7 @@ jobs:
             hermes-api/build/libs/*.jar
             hermes-core/build/libs/*.jar
             game/build/libs/*.jar
+            game/build/dist/**/*.zip
 
   build-cli:
     needs: build-engine
