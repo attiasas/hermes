@@ -4,25 +4,23 @@ import groovy.lang.Closure;
 
 public class PlatformsExtension {
 
-  private final PlatformSpec desktop = new PlatformSpec();
-  private final PlatformSpec html = new PlatformSpec();
-  private final PlatformSpec android = new PlatformSpec();
+  private final DesktopPlatformSpec desktop = new DesktopPlatformSpec();
+  private final HtmlPlatformSpec html = new HtmlPlatformSpec();
+  private final AndroidPlatformSpec android = new AndroidPlatformSpec();
 
   public PlatformsExtension() {
     desktop.setEnabled(true);
-    html.setEnabled(false);
-    android.setEnabled(false);
   }
 
-  public PlatformSpec getDesktop() {
+  public DesktopPlatformSpec getDesktop() {
     return desktop;
   }
 
-  public PlatformSpec getHtml() {
+  public HtmlPlatformSpec getHtml() {
     return html;
   }
 
-  public PlatformSpec getAndroid() {
+  public AndroidPlatformSpec getAndroid() {
     return android;
   }
 

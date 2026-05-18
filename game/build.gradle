@@ -2,22 +2,9 @@ plugins {
   id 'dev.hermes'
 }
 
+version = '0.1.0'
+
 hermes {
   applicationClass = 'dev.hermes.sample.SampleHermesGame'
   debug = true
-  platforms {
-    desktop {
-      width = 640
-      height = 480
-      title = 'Hermes'
-    }
-    html {
-      width = 640
-      height = 480
-      title = 'Hermes'
-    }
-    android {
-      applicationId = 'dev.hermes.game'
-    }
-  }
 }

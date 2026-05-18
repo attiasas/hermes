@@ -1,0 +1,38 @@
+plugins {
+  id 'application'
+}
+
+application {
+  mainClass = 'dev.hermes.cli.HermesCli'
+  applicationName = 'hermes'
+}
+
+repositories {
+  mavenLocal()
+}
+
+dependencies {
+  implementation 'info.picocli:picocli:4.7.7'
+  implementation project(':hermes-tooling')
+
+  testImplementation platform('org.junit:junit-bom:5.11.4')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+  dependsOn tasks.named('processResources')
+  useJUnitPlatform()
+}
+
+tasks.named('compileJava') {
+  dependsOn ':hermes-tooling:classes'
+}
+
+tasks.register('copyTemplates', Copy) {
+  from '../hermes-templates'
+  into layout.buildDirectory.dir('generated/hermes-cli-templates')
+}
+
+sourceSets.main.resources.srcDir(layout.buildDirectory.dir('generated/hermes-cli-templates'))
+processResources.dependsOn copyTemplates

@@ -1,5 +1,4 @@
 {
-  "name": "HermesSample",
-  "version": "0.1.0",
+  "title": "HermesSample",
   "scene": "scenes/main.json"
 }

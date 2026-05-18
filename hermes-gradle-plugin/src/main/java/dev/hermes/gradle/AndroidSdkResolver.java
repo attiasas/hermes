@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import dev.hermes.tooling.AndroidSdkValidator;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.logging.Logging;
 
@@ -33,13 +34,19 @@ public final class AndroidSdkResolver {
     File localPropertiesFile = new File(rootDir, "local.properties");
     String fromLocal = readSdkDir(localPropertiesFile);
     if (fromLocal != null && !fromLocal.isBlank()) {
-      return new File(fromLocal);
+      File sdk = new File(fromLocal);
+      return AndroidSdkValidator.isValidSdk(sdk) ? sdk : null;
     }
 
     String fromGradle = readGradleProperty(settings, GRADLE_PROPERTY);
     String fromEnv = firstNonBlank(System.getenv("ANDROID_SDK_ROOT"), System.getenv("ANDROID_HOME"));
     String sdkPath = firstNonBlank(fromGradle, fromEnv);
     if (sdkPath == null || sdkPath.isBlank()) {
+      return null;
+    }
+
+    File sdk = new File(sdkPath);
+    if (!AndroidSdkValidator.isValidSdk(sdk)) {
       return null;
     }
 

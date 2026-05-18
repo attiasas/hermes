@@ -1,0 +1,24 @@
+package dev.hermes.tooling;
+
+/** Game/simulation fields from {@code hermes.json} (no build or platform knobs). */
+public final class HermesGameConfig {
+
+  private String title = "HermesGame";
+  private String scene = "scenes/main.json";
+
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
+  }
+
+  public String getScene() {
+    return scene;
+  }
+
+  public void setScene(String scene) {
+    this.scene = scene;
+  }
+}

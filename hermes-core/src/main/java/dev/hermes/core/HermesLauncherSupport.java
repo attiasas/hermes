@@ -41,6 +41,18 @@ public final class HermesLauncherSupport {
     return HermesRuntimeConfig.get("hermes.window.title", "Hermes");
   }
 
+  public static boolean desktopVsync() {
+    return Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.desktop.vsync", "true"));
+  }
+
+  public static boolean desktopResizable() {
+    return Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.desktop.resizable", "true"));
+  }
+
+  public static int desktopForegroundFps() {
+    return Integer.parseInt(HermesRuntimeConfig.get("hermes.desktop.foregroundFps", "0"));
+  }
+
   public static String gameScenePath() {
     return HermesRuntimeConfig.get("hermes.game.scene", "scenes/main.json");
   }

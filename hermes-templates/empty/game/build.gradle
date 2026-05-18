@@ -1,0 +1,16 @@
+plugins {
+  id 'dev.hermes'
+}
+
+version = '0.1.0'
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
+hermes {
+  applicationClass = '{{APPLICATION_CLASS}}'
+  debug = true
+}

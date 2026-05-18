@@ -16,7 +16,7 @@ final class HermesRuntimeConfigGenerator {
 
   static void write(Project gameProject, HermesExtension extension, File outputDir) {
     HermesGameConfig gameConfig = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
-    PlatformSpec desktop = extension.getPlatforms().getDesktop();
+    DesktopPlatformSpec desktop = HermesPlatforms.resolve(gameProject).getDesktop();
 
     if (!outputDir.exists() && !outputDir.mkdirs()) {
       throw new GradleException("Could not create " + outputDir.getAbsolutePath());
@@ -27,8 +27,11 @@ final class HermesRuntimeConfigGenerator {
     properties.setProperty("hermes.debug", Boolean.toString(extension.isDebug()));
     properties.setProperty("hermes.window.width", Integer.toString(desktop.getWidth()));
     properties.setProperty("hermes.window.height", Integer.toString(desktop.getHeight()));
-    properties.setProperty("hermes.window.title", desktop.getTitle());
-    properties.setProperty("hermes.game.name", gameConfig.getName());
+    properties.setProperty("hermes.window.title", gameConfig.getTitle());
+    properties.setProperty("hermes.desktop.vsync", Boolean.toString(desktop.isVsync()));
+    properties.setProperty("hermes.desktop.resizable", Boolean.toString(desktop.isResizable()));
+    properties.setProperty("hermes.desktop.foregroundFps", Integer.toString(desktop.getForegroundFps()));
+    properties.setProperty("hermes.game.title", gameConfig.getTitle());
     properties.setProperty("hermes.game.scene", gameConfig.getScene());
 
     File file = new File(outputDir, "hermes-runtime.properties");

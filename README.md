@@ -27,6 +27,58 @@ Implement `dev.hermes.api.Component`, register the type, and add a `System` that
 
 ---
 
+## Phase 3 — templates, CLI, and doctor
+
+### Prerequisites for new projects
+
+Publish engine artifacts to Maven local once (from this repo):
+
+```bash
+./gradlew publishToMavenLocal
+```
+
+From the Hermes engine repo, publish artifacts and the Gradle plugin once:
+
+```bash
+./gradlew publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal
+```
+
+`hermes new` creates only the **`game`** module; the desktop launcher is synced under `.hermes/platforms/`. Engine JARs and the Hermes Gradle plugin resolve from **Maven local** (`hermes.engineVersion`) — no `includeBuild`, so IntelliJ does not show `hermes-gradle-plugin` as a module.
+
+### CLI
+
+```bash
+./gradlew :hermes-cli:installDist
+export PATH="$PWD/hermes-cli/build/install/hermes/bin:$PATH"
+
+hermes new my-game --name MyGame --package dev.hermes.mygame --platforms desktop,html
+cd my-game
+hermes doctor
+./gradlew :game:hermesRunDesktop
+```
+
+| Command | Description |
+|---------|-------------|
+| `hermes new <dir>` | Copy the empty template (`--template empty`, `--platforms`, `--android-sdk`) |
+| `hermes doctor [dir]` | Run `./gradlew :game:hermesDoctor` in a project, or standalone checks |
+| `hermes --version` | CLI / engine version |
+
+Release tags attach `hermes-cli-*-{linux,macos,windows}-*.zip` per OS (see [`.github/workflows/release.yml`](.github/workflows/release.yml)).
+
+### Gradle doctor
+
+```bash
+./gradlew :game:hermesDoctor
+```
+
+Fails the build if `com.badlogicgames.gdx` appears under `game/src/`. Sync platform stubs: `./gradlew hermesSyncPlatforms`.
+
+### Empty template
+
+Source: [`hermes-templates/empty`](hermes-templates/empty) — minimal scene, `PulseMarker` SPI example, desktop-only platforms by default in `settings.gradle`.
+
+---
+
 ## Phase 1 — run from `:game`
 
 ### Prerequisites
@@ -53,16 +105,15 @@ Cold-cache build:
 
 | Source | Purpose |
 |--------|---------|
-| [`game/hermes.json`](game/hermes.json) | **Game data only** — `name`, `version`, `scene` (simulation/content). |
-| [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Which launcher modules are included (desktop / html / android). |
-| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `applicationClass`, `assetsDirectory`, `debug`, desktop window `title` / `width` / `height`. |
+| [`game/hermes.json`](game/hermes.json) | **Game data only** — `title`, `scene` (simulation/content). |
+| [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Platform toggles and per-platform settings (desktop / html / android). |
+| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `version`, `applicationClass`, `assetsDirectory`, `debug`. |
 
 Example `hermes.json`:
 
 ```json
 {
-  "name": "HermesSample",
-  "version": "0.1.0",
+  "title": "HermesSample",
   "scene": "scenes/main.json"
 }
 ```
@@ -74,18 +125,12 @@ plugins {
   id 'dev.hermes'
 }
 
+version = '0.1.0'
+
 hermes {
   applicationClass = 'dev.hermes.sample.SampleHermesGame'
   assetsDirectory = 'src/main/resources/assets'  // default; override to relocate assets
   debug = true
-  platforms {
-    desktop {
-      enabled = true
-      width = 640
-      height = 480
-      title = 'Hermes'
-    }
-  }
 }
 ```
 
@@ -115,6 +160,8 @@ Then sync Gradle and run:
 | `hermesRunHtml` | TeaVM dev server (when `hermes-launcher-html` is included) |
 | `hermesRunAndroid` | Install debug APK and launch (when Android launcher is included) |
 | `validateHermesJson` | Parse `hermes.json`; unknown keys log a warning |
+| `hermesDoctor` | Validate setup, toolchains, and forbidden libGDX imports |
+| `hermesSyncPlatforms` | Copy launcher stubs into `.hermes/platforms/` for standalone projects |
 | `generateAssetList` | Regenerate `build/generated/hermes-assets/assets.txt` from the assets directory |
 
 ### Module graph
@@ -127,7 +174,7 @@ Then sync Gradle and run:
 Verify no direct libGDX in game sources:
 
 ```bash
-rg 'com\.badlogicgames\.gdx' game/src
+./gradlew :game:hermesDoctor
 ```
 
 ### Template provenance

@@ -1,9 +1,34 @@
 plugins {
   id 'java-gradle-plugin'
+  id 'maven-publish'
 }
+
+group = 'dev.hermes'
+version = '0.1.0-SNAPSHOT'
+
+def bundledPlatformsResources = layout.buildDirectory.dir('generated/hermes-platforms-resources')
+
+tasks.register('bundleHermesPlatforms', Copy) {
+  description = 'Bundle launcher projects for standalone game sync'
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  into layout.buildDirectory.dir('generated/hermes-platforms-resources/hermes-platforms')
+  ['hermes-launcher-desktop', 'hermes-launcher-html', 'hermes-launcher-android'].each { module ->
+    def moduleDir = file("../${module}")
+    inputs.dir(moduleDir).withPropertyName("${module}-sources")
+    from(moduleDir) {
+      into module
+      exclude 'build/**', '.gradle/**', 'bin/**'
+    }
+  }
+}
+
+sourceSets.main.resources.srcDir(bundledPlatformsResources)
+tasks.named('processResources') { dependsOn bundleHermesPlatforms }
+tasks.named('jar') { dependsOn bundleHermesPlatforms }
 
 repositories {
   mavenCentral()
+  google()
 }
 
 gradlePlugin {
@@ -19,9 +44,21 @@ gradlePlugin {
   }
 }
 
+sourceSets.main.java.srcDir('../hermes-tooling/src/main/java')
+
 dependencies {
+  implementation 'com.google.code.gson:gson:2.13.1'
   implementation gradleApi()
   implementation localGroovy()
   implementation 'org.apache.groovy:groovy:4.0.26'
-  implementation 'com.google.code.gson:gson:2.13.1'
+
+  testImplementation gradleTestKit()
+  testImplementation platform('org.junit:junit-bom:5.11.4')
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+  dependsOn bundleHermesPlatforms
 }

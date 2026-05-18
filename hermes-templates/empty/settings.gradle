@@ -1,0 +1,59 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+    google()
+    mavenLocal()
+  }
+  plugins {
+    id 'com.android.application' version '8.9.3' apply false
+  }
+}
+
+plugins {
+  id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+  id 'dev.hermes.settings' version '{{ENGINE_VERSION}}'
+}
+
+dependencyResolutionManagement {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+    google()
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://teavm.org/maven/repository/' }
+  }
+}
+
+rootProject.name = '{{ROOT_PROJECT_NAME}}'
+
+hermes {
+  platforms {
+    desktop {
+      enabled = {{DESKTOP_ENABLED}}
+      width = 640
+      height = 480
+      vsync = true
+      resizable = true
+      foregroundFps = 0  // 0 = match display refresh rate + 1
+    }
+    html {
+      enabled = {{HTML_ENABLED}}
+      width = 640
+      height = 480
+      devServerPort = 8080
+      webAssembly = true
+    }
+    android {
+      enabled = {{ANDROID_ENABLED}}
+      applicationId = '{{ANDROID_APPLICATION_ID}}'
+      minSdk = 21
+      targetSdk = 35
+      compileSdk = 35
+      versionCode = 1
+      screenOrientation = 'landscape'
+    }
+  }
+}
+
+include 'game'

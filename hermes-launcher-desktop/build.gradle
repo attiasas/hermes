@@ -25,8 +25,7 @@ def os = System.properties['os.name'].toLowerCase(Locale.ROOT)
 
 tasks.named('run', JavaExec).configure {
   // workingDir is set by :game Hermes plugin (hermes.assetsDirectory)
-  // Use jvmArgs(...) to append; jvmArgs.add(...) mutates an unmodifiable list on recent Gradle.
-  jvmArgs('--enable-native-access=ALL-UNNAMED')
+  // --enable-native-access requires Java 17+; :game:hermesRunDesktop adds it when supported.
   if (os.contains('mac')) {
     jvmArgs('-XstartOnFirstThread')
   }

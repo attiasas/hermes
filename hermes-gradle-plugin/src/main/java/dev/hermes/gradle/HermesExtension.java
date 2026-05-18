@@ -1,17 +1,30 @@
 package dev.hermes.gradle;
 
-import groovy.lang.Closure;
+import java.io.File;
 
 /** Project-level Hermes configuration on {@code :game}. */
 public class HermesExtension {
 
   private String applicationClass;
   private String assetsDirectory;
+  private String engineVersion;
+  private File home;
   private boolean debug = false;
-  private final PlatformsExtension platforms = new PlatformsExtension();
 
-  public HermesExtension() {
-    platforms.getDesktop().setEnabled(true);
+  public String getEngineVersion() {
+    return engineVersion;
+  }
+
+  public void setEngineVersion(String engineVersion) {
+    this.engineVersion = engineVersion;
+  }
+
+  public File getHome() {
+    return home;
+  }
+
+  public void setHome(File home) {
+    this.home = home;
   }
 
   public String getApplicationClass() {
@@ -36,16 +49,5 @@ public class HermesExtension {
 
   public void setDebug(boolean debug) {
     this.debug = debug;
-  }
-
-  public PlatformsExtension getPlatforms() {
-    return platforms;
-  }
-
-  @SuppressWarnings("rawtypes")
-  public void platforms(Closure configure) {
-    configure.setDelegate(platforms);
-    configure.setResolveStrategy(Closure.DELEGATE_FIRST);
-    configure.call(platforms);
   }
 }

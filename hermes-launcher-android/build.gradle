@@ -36,13 +36,13 @@ android {
   }
   defaultConfig {
     applicationId = 'dev.hermes.game'
-    def gameHermesJson = new groovy.json.JsonSlurper().parse(rootProject.file('game/hermes.json'))
     buildConfigField 'String', 'HERMES_APPLICATION_CLASS', '"dev.hermes.sample.SampleHermesGame"'
-    buildConfigField 'String', 'HERMES_GAME_SCENE', "\"${gameHermesJson.scene}\""
+    buildConfigField 'String', 'HERMES_GAME_SCENE', '"scenes/main.json"'
     minSdkVersion 21
     targetSdkVersion 35
     versionCode 1
     versionName '0.1.0'
+    manifestPlaceholders.hermesScreenOrientation = 'landscape'
   }
   buildFeatures {
     buildConfig = true
@@ -58,10 +58,6 @@ android {
       proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
     }
   }
-}
-
-repositories {
-  google()
 }
 
 configurations {
@@ -135,5 +131,5 @@ tasks.register('run', Exec) {
         'or ANDROID_SDK_ROOT / ANDROID_HOME. See local.properties.example.')
   }
   def adb = new File(sdkDir, 'platform-tools/adb').absolutePath
-  commandLine adb, 'shell', 'am', 'start', '-n', 'dev.hermes.game/dev.hermes.launcher.android.AndroidLauncher'
+  commandLine adb, 'shell', 'am', 'start', '-n', "${android.defaultConfig.applicationId}/dev.hermes.launcher.android.AndroidLauncher"
 }
