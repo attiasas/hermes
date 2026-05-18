@@ -32,7 +32,7 @@ final class SceneParserTest {
             + "      \"id\": \"logo\",\n"
             + "      \"components\": {\n"
             + "        \"Transform\": { \"x\": 140, \"y\": 210 },\n"
-            + "        \"Sprite\": { \"texture\": \"libgdx.png\" }\n"
+            + "        \"Sprite\": { \"texture\": \"hermes-logo.png\" }\n"
             + "      }\n"
             + "    }\n"
             + "  ]\n"
@@ -45,7 +45,7 @@ final class SceneParserTest {
     assertNotNull(logo);
     assertEquals(140f, world.getComponent(logo.id(), Transform.class).x());
     assertEquals(210f, world.getComponent(logo.id(), Transform.class).y());
-    assertEquals("libgdx.png", world.getComponent(logo.id(), Sprite.class).texture());
+    assertEquals("hermes-logo.png", world.getComponent(logo.id(), Sprite.class).texture());
   }
 
   @Test

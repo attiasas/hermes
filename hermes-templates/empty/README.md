@@ -11,7 +11,7 @@ Hermes game project generated from the empty template.
 ./gradlew publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal
 ```
 
-- **Android** (only if `android` is enabled in `settings.gradle`): Android SDK with `sdk.dir` in `local.properties` (see below)
+- **Android** (only if `android` is enabled in `settings.gradle`): Android SDK with `sdk.dir` in `local.properties` (see [Configuration](#configuration))
 
 This repo contains only the **`game`** module. Platform launchers are synced under `.hermes/platforms/` when you build or run — not the full Hermes engine tree.
 
@@ -21,23 +21,27 @@ This repo contains only the **`game`** module. Platform launchers are synced und
 ./gradlew :game:hermesDoctor
 ```
 
+## Running
+
 ### Desktop
+
+Requires `desktop { enabled = true }` in `settings.gradle`.
 
 ```bash
 ./gradlew :game:hermesRunDesktop
 ```
 
-Opens an LWJGL3 window. Window size and behavior are configured under `hermes { platforms { desktop { … } } }` in `settings.gradle`.
+Opens an LWJGL3 window. Window size and behavior are configured under `hermes { platforms { desktop { … } } }` in `game/build.gradle`.
 
 ### HTML (TeaVM)
 
-Requires `html { enabled = true }` in `settings.gradle`, then:
+Requires `html { enabled = true }` in `settings.gradle`.
 
 ```bash
 ./gradlew :game:hermesRunHtml
 ```
 
-Serves the build at `http://localhost:8080/` by default (`devServerPort` in `settings.gradle`).
+Serves the build at `http://localhost:8080/` by default (`devServerPort` in `game/build.gradle`).
 
 ### Android
 
@@ -51,7 +55,7 @@ sdk.dir=/path/to/Android/sdk
 
 `hermes new --android-sdk /path/to/sdk` creates this file for you. You can also set `ANDROID_SDK_ROOT` / `ANDROID_HOME`; the Hermes settings plugin will write `local.properties` on first Gradle sync if it is missing.
 
-Then connect a device or emulator and run:
+Connect a device or emulator, then:
 
 ```bash
 ./gradlew :game:hermesRunAndroid
@@ -62,8 +66,8 @@ Then connect a device or emulator and run:
 | File | Purpose |
 |------|---------|
 | [`game/hermes.json`](game/hermes.json) | Game data: **`title`** (window / tab / app label), **`scene`** path |
-| [`settings.gradle`](settings.gradle) | **`hermes { platforms { … } }`** — enable platforms and set platform-specific options |
-| [`game/build.gradle`](game/build.gradle) | **`version`**, `hermes { applicationClass, debug, assetsDirectory }` |
+| [`settings.gradle`](settings.gradle) | **`hermes { platforms { … } }`** — enable platforms (`desktop` / `html` / `android`) |
+| [`game/build.gradle`](game/build.gradle) | **`version`**, `hermes { applicationClass, debug, assetsDirectory, icons, platforms { … } }` |
 | [`gradle.properties`](gradle.properties) | `hermes.engineVersion` (libGDX/LWJGL/TeaVM versions are injected by the settings plugin) |
 | `local.properties` | **`sdk.dir`** for Android only (not committed) |
 
@@ -82,7 +86,7 @@ Then connect a device or emulator and run:
 
 Only `enabled` per platform — controls which launcher modules are included.
 
-### `game/build.gradle` (build / run / export)
+### `game/build.gradle` (build / run / export options)
 
 | Platform | Settings |
 |----------|----------|
@@ -90,24 +94,47 @@ Only `enabled` per platform — controls which launcher modules are included.
 | **html** | `width`, `height`, `devServerPort`, `webAssembly` |
 | **android** | `applicationId`, `minSdk`, `targetSdk`, `compileSdk`, `versionCode`, `screenOrientation` |
 
-Icons live under `src/main/resources/assets/icons/` (replace files to customize app icons).
-
 Artifact **version** for stores and Android `versionName` comes from `version = '…'` in `game/build.gradle`, not from `hermes.json`.
 
-### Useful Gradle tasks (`:game`)
+## Exporting
+
+Build distribution ZIPs for enabled platforms:
+
+```bash
+./gradlew :game:hermesExport          # all enabled platforms
+./gradlew :game:hermesExportDesktop   # native desktop bundles
+./gradlew :game:hermesExportHtml      # static HTML/WASM site
+./gradlew :game:hermesExportAndroid   # release APK (unsigned)
+```
+
+| Task | Output |
+|------|--------|
+| `hermesExportDesktop` | `game/build/dist/desktop/*-{linux-x64,macos-aarch64,macos-x64,windows-x64}.zip` |
+| `hermesExportHtml` | `game/build/dist/html/*-html.zip` |
+| `hermesExportAndroid` | `game/build/dist/android/*-android.zip` |
+
+Desktop exports build **host-runnable** targets only (jlink is not cross-compiled). On macOS you get `macos-aarch64` and/or `macos-x64`; on Linux, `linux-x64`; on Windows, `windows-x64`.
+
+### Icons
+
+Replace files under `game/src/main/resources/assets/icons/` (paths relative to `assetsDirectory`, default `src/main/resources/assets`):
+
+| File | Platform |
+|------|----------|
+| `icons/desktop/mac.icns` | macOS `.app` (Construo) |
+| `icons/desktop/windows.png` | Windows `.exe` |
+| `icons/android/ic_launcher.png` | Android launcher (512×512 PNG recommended) |
+| `icons/web/favicon.png` | HTML export favicon |
+
+Re-run the relevant `hermesExport*` task after changing icons.
+
+### Other useful tasks
 
 | Task | Description |
 |------|-------------|
-| `hermesRunDesktop` | Run on desktop (LWJGL3) |
-| `hermesRunHtml` | Build and serve HTML/TeaVM dev server |
-| `hermesRunAndroid` | Install debug APK and launch on device |
 | `hermesDoctor` | Validate setup, JDK, SDK, forbidden libGDX imports in game code |
 | `validateHermesJson` | Parse and validate `hermes.json` |
 | `hermesSyncPlatforms` | Refresh launcher stubs under `.hermes/platforms/` |
-| `hermesExportDesktop` | Native desktop bundles (ZIP per OS) |
-| `hermesExportHtml` | Static HTML/WASM site (ZIP) |
-| `hermesExportAndroid` | Release APK (ZIP, unsigned) |
-| `hermesExport` | All enabled exports |
 
 Root task: `./gradlew hermesSyncPlatforms` (same sync, run from project root).
 
@@ -124,3 +151,4 @@ Example scene: [`game/src/main/resources/assets/scenes/main.json`](game/src/main
 - **Plugins not found:** run `publishToMavenLocal` from the Hermes engine checkout; check `hermes.engineVersion` in `gradle.properties`.
 - **Android SDK not found:** create `local.properties` with `sdk.dir=…` or pass `--android-sdk` when running `hermes new`.
 - **HTML/Android task missing:** enable the platform in `settings.gradle`, sync Gradle, and run `hermesDoctor`.
+- **Export fails after engine upgrade:** run `./gradlew hermesSyncPlatforms` to refresh `.hermes/platforms/`.

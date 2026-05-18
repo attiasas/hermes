@@ -11,7 +11,7 @@
       "id": "logo",
       "components": {
         "Transform": { "x": 420, "y": 240 },
-        "Sprite": { "texture": "libgdx.png" },
+        "Sprite": { "texture": "hermes-logo.png" },
         "SpinMarker": {
           "speed": 1.2,
           "centerX": 320,

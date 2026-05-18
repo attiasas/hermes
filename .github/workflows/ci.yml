@@ -76,8 +76,9 @@ jobs:
         run: ./gradlew :game:hermesExportHtml --no-daemon --stacktrace
       - name: Validate HTML export zip
         run: |
+          chmod +x .github/scripts/validate-export-zip.sh
           ZIP=$(ls game/build/dist/html/*-html.zip)
-          unzip -l "$ZIP" | grep -q 'index.html'
+          .github/scripts/validate-export-zip.sh html "$ZIP"
       - name: Upload HTML export
         uses: actions/upload-artifact@v4
         with:
@@ -102,8 +103,9 @@ jobs:
         run: ./gradlew :game:hermesExportAndroid --no-daemon --stacktrace
       - name: Validate Android export zip
         run: |
+          chmod +x .github/scripts/validate-export-zip.sh
           ZIP=$(ls game/build/dist/android/*-android.zip)
-          unzip -l "$ZIP" | grep -q '\.apk'
+          .github/scripts/validate-export-zip.sh android "$ZIP"
       - name: Upload Android export
         uses: actions/upload-artifact@v4
         with:
@@ -125,6 +127,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Export desktop (linuxX64)
         run: ./gradlew :game:zipHermesExportDesktopLinuxX64 --no-daemon --stacktrace
+      - name: Validate desktop linux export zip
+        run: |
+          chmod +x .github/scripts/validate-export-zip.sh
+          ZIP=$(ls game/build/dist/desktop/*-linux-x64.zip)
+          .github/scripts/validate-export-zip.sh desktop-linux "$ZIP"
       - name: Upload desktop linux zip
         uses: actions/upload-artifact@v4
         with:
@@ -146,6 +153,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Export desktop (mac)
         run: ./gradlew :game:zipHermesExportDesktopMacM1 :game:zipHermesExportDesktopMacX64 --no-daemon --stacktrace
+      - name: Validate desktop mac export zips
+        run: |
+          chmod +x .github/scripts/validate-export-zip.sh
+          for ZIP in game/build/dist/desktop/*-macos-*.zip; do
+            .github/scripts/validate-export-zip.sh desktop-macos "$ZIP"
+          done
       - name: Upload desktop mac zips
         uses: actions/upload-artifact@v4
         with:
@@ -167,6 +180,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Export desktop (winX64)
         run: ./gradlew :game:zipHermesExportDesktopWinX64 --no-daemon --stacktrace
+      - name: Validate desktop windows export zip
+        shell: bash
+        run: |
+          chmod +x .github/scripts/validate-export-zip.sh
+          ZIP=$(ls game/build/dist/desktop/*-windows-x64.zip)
+          .github/scripts/validate-export-zip.sh desktop-windows "$ZIP"
       - name: Upload desktop windows zip
         uses: actions/upload-artifact@v4
         with:

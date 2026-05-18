@@ -11,7 +11,7 @@ Scene files describe entities and their components. They live under the game mod
       "id": "logo",
       "components": {
         "Transform": { "x": 140, "y": 210 },
-        "Sprite": { "texture": "libgdx.png" }
+        "Sprite": { "texture": "hermes-logo.png" }
       }
     }
   ]
