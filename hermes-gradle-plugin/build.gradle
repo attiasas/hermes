@@ -28,6 +28,7 @@ tasks.named('jar') { dependsOn bundleHermesPlatforms }
 
 repositories {
   mavenCentral()
+  google()
 }
 
 gradlePlugin {

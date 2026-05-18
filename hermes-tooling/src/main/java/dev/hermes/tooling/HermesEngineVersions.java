@@ -18,6 +18,12 @@ public final class HermesEngineVersions {
     "hermes.androidGradlePluginVersion",
   };
 
+  /** Keys written into generated game {@code gradle.properties} (libGDX versions are injected by the settings plugin). */
+  public static final String[] NEW_PROJECT_GRADLE_PROPERTY_KEYS = {
+    "android.useAndroidX",
+    "hermes.androidGradlePluginVersion",
+  };
+
   private static final String DEFAULT_GDX_VERSION = "1.14.0";
   private static final String DEFAULT_LWJGL3_VERSION = "3.4.1";
   private static final String DEFAULT_GDX_TEAVM_VERSION = "1.5.5";
@@ -53,14 +59,18 @@ public final class HermesEngineVersions {
     }
   }
 
-  /** Engine checkout overrides on top of bundled defaults. */
+  /** Hermes-specific keys for {@code hermes new} (not libGDX version pins). */
   public static Properties resolveForNewProject(File hermesHome) {
-    Properties resolved = defaults();
+    Properties resolved = new Properties();
+    Properties defaults = defaults();
+    for (String key : NEW_PROJECT_GRADLE_PROPERTY_KEYS) {
+      resolved.setProperty(key, defaults.getProperty(key));
+    }
     Properties fromEngine = loadFromEngineHome(hermesHome);
     if (fromEngine == null) {
       return resolved;
     }
-    for (String key : GRADLE_PROPERTY_KEYS) {
+    for (String key : NEW_PROJECT_GRADLE_PROPERTY_KEYS) {
       String value = fromEngine.getProperty(key);
       if (value != null && !value.isBlank()) {
         resolved.setProperty(key, value);

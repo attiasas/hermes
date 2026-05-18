@@ -51,7 +51,7 @@ From the Hermes engine repo, publish artifacts and the Gradle plugin once:
 ./gradlew :hermes-cli:installDist
 export PATH="$PWD/hermes-cli/build/install/hermes/bin:$PATH"
 
-hermes new my-game --name MyGame --package dev.hermes.mygame
+hermes new my-game --name MyGame --package dev.hermes.mygame --platforms desktop,html
 cd my-game
 hermes doctor
 ./gradlew :game:hermesRunDesktop
@@ -59,7 +59,7 @@ hermes doctor
 
 | Command | Description |
 |---------|-------------|
-| `hermes new <dir>` | Copy the empty template (`--template empty`) |
+| `hermes new <dir>` | Copy the empty template (`--template empty`, `--platforms`, `--android-sdk`) |
 | `hermes doctor [dir]` | Run `./gradlew :game:hermesDoctor` in a project, or standalone checks |
 | `hermes --version` | CLI / engine version |
 
@@ -105,16 +105,15 @@ Cold-cache build:
 
 | Source | Purpose |
 |--------|---------|
-| [`game/hermes.json`](game/hermes.json) | **Game data only** — `name`, `version`, `scene` (simulation/content). |
-| [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Which launcher modules are included (desktop / html / android). |
-| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `applicationClass`, `assetsDirectory`, `debug`, desktop window `title` / `width` / `height`. |
+| [`game/hermes.json`](game/hermes.json) | **Game data only** — `title`, `scene` (simulation/content). |
+| [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Platform toggles and per-platform settings (desktop / html / android). |
+| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `version`, `applicationClass`, `assetsDirectory`, `debug`. |
 
 Example `hermes.json`:
 
 ```json
 {
-  "name": "HermesSample",
-  "version": "0.1.0",
+  "title": "HermesSample",
   "scene": "scenes/main.json"
 }
 ```
@@ -126,18 +125,12 @@ plugins {
   id 'dev.hermes'
 }
 
+version = '0.1.0'
+
 hermes {
   applicationClass = 'dev.hermes.sample.SampleHermesGame'
   assetsDirectory = 'src/main/resources/assets'  // default; override to relocate assets
   debug = true
-  platforms {
-    desktop {
-      enabled = true
-      width = 640
-      height = 480
-      title = 'Hermes'
-    }
-  }
 }
 ```
 

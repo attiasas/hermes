@@ -12,8 +12,7 @@ public final class HermesGameConfigParser {
     try {
       dev.hermes.tooling.HermesGameConfig parsed = dev.hermes.tooling.HermesGameConfigParser.parse(file);
       HermesGameConfig config = new HermesGameConfig();
-      config.setName(parsed.getName());
-      config.setVersion(parsed.getVersion());
+      config.setTitle(parsed.getTitle());
       config.setScene(parsed.getScene());
       return config;
     } catch (HermesConfigException e) {

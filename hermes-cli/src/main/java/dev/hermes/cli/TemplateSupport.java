@@ -11,18 +11,27 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import dev.hermes.tooling.AndroidSdkValidator;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Stream;
 
 final class TemplateSupport {
 
   private TemplateSupport() {}
 
-  static void materializeEmptyTemplate(Path targetDir, String projectName, String packageName, String engineVersion)
+  static void materializeEmptyTemplate(
+      Path targetDir,
+      String projectName,
+      String packageName,
+      String engineVersion,
+      Set<String> enabledPlatforms,
+      Path androidSdk)
       throws IOException {
     if (Files.exists(targetDir)) {
       try (Stream<Path> entries = Files.list(targetDir)) {
@@ -33,19 +42,40 @@ final class TemplateSupport {
     }
     Files.createDirectories(targetDir);
     Path templateRoot = locateTemplateRoot();
-    Map<String, String> tokens = buildTokens(projectName, packageName, engineVersion);
+    Map<String, String> tokens = buildTokens(projectName, packageName, engineVersion, enabledPlatforms);
     copyAndSubstitute(templateRoot, targetDir, tokens);
-    mergeEngineVersionsIntoGradleProperties(targetDir);
+    mergeHermesKeysIntoGradleProperties(targetDir);
+    if (enabledPlatforms.contains("android")) {
+      configureAndroidSdk(targetDir, androidSdk);
+    }
     makeGradleWrapperExecutable(targetDir);
   }
 
-  private static void mergeEngineVersionsIntoGradleProperties(Path targetDir) throws IOException {
+  static Set<String> parsePlatforms(String platforms) throws IOException {
+    Set<String> result = new HashSet<>();
+    for (String part : platforms.split(",")) {
+      String id = part.trim().toLowerCase(Locale.ROOT);
+      if (id.isEmpty()) {
+        continue;
+      }
+      if (!id.equals("desktop") && !id.equals("html") && !id.equals("android")) {
+        throw new IOException("Unknown platform: " + part.trim() + " (expected desktop, html, or android)");
+      }
+      result.add(id);
+    }
+    if (result.isEmpty()) {
+      throw new IOException("At least one platform is required in --platforms");
+    }
+    return result;
+  }
+
+  private static void mergeHermesKeysIntoGradleProperties(Path targetDir) throws IOException {
     java.io.File home = HermesHomeDetector.detect(targetDir);
-    java.util.Properties versions = dev.hermes.tooling.HermesEngineVersions.resolveForNewProject(home);
+    Properties versions = dev.hermes.tooling.HermesEngineVersions.resolveForNewProject(home);
     Path props = targetDir.resolve("gradle.properties");
     String existing = Files.readString(props, StandardCharsets.UTF_8);
     StringBuilder appended = new StringBuilder();
-    for (String key : dev.hermes.tooling.HermesEngineVersions.GRADLE_PROPERTY_KEYS) {
+    for (String key : dev.hermes.tooling.HermesEngineVersions.NEW_PROJECT_GRADLE_PROPERTY_KEYS) {
       String value = versions.getProperty(key);
       if (value == null || value.isBlank() || existing.contains(key + "=")) {
         continue;
@@ -58,6 +88,40 @@ final class TemplateSupport {
           existing.endsWith("\n") ? existing + appended : existing + "\n" + appended,
           StandardCharsets.UTF_8);
     }
+  }
+
+  private static void configureAndroidSdk(Path targetDir, Path androidSdk) throws IOException {
+    String sdkPath = resolveAndroidSdkPath(androidSdk);
+    if (sdkPath == null) {
+      System.out.println(
+          "Android platform enabled but no SDK found. Set --android-sdk, sdk.dir in local.properties, "
+              + "or ANDROID_SDK_ROOT / ANDROID_HOME before building.");
+      return;
+    }
+    Path localProperties = targetDir.resolve("local.properties");
+    Properties properties = new Properties();
+    properties.setProperty("sdk.dir", sdkPath.replace('\\', '/'));
+    try (var out = Files.newOutputStream(localProperties)) {
+      properties.store(out, "Android SDK location (standard AGP path; gitignored)");
+    }
+  }
+
+  private static String resolveAndroidSdkPath(Path androidSdk) {
+    if (androidSdk != null) {
+      java.io.File sdk = androidSdk.toFile();
+      if (!AndroidSdkValidator.isValidSdk(sdk)) {
+        throw new IllegalArgumentException("Invalid Android SDK: " + androidSdk);
+      }
+      return sdk.getAbsolutePath();
+    }
+    String fromEnv = System.getenv("ANDROID_SDK_ROOT");
+    if (fromEnv == null || fromEnv.isBlank()) {
+      fromEnv = System.getenv("ANDROID_HOME");
+    }
+    if (fromEnv != null && !fromEnv.isBlank() && AndroidSdkValidator.isValidSdk(new java.io.File(fromEnv))) {
+      return new java.io.File(fromEnv).getAbsolutePath();
+    }
+    return null;
   }
 
   private static void makeGradleWrapperExecutable(Path projectDir) throws IOException {
@@ -148,7 +212,8 @@ final class TemplateSupport {
     return null;
   }
 
-  private static Map<String, String> buildTokens(String projectName, String packageName, String engineVersion) {
+  private static Map<String, String> buildTokens(
+      String projectName, String packageName, String engineVersion, Set<String> enabledPlatforms) {
     String safeName = projectName.replaceAll("[^a-zA-Z0-9_-]", "");
     if (safeName.isBlank()) {
       safeName = "game";
@@ -156,6 +221,7 @@ final class TemplateSupport {
     String rootProjectName = safeName.toLowerCase(Locale.ROOT);
     String applicationClass = packageName + ".Game";
     String packageDir = packageName.replace('.', '/');
+    String androidApplicationId = packageName;
     Map<String, String> tokens = new HashMap<>();
     tokens.put("{{PROJECT_NAME}}", projectName);
     tokens.put("{{ROOT_PROJECT_NAME}}", rootProjectName);
@@ -164,6 +230,10 @@ final class TemplateSupport {
     tokens.put("{{APPLICATION_CLASS}}", applicationClass);
     tokens.put("{{ENGINE_VERSION}}", engineVersion);
     tokens.put("{{packageDir}}", packageDir);
+    tokens.put("{{DESKTOP_ENABLED}}", Boolean.toString(enabledPlatforms.contains("desktop")));
+    tokens.put("{{HTML_ENABLED}}", Boolean.toString(enabledPlatforms.contains("html")));
+    tokens.put("{{ANDROID_ENABLED}}", Boolean.toString(enabledPlatforms.contains("android")));
+    tokens.put("{{ANDROID_APPLICATION_ID}}", androidApplicationId);
     return tokens;
   }
 

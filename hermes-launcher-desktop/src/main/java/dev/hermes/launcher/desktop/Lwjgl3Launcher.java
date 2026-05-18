@@ -25,8 +25,14 @@ public final class Lwjgl3Launcher {
   private static Lwjgl3ApplicationConfiguration configuration() {
     Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
     configuration.setTitle(HermesLauncherSupport.windowTitle());
-    configuration.useVsync(true);
-    configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);
+    configuration.useVsync(HermesLauncherSupport.desktopVsync());
+    configuration.setResizable(HermesLauncherSupport.desktopResizable());
+    int foregroundFps = HermesLauncherSupport.desktopForegroundFps();
+    if (foregroundFps > 0) {
+      configuration.setForegroundFPS(foregroundFps);
+    } else {
+      configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);
+    }
     configuration.setWindowedMode(HermesLauncherSupport.windowWidth(), HermesLauncherSupport.windowHeight());
     return configuration;
   }

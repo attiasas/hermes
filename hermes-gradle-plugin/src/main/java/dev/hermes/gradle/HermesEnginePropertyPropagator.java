@@ -6,25 +6,28 @@ import java.io.File;
 import java.util.Properties;
 import org.gradle.api.initialization.Settings;
 
-/**
- * Copies version properties from a Hermes engine checkout {@code gradle.properties} into game
- * projects that include {@code :hermes-core} / launchers from {@code hermes.home}.
- */
+/** Injects libGDX / launcher version properties into all Gradle projects when unset. */
 final class HermesEnginePropertyPropagator {
 
   private HermesEnginePropertyPropagator() {}
 
-  static void applyFromHome(Settings settings, File hermesHome) {
-    Properties engineProps = HermesEngineVersions.loadFromEngineHome(hermesHome);
-    if (engineProps == null) {
-      return;
+  static void apply(Settings settings, File hermesHome) {
+    Properties resolved = HermesEngineVersions.defaults();
+    Properties fromHome = HermesEngineVersions.loadFromEngineHome(hermesHome);
+    if (fromHome != null) {
+      for (String key : HermesEngineVersions.GRADLE_PROPERTY_KEYS) {
+        String value = fromHome.getProperty(key);
+        if (value != null && !value.isBlank()) {
+          resolved.setProperty(key, value);
+        }
+      }
     }
     settings
         .getGradle()
         .beforeProject(
             project -> {
               for (String key : HermesEngineVersions.GRADLE_PROPERTY_KEYS) {
-                String value = engineProps.getProperty(key);
+                String value = resolved.getProperty(key);
                 if (value == null || value.isBlank()) {
                   continue;
                 }

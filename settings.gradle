@@ -18,12 +18,27 @@ hermes {
   platforms {
     desktop {
       enabled = true
+      width = 640
+      height = 480
+      vsync = true
+      resizable = true
+      foregroundFps = 0
     }
     html {
       enabled = true
+      width = 640
+      height = 480
+      devServerPort = 8080
+      webAssembly = true
     }
     android {
       enabled = true
+      applicationId = 'dev.hermes.game'
+      minSdk = 21
+      targetSdk = 35
+      compileSdk = 35
+      versionCode = 1
+      screenOrientation = 'landscape'
     }
   }
 }

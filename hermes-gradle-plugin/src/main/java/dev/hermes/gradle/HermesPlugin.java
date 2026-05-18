@@ -83,7 +83,10 @@ public final class HermesPlugin implements Plugin<Project> {
                     String engineVersion = HermesEngineVersion.resolve(gameProject, gameExtension);
                     File hermesHome = HermesHomeResolver.resolve(gameProject);
                     HermesPlatformSync.syncAllEnabled(
-                        root.getRootDir(), gameExtension.getPlatforms(), engineVersion, hermesHome);
+                        root.getRootDir(),
+                        HermesPlatforms.resolve(gameProject),
+                        engineVersion,
+                        hermesHome);
                   });
             });
   }
@@ -279,7 +282,7 @@ public final class HermesPlugin implements Plugin<Project> {
 
   private static void applyDesktopSystemProperties(
       JavaExec task, Project gameProject, HermesExtension extension) {
-    PlatformSpec desktop = extension.getPlatforms().getDesktop();
+    DesktopPlatformSpec desktop = HermesPlatforms.resolve(gameProject).getDesktop();
     HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
     HermesJvmArgs.stripNativeAccess(jvmArgs);
@@ -287,8 +290,11 @@ public final class HermesPlugin implements Plugin<Project> {
     jvmArgs.add("-Dhermes.debug=" + extension.isDebug());
     jvmArgs.add("-Dhermes.window.width=" + desktop.getWidth());
     jvmArgs.add("-Dhermes.window.height=" + desktop.getHeight());
-    jvmArgs.add("-Dhermes.window.title=" + desktop.getTitle());
-    jvmArgs.add("-Dhermes.game.name=" + config.getName());
+    jvmArgs.add("-Dhermes.window.title=" + config.getTitle());
+    jvmArgs.add("-Dhermes.desktop.vsync=" + desktop.isVsync());
+    jvmArgs.add("-Dhermes.desktop.resizable=" + desktop.isResizable());
+    jvmArgs.add("-Dhermes.desktop.foregroundFps=" + desktop.getForegroundFps());
+    jvmArgs.add("-Dhermes.game.title=" + config.getTitle());
     jvmArgs.add("-Dhermes.game.scene=" + config.getScene());
     task.setJvmArgs(jvmArgs);
   }
@@ -297,7 +303,7 @@ public final class HermesPlugin implements Plugin<Project> {
     Project root = project.getRootProject();
     Project launcher = root.findProject("hermes-launcher-html");
     if (launcher == null) {
-      if (extension.getPlatforms().getHtml().isEnabled()) {
+      if (HermesPlatforms.resolve(project).getHtml().isEnabled()) {
         registerMissingLauncherTask(
             project,
             "hermesRunHtml",
@@ -384,16 +390,18 @@ public final class HermesPlugin implements Plugin<Project> {
 
   private static void applyHtmlSystemProperties(
       JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
-    PlatformSpec html = extension.getPlatforms().getHtml();
+    HtmlPlatformSpec html = HermesPlatforms.resolve(gameProject).getHtml();
+    HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
     task.systemProperty("hermes.applicationClass", extension.getApplicationClass());
     task.systemProperty("hermes.debug", String.valueOf(extension.isDebug()));
     task.systemProperty("hermes.window.width", String.valueOf(html.getWidth()));
     task.systemProperty("hermes.window.height", String.valueOf(html.getHeight()));
-    task.systemProperty("hermes.window.title", html.getTitle());
+    task.systemProperty("hermes.window.title", config.getTitle());
+    task.systemProperty("hermes.html.devServerPort", String.valueOf(html.getDevServerPort()));
+    task.systemProperty("hermes.html.webAssembly", String.valueOf(html.isWebAssembly()));
     task.systemProperty("hermes.assets.dir", assetsDir.getAbsolutePath());
     task.systemProperty("hermes.game.sources.dir", gameProject.file("src/main/java").getAbsolutePath());
-    HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
-    task.systemProperty("hermes.game.name", config.getName());
+    task.systemProperty("hermes.game.title", config.getTitle());
     task.systemProperty("hermes.game.scene", config.getScene());
   }
 
@@ -415,8 +423,8 @@ public final class HermesPlugin implements Plugin<Project> {
                     throw new GradleException(
                         "Platform '"
                             + platformName
-                            + "' is enabled on "
-                            + project.getPath()
+                            + "' is enabled in "
+                            + settingsFile
                             + " but "
                             + launcherModule
                             + " is not included. "
@@ -433,7 +441,7 @@ public final class HermesPlugin implements Plugin<Project> {
     Project root = project.getRootProject();
     Project launcher = root.findProject("hermes-launcher-android");
     if (launcher == null) {
-      if (extension.getPlatforms().getAndroid().isEnabled()) {
+      if (HermesPlatforms.resolve(project).getAndroid().isEnabled()) {
         registerMissingLauncherTask(
             project,
             "hermesRunAndroid",
@@ -443,6 +451,7 @@ public final class HermesPlugin implements Plugin<Project> {
       }
       return;
     }
+    HermesAndroidLauncherConfigurer.wire(project, launcher, extension);
     project
         .getTasks()
         .register(

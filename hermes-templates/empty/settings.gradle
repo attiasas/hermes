@@ -30,13 +30,28 @@ rootProject.name = '{{ROOT_PROJECT_NAME}}'
 hermes {
   platforms {
     desktop {
-      enabled = true
+      enabled = {{DESKTOP_ENABLED}}
+      width = 640
+      height = 480
+      vsync = true
+      resizable = true
+      foregroundFps = 0  // 0 = match display refresh rate + 1
     }
     html {
-      enabled = false
+      enabled = {{HTML_ENABLED}}
+      width = 640
+      height = 480
+      devServerPort = 8080
+      webAssembly = true
     }
     android {
-      enabled = false
+      enabled = {{ANDROID_ENABLED}}
+      applicationId = '{{ANDROID_APPLICATION_ID}}'
+      minSdk = 21
+      targetSdk = 35
+      compileSdk = 35
+      versionCode = 1
+      screenOrientation = 'landscape'
     }
   }
 }

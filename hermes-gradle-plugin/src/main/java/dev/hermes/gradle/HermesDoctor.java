@@ -125,7 +125,7 @@ public final class HermesDoctor {
           "hermes.json",
           Status.WARN,
           "hermes.json not found at " + (file == null ? "?" : file.getAbsolutePath()),
-          "Add game/hermes.json with name, version, and scene path.");
+          "Add game/hermes.json with title and scene path.");
     }
     try {
       HermesGameConfigParser.parse(file);

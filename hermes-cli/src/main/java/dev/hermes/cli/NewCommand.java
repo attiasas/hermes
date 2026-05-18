@@ -2,6 +2,7 @@ package dev.hermes.cli;
 
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Set;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -27,6 +28,17 @@ public final class NewCommand implements Runnable {
       description = "Hermes engine version for Maven coordinates")
   String engineVersion;
 
+  @Option(
+      names = "--platforms",
+      defaultValue = "desktop",
+      description = "Comma-separated platforms to enable: desktop, html, android")
+  String platforms;
+
+  @Option(
+      names = "--android-sdk",
+      description = "Android SDK path (used when android is in --platforms)")
+  Path androidSdk;
+
   @Override
   public void run() {
     if (!"empty".equals(template)) {
@@ -39,13 +51,28 @@ public final class NewCommand implements Runnable {
         packageName != null
             ? packageName
             : "dev.hermes." + projectName.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    Set<String> enabledPlatforms;
     try {
-      TemplateSupport.materializeEmptyTemplate(targetDir.toAbsolutePath(), projectName, pkg, engineVersion);
+      enabledPlatforms = TemplateSupport.parsePlatforms(platforms);
+      TemplateSupport.materializeEmptyTemplate(
+          targetDir.toAbsolutePath(), projectName, pkg, engineVersion, enabledPlatforms, androidSdk);
       System.out.println("Created Hermes project at " + targetDir.toAbsolutePath());
       System.out.println("Next:");
       System.out.println("  cd " + targetDir);
       System.out.println("  ./gradlew :game:hermesDoctor");
-      System.out.println("  ./gradlew :game:hermesRunDesktop");
+      if (enabledPlatforms.contains("desktop")) {
+        System.out.println("  ./gradlew :game:hermesRunDesktop");
+      }
+      if (enabledPlatforms.contains("html")) {
+        System.out.println("  ./gradlew :game:hermesRunHtml");
+      }
+      if (enabledPlatforms.contains("android")) {
+        System.out.println("  ./gradlew :game:hermesRunAndroid");
+        if (androidSdk == null) {
+          System.out.println(
+              "  (Android: add sdk.dir to local.properties, or pass --android-sdk / set ANDROID_SDK_ROOT)");
+        }
+      }
     } catch (Exception e) {
       System.err.println("Failed to create project: " + e.getMessage());
       throw new picocli.CommandLine.ExecutionException(

@@ -14,7 +14,7 @@ import java.util.Set;
 
 public final class HermesGameConfigParser {
 
-  private static final Set<String> KNOWN_KEYS = Set.of("name", "version", "scene");
+  private static final Set<String> KNOWN_KEYS = Set.of("title", "scene");
   private static final Gson GSON = new Gson();
 
   private HermesGameConfigParser() {}
@@ -30,11 +30,8 @@ public final class HermesGameConfigParser {
       }
       warnUnknownKeys(file, root);
       HermesGameConfig config = new HermesGameConfig();
-      if (root.has("name")) {
-        config.setName(root.get("name").getAsString());
-      }
-      if (root.has("version")) {
-        config.setVersion(root.get("version").getAsString());
+      if (root.has("title")) {
+        config.setTitle(root.get("title").getAsString());
       }
       if (root.has("scene")) {
         config.setScene(root.get("scene").getAsString());

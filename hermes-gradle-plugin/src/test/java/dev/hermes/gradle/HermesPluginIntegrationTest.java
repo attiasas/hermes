@@ -115,7 +115,9 @@ class HermesPluginIntegrationTest {
     settings =
         settings
             .replace("desktop {\n      enabled = true", "desktop {\n      enabled = false")
+            .replace("html {\n      enabled = true", "html {\n      enabled = false")
             .replace("html {\n      enabled = false", "html {\n      enabled = false")
+            .replace("android {\n      enabled = true", "android {\n      enabled = false")
             .replace("android {\n      enabled = false", "android {\n      enabled = false");
     settings =
         settings.replace(
@@ -138,9 +140,6 @@ class HermesPluginIntegrationTest {
     String props =
         """
         hermes.engineVersion=0.1.0-SNAPSHOT
-        gdxVersion=1.14.0
-        lwjgl3Version=3.4.1
-        gdxTeaVMVersion=1.5.5
         android.useAndroidX=true
         hermes.androidGradlePluginVersion=8.9.3
         """;
@@ -163,7 +162,11 @@ class HermesPluginIntegrationTest {
                         .replace("{{PACKAGE}}", pkg)
                         .replace("{{APPLICATION_CLASS}}", pkg + ".Game")
                         .replace("{{ENGINE_VERSION}}", version)
-                        .replace("{{packageDir}}", pkg.replace('.', '/'));
+                        .replace("{{packageDir}}", pkg.replace('.', '/'))
+                        .replace("{{DESKTOP_ENABLED}}", "true")
+                        .replace("{{HTML_ENABLED}}", "false")
+                        .replace("{{ANDROID_ENABLED}}", "false")
+                        .replace("{{ANDROID_APPLICATION_ID}}", pkg);
                 Path dest = target.resolve(rel);
                 if (Files.isDirectory(path)) {
                   Files.createDirectories(dest);
@@ -179,7 +182,11 @@ class HermesPluginIntegrationTest {
                             .replace("{{PACKAGE}}", pkg)
                             .replace("{{APPLICATION_CLASS}}", pkg + ".Game")
                             .replace("{{ENGINE_VERSION}}", version)
-                            .replace("{{packageDir}}", pkg.replace('.', '/'));
+                            .replace("{{packageDir}}", pkg.replace('.', '/'))
+                            .replace("{{DESKTOP_ENABLED}}", "true")
+                            .replace("{{HTML_ENABLED}}", "false")
+                            .replace("{{ANDROID_ENABLED}}", "false")
+                            .replace("{{ANDROID_APPLICATION_ID}}", pkg);
                     Files.writeString(dest, content, StandardCharsets.UTF_8);
                   } else {
                     Files.copy(path, dest);

@@ -38,8 +38,10 @@ public final class TeaVMBuilder {
     String title = System.getProperty("hermes.window.title", "Hermes");
     int width = Integer.parseInt(System.getProperty("hermes.window.width", "640"));
     int height = Integer.parseInt(System.getProperty("hermes.window.height", "480"));
-    String gameName = System.getProperty("hermes.game.name", "HermesGame");
+    String gameTitle = System.getProperty("hermes.game.title", "HermesGame");
     String gameScene = System.getProperty("hermes.game.scene", "scenes/main.json");
+    int devServerPort = Integer.parseInt(System.getProperty("hermes.html.devServerPort", "8080"));
+    boolean webAssembly = Boolean.parseBoolean(System.getProperty("hermes.html.webAssembly", "true"));
     String assetsPath = System.getProperty("hermes.assets.dir");
     if (assetsPath == null || assetsPath.isBlank()) {
       throw new IllegalStateException(
@@ -48,7 +50,7 @@ public final class TeaVMBuilder {
 
     File runtimeConfigDir = new File("build/hermes-runtime");
     writeRuntimeProperties(
-        runtimeConfigDir, applicationClass, debug, title, width, height, gameName, gameScene);
+        runtimeConfigDir, applicationClass, debug, title, width, height, gameTitle, gameScene);
 
     File launcherSources = new File("src/main/java");
     TeaCompiler compiler =
@@ -57,9 +59,9 @@ public final class TeaVMBuilder {
                     .setHtmlWidth(width)
                     .setHtmlHeight(height)
                     .setHtmlTitle(title)
-                    .setWebAssembly(true)
+                    .setWebAssembly(webAssembly)
                     .setStartJettyAfterBuild(startJetty)
-                    .setJettyPort(8080))
+                    .setJettyPort(devServerPort))
             .addAssets(new AssetFileHandle(assetsPath))
             .addAssets(new AssetFileHandle(runtimeConfigDir.getPath()))
             .setOptimizationLevel(debug ? TeaVMOptimizationLevel.SIMPLE : TeaVMOptimizationLevel.ADVANCED)
@@ -104,7 +106,7 @@ public final class TeaVMBuilder {
       String title,
       int width,
       int height,
-      String gameName,
+      String gameTitle,
       String gameScene)
       throws IOException {
     if (!dir.exists() && !dir.mkdirs()) {
@@ -116,7 +118,7 @@ public final class TeaVMBuilder {
     properties.setProperty("hermes.window.title", title);
     properties.setProperty("hermes.window.width", Integer.toString(width));
     properties.setProperty("hermes.window.height", Integer.toString(height));
-    properties.setProperty("hermes.game.name", gameName);
+    properties.setProperty("hermes.game.title", gameTitle);
     properties.setProperty("hermes.game.scene", gameScene);
     File file = new File(dir, "hermes-runtime.properties");
     try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {

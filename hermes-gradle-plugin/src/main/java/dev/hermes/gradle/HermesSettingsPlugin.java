@@ -12,22 +12,31 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
     AndroidSdkResolver.resolve(settings);
     // Maven-first game projects have no root buildscript; AGP must be in pluginManagement.
     HermesAndroidGradlePlugin.register(settings);
-    HermesSettingsExtension extension = new HermesSettingsExtension();
-    settings.getExtensions().add("hermes", extension);
+    HermesSettingsExtension extension =
+        settings.getExtensions().create("hermes", HermesSettingsExtension.class);
     settings
         .getGradle()
         .settingsEvaluated(
             gradle -> {
               String engineVersion = HermesEngineVersion.resolve(settings, extension);
               File hermesHome = HermesHomeResolver.resolve(settings);
-              HermesEnginePropertyPropagator.applyFromHome(settings, hermesHome);
-              includeLauncher(settings, extension, "hermes-launcher-desktop", extension.getPlatforms().getDesktop().isEnabled(), engineVersion);
-              includeLauncher(settings, extension, "hermes-launcher-html", extension.getPlatforms().getHtml().isEnabled(), engineVersion);
+              HermesEnginePropertyPropagator.apply(settings, hermesHome);
+              PlatformsExtension platforms = extension.getPlatforms();
+              settings
+                  .getGradle()
+                  .beforeProject(
+                      project ->
+                          project
+                              .getExtensions()
+                              .getExtraProperties()
+                              .set(HermesPlatforms.PROJECT_EXTRA_PROPERTY, platforms));
+              includeLauncher(settings, extension, "hermes-launcher-desktop", platforms.getDesktop().isEnabled(), engineVersion);
+              includeLauncher(settings, extension, "hermes-launcher-html", platforms.getHtml().isEnabled(), engineVersion);
               includeLauncher(
                   settings,
                   extension,
                   "hermes-launcher-android",
-                  extension.getPlatforms().getAndroid().isEnabled(),
+                  platforms.getAndroid().isEnabled(),
                   engineVersion);
             });
   }
