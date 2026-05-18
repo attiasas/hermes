@@ -1,3 +1,21 @@
 {
-  "entities": []
+  "entities": [
+    {
+      "id": "logo",
+      "components": {
+        "Transform": { "x": 420, "y": 240 },
+        "Sprite": { "texture": "libgdx.png" },
+        "SpinMarker": {
+          "speed": 1.2,
+          "centerX": 320,
+          "centerY": 240,
+          "radius": 100
+        },
+        "BounceMarker": {
+          "amplitude": 18,
+          "speed": 3
+        }
+      }
+    }
+  ]
 }

@@ -6,6 +6,27 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Use
 
 ---
 
+## Phase 2 — JSON scenes + ECS
+
+Scenes under `assets/` drive entities at startup. The sample scene [`assets/scenes/main.json`](assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` components. See [docs/scene-format-v1.md](docs/scene-format-v1.md).
+
+### Custom components
+
+Implement `dev.hermes.api.Component`, register the type, and add a `System` that reads or mutates it each frame (no libGDX imports required for transform-only logic).
+
+**Explicit (`onCreate`):** `BounceMarker` + `BounceMarkerSystem` in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java).
+
+**ServiceLoader:** `SpinMarker` + `SpinMarkerSystem` via [`META-INF/services/...`](game/src/main/resources/META-INF/services/dev.hermes.api.ecs.ComponentRegistration) and [`SpinMarkerRegistration`](game/src/main/java/dev/hermes/sample/SpinMarkerRegistration.java).
+
+### Verify
+
+```bash
+./gradlew :hermes-core:test
+./gradlew :game:hermesRunDesktop
+```
+
+---
+
 ## Phase 1 — run from `:game`
 
 ### Prerequisites

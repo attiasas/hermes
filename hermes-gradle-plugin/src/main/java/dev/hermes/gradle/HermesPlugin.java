@@ -37,6 +37,7 @@ public final class HermesPlugin implements Plugin<Project> {
     project.getTasks().named("compileJava").configure(t -> t.dependsOn("validateHermesJson"));
 
     registerAssetListTask(project);
+    registerRuntimeConfigTask(project);
 
     project.afterEvaluate(
         evaluated -> {
@@ -53,6 +54,38 @@ public final class HermesPlugin implements Plugin<Project> {
 
   private static HermesGameConfig loadGameConfig(Project project) {
     return HermesGameConfigParser.parse(project.file("hermes.json"));
+  }
+
+  private static void registerRuntimeConfigTask(Project project) {
+    File generatedDir = project.file("build/generated/hermes-runtime");
+    project
+        .getExtensions()
+        .getByType(SourceSetContainer.class)
+        .getByName("main")
+        .getResources()
+        .srcDir(generatedDir);
+
+    project
+        .getTasks()
+        .register(
+            "generateHermesRuntimeConfig",
+            task -> {
+              task.setGroup("hermes");
+              task.setDescription("Generate hermes-runtime.properties for all platforms");
+              task.getOutputs().dir(generatedDir);
+              task.doLast(
+                  t -> {
+                    HermesExtension extension = project.getExtensions().getByType(HermesExtension.class);
+                    if (extension.getApplicationClass() == null || extension.getApplicationClass().isBlank()) {
+                      throw new GradleException(
+                          "hermes.applicationClass must be set in " + project.getPath() + "/build.gradle");
+                    }
+                    HermesRuntimeConfigGenerator.write(project, extension, generatedDir);
+                  });
+            });
+
+    project.getTasks().named("processResources").configure(t -> t.dependsOn("generateHermesRuntimeConfig"));
+    project.getTasks().named("compileJava").configure(t -> t.dependsOn("generateHermesRuntimeConfig"));
   }
 
   private static void registerAssetListTask(Project project) {

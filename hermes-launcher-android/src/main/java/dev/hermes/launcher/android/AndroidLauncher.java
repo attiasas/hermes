@@ -14,6 +14,9 @@ public final class AndroidLauncher extends AndroidApplication {
     if (System.getProperty("hermes.applicationClass") == null) {
       System.setProperty("hermes.applicationClass", BuildConfig.HERMES_APPLICATION_CLASS);
     }
+    if (System.getProperty("hermes.game.scene") == null) {
+      System.setProperty("hermes.game.scene", BuildConfig.HERMES_GAME_SCENE);
+    }
     super.onCreate(savedInstanceState);
     AndroidApplicationConfiguration configuration = new AndroidApplicationConfiguration();
     configuration.useImmersiveMode = true;

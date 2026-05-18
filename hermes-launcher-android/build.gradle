@@ -37,7 +37,9 @@ android {
   }
   defaultConfig {
     applicationId = 'dev.hermes.game'
+    def gameHermesJson = new groovy.json.JsonSlurper().parse(rootProject.file('game/hermes.json'))
     buildConfigField 'String', 'HERMES_APPLICATION_CLASS', '"dev.hermes.sample.SampleHermesGame"'
+    buildConfigField 'String', 'HERMES_GAME_SCENE', "\"${gameHermesJson.scene}\""
     minSdkVersion 21
     targetSdkVersion 35
     versionCode 1

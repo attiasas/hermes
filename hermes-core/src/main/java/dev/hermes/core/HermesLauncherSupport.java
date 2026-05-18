@@ -40,4 +40,8 @@ public final class HermesLauncherSupport {
   public static String windowTitle() {
     return HermesRuntimeConfig.get("hermes.window.title", "Hermes");
   }
+
+  public static String gameScenePath() {
+    return HermesRuntimeConfig.get("hermes.game.scene", "scenes/main.json");
+  }
 }

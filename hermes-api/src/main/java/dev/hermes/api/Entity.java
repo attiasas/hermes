@@ -6,4 +6,7 @@ package dev.hermes.api;
 public interface Entity {
 
   EntityId id();
+
+  /** Optional logical name from scene JSON; empty when unnamed. */
+  String name();
 }
