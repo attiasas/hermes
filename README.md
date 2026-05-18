@@ -2,69 +2,156 @@
 
 Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). User-facing code targets a small public API (`hermes-api`); libGDX stays inside `hermes-core` and launcher modules.
 
-**Vision and requirements** (longer form): see [plan](plan/).
+**Vision and requirements:** [plan/PROJECT.md](plan/PROJECT.md) · **Roadmap:** [plan/hermes_engine_plan_80cb86d9.detailed.plan.md](plan/hermes_engine_plan_80cb86d9.detailed.plan.md)
 
 ---
 
-## Phase 0 — build and run (desktop)
+## Phase 1 — run from `:game`
 
 ### Prerequisites
 
-- **JDK 11** or newer (toolchain targets Java 11).
+- **JDK 11+** (toolchain targets Java 11; CI uses 17).
 - Network access the first time Gradle resolves dependencies.
+- **Android** (optional): Android SDK — see [Android SDK](#android-sdk) below.
 
-### Clone and run
+### Quick start (desktop)
 
 ```bash
-./gradlew :hermes-launcher-desktop:run
+./gradlew :game:hermesRunDesktop
 ```
 
-The Gradle `run` task uses the repo root `assets/` directory as the working directory (same pattern as the gdx-liftoff template). You should see a 640×480 window with the sample libGDX logo; the internal `:sample-game` module implements `HermesApplication` with **no** `com.badlogicgames.gdx` imports.
+You should see a 640×480 window with the sample libGDX logo. Game logic lives in `:game` (`SampleHermesGame`); the engine loads it via `-Dhermes.applicationClass` from the Gradle plugin.
 
-Cold-cache sanity check:
+Cold-cache build:
 
 ```bash
 ./gradlew clean build
 ```
 
-### Module graph (Phase 0)
+### Configuration split
 
-- `sample-game` → `hermes-api` (compile only; no libGDX).
-- `hermes-core` → `hermes-api` (api) + `gdx` (implementation).
-- `hermes-launcher-desktop` → `hermes-core`, `sample-game`, LWJGL3 backend + desktop natives.
+| Source | Purpose |
+|--------|---------|
+| [`game/hermes.json`](game/hermes.json) | **Game data only** — `name`, `version`, `scene` (simulation/content). |
+| [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Which launcher modules are included (desktop / html / android). |
+| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `applicationClass`, `debug`, desktop window `title` / `width` / `height`. |
+
+Example `hermes.json`:
+
+```json
+{
+  "name": "HermesSample",
+  "version": "0.1.0",
+  "scene": "scenes/main.json"
+}
+```
+
+Example Gradle DSL on `:game`:
+
+```groovy
+plugins {
+  id 'dev.hermes'
+}
+
+hermes {
+  applicationClass = 'dev.hermes.sample.SampleHermesGame'
+  debug = true
+  platforms {
+    desktop {
+      enabled = true
+      width = 640
+      height = 480
+      title = 'Hermes'
+    }
+  }
+}
+```
+
+Enable HTML or Android in [`settings.gradle`](settings.gradle):
+
+```groovy
+hermes {
+  platforms {
+    html { enabled = true }
+    android { enabled = true }
+  }
+}
+```
+
+Then sync Gradle and run:
+
+```bash
+./gradlew :game:hermesRunHtml
+./gradlew :game:hermesRunAndroid   # requires device/emulator + SDK
+```
+
+### Hermes Gradle tasks (`:game`)
+
+| Task | Description |
+|------|-------------|
+| `hermesRunDesktop` | LWJGL3 desktop run |
+| `hermesRunHtml` | TeaVM dev server (when `hermes-launcher-html` is included) |
+| `hermesRunAndroid` | Install debug APK and launch (when Android launcher is included) |
+| `validateHermesJson` | Parse `hermes.json`; unknown keys log a warning |
+| `generateAssetList` | Regenerate `assets/assets.txt` |
+
+### Module graph
+
+- `game` → `hermes-api` (compile); `hermes-core` (runtime).
+- `hermes-core` → `hermes-api` + libGDX (internal).
+- `hermes-launcher-*` → `hermes-core` (+ platform backends).
+- `hermes-gradle-plugin` — composite-included via `includeBuild`; not a published subproject.
+
+Verify no direct libGDX in game sources:
+
+```bash
+rg 'com\.badlogicgames\.gdx' game/src
+```
 
 ### Template provenance
 
-Desktop launcher behavior (Gradle JVM args, `StartupHelper`, LWJGL version constraints) is adapted from the local **gdx-liftoff** template:
+Launchers adapt the local **gdx-liftoff** template (`libGDX 1.14.0`, LWJGL 3.4.1, TeaVM 1.5.5). See Phase 0 notes for `StartupHelper` (Apache 2.0, damios).
 
-`/Users/assafa/Documents/hermes/untitled folder/template`
+### Android SDK
 
-Versions are aligned with that template where it matters (e.g. **libGDX 1.14.0**, **LWJGL 3.4.1**). `StartupHelper` is included under `hermes-launcher-desktop` with its original license header (Apache 2.0, damios).
+Hermes resolves the SDK in this order (first match wins):
+
+1. `sdk.dir` in [`local.properties`](local.properties) (gitignored; copy from [`local.properties.example`](local.properties.example))
+2. `hermes.android.sdk` in [`gradle.properties`](gradle.properties)
+3. `ANDROID_SDK_ROOT` or `ANDROID_HOME`
+
+If the path comes from (2) or (3) and `local.properties` has no `sdk.dir`, the settings plugin writes `local.properties` for AGP.
+
+Examples:
+
+```properties
+# local.properties
+sdk.dir=/opt/homebrew/share/android-commandlinetools
+```
+
+```properties
+# gradle.properties
+hermes.android.sdk=/opt/homebrew/share/android-commandlinetools
+```
+
+```bash
+export ANDROID_SDK_ROOT=/opt/homebrew/share/android-commandlinetools
+./gradlew :game:hermesRunAndroid
+```
+
+Enable the platform in [`settings.gradle`](settings.gradle) (`platforms.android.enabled = true`), then install platform/build-tools if needed (`sdkmanager "platforms;android-35" "build-tools;35.0.0"`).
 
 ### Troubleshooting
 
-- **macOS:** LWJGL3 normally requires `-XstartOnFirstThread`. `StartupHelper` restarts the JVM with that flag when needed; the `run` task also adds it on macOS.
-- **Linux + NVIDIA:** Debugging LWJGL can require `__GL_THREADED_OPTIMIZATIONS=0`. The `run` task sets this for Gradle-spawned JVMs (see template comments in `hermes-launcher-desktop/build.gradle`).
-
-### Useful Gradle commands
-
-```bash
-./gradlew projects
-./gradlew :hermes-api:dependencies --configuration compileClasspath
-```
-
-Verify the sample has no direct libGDX imports:
-
-```bash
-rg 'com\.badlogicgames\.gdx' sample-game/src
-```
-
-(expected: no matches)
+- **macOS:** `hermesRunDesktop` adds `-XstartOnFirstThread`; `StartupHelper` may restart the JVM when needed.
+- **Linux + NVIDIA:** `__GL_THREADED_OPTIMIZATIONS=0` is set for Gradle-spawned runs.
+- **Android:** See [Android SDK](#android-sdk); ensure a device/emulator is connected for `hermesRunAndroid`.
+- **HTML:** Enable `platforms.html` in settings, then `hermesRunHtml` serves at http://localhost:8080/ after TeaVM build.
 
 ### CI and releases
 
-- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs `./gradlew clean build` on **every push** (any branch). `pull_request` runs only for **fork** PRs (same-repo PRs use the branch push, so CI does not run twice). JDK 17 on Ubuntu.
-- **Releases:** [`.github/workflows/release.yml`](.github/workflows/release.yml) builds artifacts on tag `v*` or manual dispatch; tag pushes also create a GitHub Release with **auto-generated notes** driven by [`.github/release.yml`](.github/release.yml). Label PRs (for example `feature`, `bug`, `documentation`) so notes are grouped; use `ignore-for-release` or `skip-changelog` to omit a PR from the changelog.
+- **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `./gradlew clean build` on push (desktop-only platforms by default).
+- **Releases:** [`.github/workflows/release.yml`](.github/workflows/release.yml) on tag `v*`.
 
 ### References
 

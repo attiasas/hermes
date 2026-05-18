@@ -1,0 +1,2 @@
+-keep class com.badlogic.gdx.** { *; }
+-keep class dev.hermes.** { *; }

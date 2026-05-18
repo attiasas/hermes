@@ -1,0 +1,27 @@
+plugins {
+  id 'java-gradle-plugin'
+}
+
+repositories {
+  mavenCentral()
+}
+
+gradlePlugin {
+  plugins {
+    hermes {
+      id = 'dev.hermes'
+      implementationClass = 'dev.hermes.gradle.HermesPlugin'
+    }
+    hermesSettings {
+      id = 'dev.hermes.settings'
+      implementationClass = 'dev.hermes.gradle.HermesSettingsPlugin'
+    }
+  }
+}
+
+dependencies {
+  implementation gradleApi()
+  implementation localGroovy()
+  implementation 'org.apache.groovy:groovy:4.0.26'
+  implementation 'com.google.code.gson:gson:2.13.1'
+}

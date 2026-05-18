@@ -1,0 +1,10 @@
+# Copy to local.properties (gitignored) or set hermes.android.sdk in gradle.properties.
+#
+# Priority (first match wins):
+#   1. sdk.dir in local.properties
+#   2. hermes.android.sdk in gradle.properties
+#   3. ANDROID_SDK_ROOT
+#   4. ANDROID_HOME
+#
+# Homebrew command-line tools (example):
+sdk.dir=/opt/homebrew/share/android-commandlinetools

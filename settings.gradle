@@ -1,14 +1,31 @@
 pluginManagement {
+  includeBuild('hermes-gradle-plugin')
   repositories {
     gradlePluginPortal()
     mavenCentral()
+    google()
   }
 }
 
 plugins {
   id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+  id 'dev.hermes.settings'
 }
 
 rootProject.name = 'hermes'
 
-include 'hermes-api', 'hermes-core', 'hermes-launcher-desktop', 'sample-game'
+hermes {
+  platforms {
+    desktop {
+      enabled = true
+    }
+    html {
+      enabled = true
+    }
+    android {
+      enabled = true
+    }
+  }
+}
+
+include 'hermes-api', 'hermes-core', 'game'
