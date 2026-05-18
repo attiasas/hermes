@@ -170,6 +170,7 @@ public final class HermesPlugin implements Plugin<Project> {
       return;
     }
     registerGenerateTeaLauncher(project, extension, launcher);
+    wireHtmlBuildTasks(project, extension, launcher);
     project
         .getTasks()
         .register(
@@ -192,6 +193,23 @@ public final class HermesPlugin implements Plugin<Project> {
               task.setWorkingDir(launcher.getProjectDir());
               task.args("run");
               applyHtmlSystemProperties(task, project, extension);
+            });
+  }
+
+  private static void wireHtmlBuildTasks(
+      Project gameProject, HermesExtension extension, Project htmlLauncher) {
+    htmlLauncher
+        .getTasks()
+        .withType(JavaExec.class)
+        .configureEach(
+            task -> {
+              // mainClass is unset during configuration for tasks.register(..., JavaExec)
+              String name = task.getName();
+              if (!name.equals("buildRelease") && !name.equals("runRelease") && !name.equals("runDebug")) {
+                return;
+              }
+              task.dependsOn(gameProject.getTasks().named("generateTeaLauncher"));
+              applyHtmlSystemProperties(task, gameProject, extension);
             });
   }
 
