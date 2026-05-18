@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   build:
     name: Build and Test - (${{ matrix.os }})
@@ -35,11 +40,15 @@ jobs:
       - name: Build and test
         run: ./gradlew clean build publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal :hermes-gradle-plugin:test :hermes-cli:test --no-daemon --stacktrace
 
-      - name: Publish test summary
+      - name: Publish test report
+        uses: dorny/test-reporter@v2
         if: always()
-        continue-on-error: true
-        shell: bash
-        run: python3 scripts/ci-test-summary.py .
+        with:
+          name: Gradle tests (${{ matrix.os }})
+          path: "**/build/test-results/test/*.xml"
+          reporter: java-junit
+          fail-on-error: false
+          use-actions-summary: true
 
       - name: Upload test reports
         if: always()
