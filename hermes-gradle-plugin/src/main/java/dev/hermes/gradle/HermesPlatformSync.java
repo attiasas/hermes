@@ -75,6 +75,8 @@ public final class HermesPlatformSync {
       } else {
         extractLauncherFromPlugin(rootDir, moduleName, engineVersion);
       }
+    } else {
+      refreshOutdatedDesktopLauncher(rootDir, moduleName, engineVersion, hermesHome);
     }
     File launcherDir = launcherDir(rootDir, moduleName);
     patchLauncherForMaven(launcherDir, engineVersion);
@@ -215,6 +217,10 @@ public final class HermesPlatformSync {
   }
 
   private static void patchLauncherForStandaloneGame(File launcherDir) {
+    // HTML uses TeaVM to compile :game into the site; desktop/Android need :game on the runtime classpath.
+    if (!"hermes-launcher-html".equals(launcherDir.getName())) {
+      return;
+    }
     File buildFile = new File(launcherDir, "build.gradle");
     if (!buildFile.isFile()) {
       return;
@@ -363,6 +369,40 @@ public final class HermesPlatformSync {
           .lifecycle("Hermes: synced {} from HERMES_HOME to {}", moduleName, target.getAbsolutePath());
     } catch (IOException e) {
       throw new GradleException("Failed to sync " + moduleName + " from HERMES_HOME", e);
+    }
+  }
+
+  /**
+   * Re-extracts desktop launcher stubs from older Hermes releases that omitted Construo or {@code :game}.
+   */
+  private static void refreshOutdatedDesktopLauncher(
+      File rootDir, String moduleName, String engineVersion, File hermesHome) {
+    if (!"hermes-launcher-desktop".equals(moduleName)) {
+      return;
+    }
+    File buildFile = new File(launcherDir(rootDir, moduleName), "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = readBuildFile(buildFile);
+      if (content.contains("fourlastor.construo")
+          && (content.contains("implementation project(':game')")
+              || content.contains("implementation(project(':game'))"))) {
+        return;
+      }
+      Logging.getLogger(HermesPlatformSync.class)
+          .lifecycle(
+              "Hermes: refreshing outdated {} platform stub (missing Construo or :game dependency)",
+              moduleName);
+      deleteRecursive(launcherDir(rootDir, moduleName).toPath());
+      if (HermesHomeResolver.isHermesCheckout(hermesHome)) {
+        copyLauncherFromHome(rootDir, hermesHome, moduleName, engineVersion);
+      } else {
+        extractLauncherFromPlugin(rootDir, moduleName, engineVersion);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to refresh outdated desktop launcher stub", e);
     }
   }
 

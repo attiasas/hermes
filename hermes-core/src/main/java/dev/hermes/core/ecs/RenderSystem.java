@@ -1,8 +1,10 @@
 package dev.hermes.core.ecs;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import dev.hermes.core.HermesAssetPaths;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
@@ -62,7 +64,13 @@ public final class RenderSystem implements System {
     if (texturePath == null || texturePath.isBlank()) {
       return;
     }
-    TextureRegion region = regions.computeIfAbsent(texturePath, path -> new TextureRegion(new Texture(path)));
+    TextureRegion region =
+        regions.computeIfAbsent(
+            texturePath,
+            path -> {
+              FileHandle file = HermesAssetPaths.internal(path);
+              return new TextureRegion(new Texture(file));
+            });
     float width = region.getRegionWidth() * transform.scaleX();
     float height = region.getRegionHeight() * transform.scaleY();
     batch.draw(

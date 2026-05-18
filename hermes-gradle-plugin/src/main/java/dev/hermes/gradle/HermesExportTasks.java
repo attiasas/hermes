@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
@@ -118,8 +119,10 @@ final class HermesExportTasks {
               copy.setGroup("hermes");
               copy.setDescription("Stage HTML export output");
               copy.dependsOn(":hermes-launcher-html:buildRelease", "generateTeaLauncher", "classes", "generateAssetList");
+              copy.doFirst(t -> HermesExportStaging.cleanBeforeCopy(gameProject, staging));
               copy.from(launcher.file("build/dist"));
               copy.into(staging);
+              copy.doLast(t -> HermesHtmlExportBundle.writeInto(staging));
             });
 
     Copy favicon =
@@ -235,8 +238,14 @@ final class HermesExportTasks {
                 copy.setGroup("hermes");
                 copy.setDescription("Stage Construo output for " + target);
                 copy.dependsOn(":hermes-launcher-desktop:" + packageTask, "classes", "generateAssetList");
+                copy.doFirst(t -> HermesExportStaging.cleanBeforeCopy(gameProject, staging));
                 copy.from(launcher.file("build/construo/" + target));
                 copy.into(staging);
+                copy.doLast(
+                    t -> {
+                      HermesDesktopExportFixup.fixStagingDirectory(staging);
+                      HermesDesktopExportBundle.writeInto(staging);
+                    });
               });
       String zipTaskName = "zipHermesExportDesktop" + capitalize(target);
       Zip zip =
@@ -280,15 +289,22 @@ final class HermesExportTasks {
     launcher.getExtensions().getExtraProperties().set("hermesWinIcon", HermesIcons.desktopWindows(gameProject, config.getGame()).getAbsolutePath());
     launcher.getExtensions().getExtraProperties().set("hermesProjectVersion", HermesExportNaming.version(gameProject));
 
+    wireDesktopLauncherGameDependency(gameProject, launcher);
+
+  }
+
+  /** Ensures the Construo fat JAR contains game classes, assets, and {@code hermes-runtime.properties}. */
+  private static void wireDesktopLauncherGameDependency(Project gameProject, Project launcher) {
+    DependencyHandler dependencies = launcher.getDependencies();
+    dependencies.add("implementation", gameProject);
     launcher
         .getTasks()
-        .withType(JavaExec.class)
+        .matching(task -> task.getName().equals("jar") || task.getName().startsWith("package"))
         .configureEach(
-            task -> {
-              if (task.getName().startsWith("package") || task.getName().equals("jar")) {
-                task.dependsOn(gameProject.getTasks().named("classes"));
-              }
-            });
+            task ->
+                task.dependsOn(
+                    gameProject.getTasks().named("classes"),
+                    gameProject.getTasks().named("processResources")));
   }
 
   private static String capitalize(String target) {

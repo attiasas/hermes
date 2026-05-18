@@ -128,6 +128,15 @@ Replace files under `game/src/main/resources/assets/icons/` (paths relative to `
 
 Re-run the relevant `hermesExport*` task after changing icons.
 
+### Running exported builds
+
+**Desktop (macOS):** unzip the ZIP, then open the `.app` inside. If macOS says the app “can’t be opened”, try:
+
+- Right-click the `.app` → **Open** → **Open** (first launch for unsigned apps), or
+- In Terminal: `xattr -cr /path/to/my-game.app` then double-click again.
+
+**HTML:** unzip the ZIP and run `./serve.sh` from the export folder (or `serve.bat` on Windows). Open the printed `http://127.0.0.1:8080/` URL. Do **not** open `webapp/index.html` via `file://` — browsers block WebAssembly loads from local files.
+
 ### Other useful tasks
 
 | Task | Description |
