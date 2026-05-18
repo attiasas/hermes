@@ -30,6 +30,19 @@ public final class HermesPlatformSync {
 
   private HermesPlatformSync() {}
 
+  /** Patches use LF-based matching; normalize CRLF from Windows checkouts and JAR extraction. */
+  private static String normalizeNewlines(String content) {
+    return content.replace("\r\n", "\n").replace('\r', '\n');
+  }
+
+  private static void writeBuildFile(File buildFile, String content) throws IOException {
+    Files.writeString(buildFile.toPath(), content);
+  }
+
+  private static String readBuildFile(File buildFile) throws IOException {
+    return normalizeNewlines(Files.readString(buildFile.toPath()));
+  }
+
   public static File platformRoot(File rootDir) {
     return new File(rootDir, PLATFORMS_DIR);
   }
@@ -82,13 +95,13 @@ public final class HermesPlatformSync {
       return;
     }
     try {
-      String content = Files.readString(buildFile.toPath());
+      String content = readBuildFile(buildFile);
       String patched =
           content
               .replace("\nrepositories {\n  google()\n}\n", "\n")
               .replace("\nrepositories {\n    google()\n}\n", "\n");
       if (!patched.equals(content)) {
-        Files.writeString(buildFile.toPath(), patched);
+        writeBuildFile(buildFile, patched);
       }
     } catch (IOException e) {
       throw new GradleException("Failed to strip project repositories from " + buildFile.getAbsolutePath(), e);
@@ -106,27 +119,22 @@ public final class HermesPlatformSync {
     try {
       String agpVersion = resolveAndroidGradlePluginVersion(rootDir);
       String androidHeader = androidBuildscriptBlock(agpVersion);
-      String content = Files.readString(buildFile.toPath());
+      String content = readBuildFile(buildFile);
       if (content.startsWith("buildscript {") && content.contains("com.android.tools.build:gradle")) {
         return;
       }
-      // buildscript header already present; stripAndroidProjectRepositories handles repos separately
       String patched =
           content.replaceFirst(
               "(?s)^plugins \\{[^}]*com\\.android\\.application[^}]*\\}\\s*",
               androidHeader + "\n");
-      if (patched.equals(content)
-          && (content.contains("apply plugin: 'com.android.application'")
-              || content.contains("apply plugin: \"com.android.application\""))) {
+      if (patched.equals(content)) {
         patched =
-            patched
-                .replace("apply plugin: 'com.android.application'\n\n", androidHeader + "\n")
-                .replace("apply plugin: \"com.android.application\"\n\n", androidHeader + "\n")
-                .replace("apply plugin: 'com.android.application'\n", androidHeader + "\n")
-                .replace("apply plugin: \"com.android.application\"\n", androidHeader + "\n");
+            content.replaceFirst(
+                "(?m)^apply plugin: ['\"]com\\.android\\.application['\"]\\s*\\n+",
+                androidHeader + "\n");
       }
       if (!patched.equals(content)) {
-        Files.writeString(buildFile.toPath(), patched);
+        writeBuildFile(buildFile, patched);
       }
     } catch (IOException e) {
       throw new GradleException("Failed to patch Android plugin declaration in " + buildFile.getAbsolutePath(), e);
@@ -175,10 +183,10 @@ public final class HermesPlatformSync {
       return;
     }
     try {
-      String content = Files.readString(buildFile.toPath());
+      String content = readBuildFile(buildFile);
       String patched = stripNativeAccessJvmArg(content);
       if (!patched.equals(content)) {
-        Files.writeString(buildFile.toPath(), patched);
+        writeBuildFile(buildFile, patched);
       }
     } catch (IOException e) {
       throw new GradleException("Failed to strip JVM args from " + buildFile.getAbsolutePath(), e);
@@ -191,14 +199,14 @@ public final class HermesPlatformSync {
       return;
     }
     try {
-      String content = Files.readString(buildFile.toPath());
+      String content = readBuildFile(buildFile);
       String coord = "dev.hermes:hermes-core:" + engineVersion;
       String patched =
           content
               .replace("implementation project(':hermes-core')", "implementation '" + coord + "'")
               .replace("implementation(project(':hermes-core'))", "implementation '" + coord + "'");
       if (!patched.equals(content)) {
-        Files.writeString(buildFile.toPath(), patched);
+        writeBuildFile(buildFile, patched);
       }
     } catch (IOException e) {
       throw new GradleException("Failed to patch " + buildFile.getAbsolutePath(), e);
@@ -211,7 +219,7 @@ public final class HermesPlatformSync {
       return;
     }
     try {
-      String content = Files.readString(buildFile.toPath());
+      String content = readBuildFile(buildFile);
       String patched = content;
       if (content.contains("implementation project(':game')")) {
         patched =
@@ -220,7 +228,7 @@ public final class HermesPlatformSync {
                 .replace("implementation(project(':game'))", "compileOnly(project(':game'))");
       }
       if (!patched.equals(content)) {
-        Files.writeString(buildFile.toPath(), patched);
+        writeBuildFile(buildFile, patched);
       }
     } catch (IOException e) {
       throw new GradleException("Failed to patch standalone HTML launcher " + buildFile.getAbsolutePath(), e);
@@ -233,7 +241,7 @@ public final class HermesPlatformSync {
       return;
     }
     try {
-      String content = Files.readString(buildFile.toPath());
+      String content = readBuildFile(buildFile);
       String patched = stripNativeAccessJvmArg(content);
       boolean hasToolchain =
           patched.contains("languageVersion") && patched.contains("JavaLanguageVersion.of(11)");
@@ -257,7 +265,7 @@ public final class HermesPlatformSync {
         }
       }
       if (!patched.equals(content)) {
-        Files.writeString(buildFile.toPath(), patched);
+        writeBuildFile(buildFile, patched);
       }
     } catch (IOException e) {
       throw new GradleException("Failed to patch Java toolchain in " + buildFile.getAbsolutePath(), e);

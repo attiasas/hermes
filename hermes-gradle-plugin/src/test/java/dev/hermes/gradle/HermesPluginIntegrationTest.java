@@ -85,8 +85,11 @@ class HermesPluginIntegrationTest {
             projectDir.resolve(".hermes/platforms/hermes-launcher-android/build.gradle"),
             StandardCharsets.UTF_8);
     assertTrue(
-        launcherBuild.contains("com.android.tools.build:gradle:"),
+        launcherBuild.replace("\r\n", "\n").startsWith("buildscript {"),
         "synced Android launcher must use buildscript for AGP resolution");
+    assertTrue(
+        launcherBuild.contains("com.android.tools.build:gradle:"),
+        "synced Android launcher must pin AGP version in buildscript");
     assertFalse(
         launcherBuild.contains("repositories {\n  google()"),
         "synced Android launcher must not declare google-only project repositories");
