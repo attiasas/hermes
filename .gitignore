@@ -1,7 +1,55 @@
-/.gradle/
-/build/
-**/build/
+# --- Gradle ---
+.gradle/
+build/
+
+# --- Hermes ---
+.hermes/
+**/build/generated-tea-sources/
+
+# Generated asset index (regenerate: ./gradlew :game:generateAssetList)
+assets/assets.txt
+
+# --- Android SDK & signing (never commit secrets) ---
 local.properties
+*.jks
+*.keystore
+google-services.json
+
+# Android: copied libGDX natives (copyAndroidNatives) and AGP extras
+hermes-launcher-android/libs/
+.cxx/
+.externalNativeBuild/
+*.apk
+*.aab
+
+# --- JVM / logs ---
+*.class
+*.log
+*.hprof
+hs_err_pid*
+
+# --- IDEs ---
 .idea/
 *.iml
+.vscode/
+*.ipr
+*.iws
+out/
+
+# Eclipse / NetBeans
+.classpath
+.project
+.settings/
+nb-configuration.xml
+
+# Kotlin
+.kotlin/
+
+# --- OS ---
 .DS_Store
+Thumbs.db
+
+# --- Editor swap files ---
+*~
+*.swp
+*.swo

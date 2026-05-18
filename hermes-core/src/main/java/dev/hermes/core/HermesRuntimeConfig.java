@@ -1,0 +1,34 @@
+package dev.hermes.core;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+/** Resolves Hermes launch settings from JVM system properties or {@code hermes-runtime.properties} on the classpath. */
+final class HermesRuntimeConfig {
+
+  private static final Properties PACKAGED = loadPackaged();
+
+  private HermesRuntimeConfig() {}
+
+  static String get(String key, String defaultValue) {
+    String fromJvm = System.getProperty(key);
+    if (fromJvm != null && !fromJvm.isBlank()) {
+      return fromJvm;
+    }
+    return PACKAGED.getProperty(key, defaultValue);
+  }
+
+  private static Properties loadPackaged() {
+    Properties properties = new Properties();
+    try (InputStream in =
+        HermesRuntimeConfig.class.getClassLoader().getResourceAsStream("hermes-runtime.properties")) {
+      if (in != null) {
+        properties.load(in);
+      }
+    } catch (IOException e) {
+      throw new IllegalStateException("Failed to load hermes-runtime.properties", e);
+    }
+    return properties;
+  }
+}
