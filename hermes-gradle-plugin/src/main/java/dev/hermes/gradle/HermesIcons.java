@@ -1,10 +1,12 @@
 package dev.hermes.gradle;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import javax.imageio.ImageIO;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
@@ -41,7 +43,27 @@ final class HermesIcons {
   }
 
   static File androidLauncher(Project gameProject, HermesExtension extension) {
-    return resolveIcon(gameProject, extension, extension.getIcons().getAndroid().getLauncher());
+    String relative = extension.getIcons().getAndroid().getLauncher();
+    File candidate = resolveIcon(gameProject, extension, relative);
+    if (isUsableLauncherIcon(candidate)) {
+      return candidate;
+    }
+    return extractFallback(relative);
+  }
+
+  private static boolean isUsableLauncherIcon(File icon) {
+    if (!icon.isFile()) {
+      return false;
+    }
+    try {
+      BufferedImage image = ImageIO.read(icon);
+      if (image == null) {
+        return false;
+      }
+      return Math.max(image.getWidth(), image.getHeight()) >= 48;
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   static File webFavicon(Project gameProject, HermesExtension extension) {

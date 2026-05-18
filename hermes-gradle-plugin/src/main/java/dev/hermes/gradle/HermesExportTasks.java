@@ -210,10 +210,7 @@ final class HermesExportTasks {
     }
     configureDesktopLauncher(gameProject, launcher, config);
     DesktopPlatformSpec desktop = config.getPlatforms().getDesktop();
-    List<String> targets = desktop.getExportTargets();
-    if (targets == null || targets.isEmpty()) {
-      targets = List.of("linuxX64");
-    }
+    List<String> targets = HermesDesktopExportTargets.forCurrentHost(desktop.getExportTargets());
     List<String> zipTasks = new ArrayList<>();
     File distRoot = gameProject.file("build/dist/desktop");
     for (String target : targets) {

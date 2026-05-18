@@ -14,6 +14,8 @@ import java.util.Enumeration;
 import java.util.Locale;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.api.GradleException;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.logging.Logging;
@@ -28,11 +30,85 @@ public final class HermesPlatformSync {
     "hermes-launcher-desktop", "hermes-launcher-html", "hermes-launcher-android"
   };
 
+  private static final String DESKTOP_CONSTRUO_JDK_ROOT_BLOCK =
+      """
+      // Construo defaults jlink to java.home; use the downloaded JDK so versions match target jmods.
+      tasks.withType(CreateRuntimeImageTask).configureEach { CreateRuntimeImageTask task ->
+        String target = task.name.substring('createRuntimeImage'.length())
+        String targetKey = target.substring(0, 1).toLowerCase(Locale.ROOT) + target.substring(1)
+        task.dependsOn("downloadJdk${target}", "unzipJdk${target}")
+        task.jdkRoot.set(
+            tasks.named("unzipJdk${target}").map {
+              File dir = layout.buildDirectory.dir("construo/jdk/${targetKey}").get().asFile
+              File jlink =
+                  fileTree(dir).matching { include '**/bin/jlink' }.files.find { it?.isFile() }
+              if (jlink == null) {
+                throw new GradleException("No jlink under ${dir} (run unzipJdk${target} first)")
+              }
+              layout.projectDirectory.dir(jlink.parentFile.parentFile.absolutePath)
+            })
+      }
+      """;
+
   private HermesPlatformSync() {}
 
   /** Patches use LF-based matching; normalize CRLF from Windows checkouts and JAR extraction. */
   private static String normalizeNewlines(String content) {
     return content.replace("\r\n", "\n").replace('\r', '\n');
+  }
+
+  private static String readBuildFileQuietly(File buildFile) {
+    try {
+      return readBuildFile(buildFile);
+    } catch (IOException e) {
+      return "";
+    }
+  }
+
+  private static boolean isCorruptedDesktopBuild(String content) {
+    if (content == null || content.isBlank()) {
+      return false;
+    }
+    int construoApply = countOccurrences(content, "apply plugin: 'io.github.fourlastor.construo'");
+    return construoApply > 1
+        || content.contains("architecture.set(Target.Architecture")
+        && content.indexOf("architecture.set(Target.Architecture") < content.indexOf("construo {");
+  }
+
+  private static int countOccurrences(String haystack, String needle) {
+    int count = 0;
+    int index = 0;
+    while ((index = haystack.indexOf(needle, index)) >= 0) {
+      count++;
+      index += needle.length();
+    }
+    return count;
+  }
+
+  private static void deleteDirectoryQuietly(File dir) {
+    if (!dir.exists()) {
+      return;
+    }
+    try {
+      Files.walkFileTree(
+          dir.toPath(),
+          new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+              Files.deleteIfExists(file);
+              return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path directory, IOException exc) throws IOException {
+              Files.deleteIfExists(directory);
+              return FileVisitResult.CONTINUE;
+            }
+          });
+    } catch (IOException e) {
+      Logging.getLogger(HermesPlatformSync.class)
+          .warn("Failed to delete corrupted launcher dir {}: {}", dir, e.getMessage());
+    }
   }
 
   private static void writeBuildFile(File buildFile, String content) throws IOException {
@@ -69,6 +145,13 @@ public final class HermesPlatformSync {
   }
 
   public static void syncIfNeeded(File rootDir, String moduleName, String engineVersion, File hermesHome) {
+    if ("hermes-launcher-desktop".equals(moduleName)) {
+      File desktopDir = launcherDir(rootDir, moduleName);
+      File buildFile = new File(desktopDir, "build.gradle");
+      if (buildFile.isFile() && isCorruptedDesktopBuild(readBuildFileQuietly(buildFile))) {
+        deleteDirectoryQuietly(desktopDir);
+      }
+    }
     if (!isSynced(rootDir, moduleName)) {
       if (HermesHomeResolver.isHermesCheckout(hermesHome)) {
         copyLauncherFromHome(rootDir, hermesHome, moduleName, engineVersion);
@@ -80,6 +163,7 @@ public final class HermesPlatformSync {
     patchLauncherForMaven(launcherDir, engineVersion);
     patchLauncherJava11(launcherDir);
     patchDesktopConstruoToolchain(launcherDir);
+    patchDesktopConstruoJdkRoot(launcherDir);
     patchLauncherForStandaloneGame(launcherDir);
     patchAndroidPluginDeclaration(rootDir, launcherDir);
     stripAndroidProjectRepositories(launcherDir);
@@ -245,7 +329,9 @@ public final class HermesPlatformSync {
       String content = readBuildFile(buildFile);
       String patched = stripNativeAccessJvmArg(content);
       boolean hasToolchain =
-          patched.contains("languageVersion") && patched.contains("JavaLanguageVersion.of(11)");
+          patched.contains("languageVersion")
+              && (patched.contains("JavaLanguageVersion.of(11)")
+                  || patched.contains("JavaLanguageVersion.of(17)"));
       if (!hasToolchain) {
         String toolchainBlock =
             """
@@ -270,6 +356,79 @@ public final class HermesPlatformSync {
       }
     } catch (IOException e) {
       throw new GradleException("Failed to patch Java toolchain in " + buildFile.getAbsolutePath(), e);
+    }
+  }
+
+  /**
+   * Resolves Construo {@code jdkRoot} at execution time (after {@code unzipJdk*}) so configuration
+   * does not fail before the JDK is downloaded.
+   */
+  private static void patchDesktopConstruoJdkRoot(File launcherDir) {
+    if (!"hermes-launcher-desktop".equals(launcherDir.getName())) {
+      return;
+    }
+    File buildFile = new File(launcherDir, "build.gradle");
+    if (!buildFile.isFile()) {
+      return;
+    }
+    try {
+      String content = readBuildFile(buildFile);
+      if (!content.contains("CreateRuntimeImageTask")) {
+        return;
+      }
+      if (content.contains("tasks.named(\"unzipJdk${target}\").map {")
+          && content.contains("task.jdkRoot.set(")) {
+        return;
+      }
+      String patched = content;
+      if (patched.contains("task.doFirst {")
+          && patched.contains("task.jdkRoot.set(layout.projectDirectory.dir(jlink")) {
+        patched =
+            Pattern.compile("(?s)// Construo defaults jlink to java\\.home;.*?\\n\\s*\\}\\s*")
+                .matcher(patched)
+                .replaceFirst(Matcher.quoteReplacement(DESKTOP_CONSTRUO_JDK_ROOT_BLOCK.trim()) + "\n\n");
+      }
+      if (patched.contains("layout.buildDirectory.dir(\"construo/jdk/${targetKey}\").map { dir ->")) {
+        patched =
+            patched.replace(
+                "task.dependsOn(\"unzipJdk${target}\")",
+                "task.dependsOn(\"downloadJdk${target}\", \"unzipJdk${target}\")");
+        patched =
+            Pattern.compile(
+                    "(?s)task\\.jdkRoot\\.set\\(\\s*layout\\.buildDirectory\\.dir\\(\"construo/jdk/\\$\\{targetKey\\}\"\\)\\.map \\{ dir ->.*?\\}\\s*\\)")
+                .matcher(patched)
+                .replaceFirst(
+                    Matcher.quoteReplacement(
+                        """
+                        task.jdkRoot.set(
+                            tasks.named("unzipJdk${target}").map {
+                              File dir = layout.buildDirectory.dir("construo/jdk/${targetKey}").get().asFile
+                              File jlink =
+                                  fileTree(dir).matching { include '**/bin/jlink' }.files.find { it?.isFile() }
+                              if (jlink == null) {
+                                throw new GradleException("No jlink under ${dir} (run unzipJdk${target} first)")
+                              }
+                              layout.projectDirectory.dir(jlink.parentFile.parentFile.absolutePath)
+                            })"""
+                            .stripLeading()));
+      } else if (patched.contains("CreateRuntimeImageTask")
+          && !patched.contains("tasks.named(\"unzipJdk${target}\").map {")) {
+        Pattern construoJdkBlock =
+            Pattern.compile("(?s)// Construo defaults jlink to java\\.home;.*?\\n\\s*\\}\\s*");
+        if (construoJdkBlock.matcher(patched).find()) {
+          patched =
+              construoJdkBlock
+                  .matcher(patched)
+                  .replaceFirst(Matcher.quoteReplacement(DESKTOP_CONSTRUO_JDK_ROOT_BLOCK.trim()) + "\n\n");
+        } else {
+          patched = patched.trim() + "\n\n" + DESKTOP_CONSTRUO_JDK_ROOT_BLOCK + "\n";
+        }
+      }
+      if (!patched.equals(content)) {
+        writeBuildFile(buildFile, patched);
+      }
+    } catch (IOException e) {
+      throw new GradleException("Failed to patch Construo jdkRoot in " + buildFile.getAbsolutePath(), e);
     }
   }
 

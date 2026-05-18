@@ -2,8 +2,6 @@ package dev.hermes.gradle;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.Copy;
@@ -17,25 +15,20 @@ final class HermesIconsConfigurer {
       return;
     }
     File generatedRes = gameProject.file("build/generated/hermes-icons/android-res");
-    File mipmap = new File(generatedRes, "mipmap-xxxhdpi");
     gameProject
         .getTasks()
         .register(
             "generateHermesAndroidIcons",
             task -> {
               task.setGroup("hermes");
-              task.setDescription("Copy game launcher icon into generated Android res");
+              task.setDescription("Generate Android mipmap launcher icons from the game icon");
               task.getOutputs().dir(generatedRes);
               task.doLast(
                   t -> {
                     try {
                       HermesExtension extension = gameProject.getExtensions().getByType(HermesExtension.class);
-                      Files.createDirectories(mipmap.toPath());
                       File icon = HermesIcons.androidLauncher(gameProject, extension);
-                      Files.copy(
-                          icon.toPath(),
-                          new File(mipmap, "ic_launcher.png").toPath(),
-                          StandardCopyOption.REPLACE_EXISTING);
+                      HermesAndroidIconGenerator.generateMipmaps(icon, generatedRes);
                     } catch (IOException e) {
                       throw new GradleException("Failed to generate Android launcher icon", e);
                     }
