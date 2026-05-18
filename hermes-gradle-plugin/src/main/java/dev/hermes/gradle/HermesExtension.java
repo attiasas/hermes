@@ -6,6 +6,7 @@ import groovy.lang.Closure;
 public class HermesExtension {
 
   private String applicationClass;
+  private String assetsDirectory;
   private boolean debug = false;
   private final PlatformsExtension platforms = new PlatformsExtension();
 
@@ -19,6 +20,14 @@ public class HermesExtension {
 
   public void setApplicationClass(String applicationClass) {
     this.applicationClass = applicationClass;
+  }
+
+  public String getAssetsDirectory() {
+    return assetsDirectory;
+  }
+
+  public void setAssetsDirectory(String assetsDirectory) {
+    this.assetsDirectory = assetsDirectory;
   }
 
   public boolean isDebug() {

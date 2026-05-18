@@ -8,7 +8,7 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Use
 
 ## Phase 2 — JSON scenes + ECS
 
-Scenes under `assets/` drive entities at startup. The sample scene [`assets/scenes/main.json`](assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`, orthographic or perspective). See [docs/scene-format-v1.md](docs/scene-format-v1.md).
+Scenes under the game module assets directory drive entities at startup. The sample scene [`game/src/main/resources/assets/scenes/main.json`](game/src/main/resources/assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`, orthographic or perspective). See [docs/scene-format-v1.md](docs/scene-format-v1.md).
 
 ### Custom components
 
@@ -55,7 +55,7 @@ Cold-cache build:
 |--------|---------|
 | [`game/hermes.json`](game/hermes.json) | **Game data only** — `name`, `version`, `scene` (simulation/content). |
 | [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Which launcher modules are included (desktop / html / android). |
-| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `applicationClass`, `debug`, desktop window `title` / `width` / `height`. |
+| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `applicationClass`, `assetsDirectory`, `debug`, desktop window `title` / `width` / `height`. |
 
 Example `hermes.json`:
 
@@ -76,6 +76,7 @@ plugins {
 
 hermes {
   applicationClass = 'dev.hermes.sample.SampleHermesGame'
+  assetsDirectory = 'src/main/resources/assets'  // default; override to relocate assets
   debug = true
   platforms {
     desktop {
@@ -114,7 +115,7 @@ Then sync Gradle and run:
 | `hermesRunHtml` | TeaVM dev server (when `hermes-launcher-html` is included) |
 | `hermesRunAndroid` | Install debug APK and launch (when Android launcher is included) |
 | `validateHermesJson` | Parse `hermes.json`; unknown keys log a warning |
-| `generateAssetList` | Regenerate `assets/assets.txt` |
+| `generateAssetList` | Regenerate `build/generated/hermes-assets/assets.txt` from the assets directory |
 
 ### Module graph
 

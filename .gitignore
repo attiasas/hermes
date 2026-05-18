@@ -7,7 +7,7 @@ build/
 **/build/generated-tea-sources/
 
 # Generated asset index (regenerate: ./gradlew :game:generateAssetList)
-assets/assets.txt
+game/build/generated/hermes-assets/
 
 # --- Android SDK & signing (never commit secrets) ---
 local.properties

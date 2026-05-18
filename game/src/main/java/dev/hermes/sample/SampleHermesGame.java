@@ -9,7 +9,8 @@ import dev.hermes.api.ecs.Transform;
 /**
  * Internal sample; compiles only against {@code hermes-api} (no libGDX imports).
  *
- * <p>Scene entities come from {@code assets/scenes/main.json}. {@link #spawnCodeEntity(HermesEngine)} adds one
+ * <p>Scene entities come from {@code src/main/resources/assets/scenes/main.json}. {@link #spawnCodeEntity(HermesEngine)}
+ * adds one
  * entity from Java before the scene file is loaded.
  */
 public final class SampleHermesGame implements HermesApplication {

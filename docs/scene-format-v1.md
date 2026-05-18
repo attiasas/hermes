@@ -1,6 +1,6 @@
 # Scene format v1
 
-Scene files describe entities and their components. They live under the shared `assets/` directory and are referenced from `hermes.json` via the `scene` field.
+Scene files describe entities and their components. They live under the game module assets directory (default `src/main/resources/assets/`, configurable via `hermes.assetsDirectory` in `game/build.gradle`) and are referenced from `hermes.json` via the `scene` field.
 
 ## Top-level shape
 
@@ -31,7 +31,7 @@ Scene files describe entities and their components. They live under the shared `
 | Type | Properties | Description |
 |------|------------|-------------|
 | `Transform` | See below | Position, rotation (degrees), and scale. All fields optional. |
-| `Sprite` | `texture` (string) | Asset path relative to `assets/` (or internal libGDX path). |
+| `Sprite` | `texture` (string) | Asset path relative to the assets root (or internal libGDX path). |
 | `Camera` | See below | View/projection settings; pair with `Transform` on the same entity. |
 
 ### Transform properties

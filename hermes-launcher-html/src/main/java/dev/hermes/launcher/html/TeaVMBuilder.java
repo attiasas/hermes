@@ -40,6 +40,11 @@ public final class TeaVMBuilder {
     int height = Integer.parseInt(System.getProperty("hermes.window.height", "480"));
     String gameName = System.getProperty("hermes.game.name", "HermesGame");
     String gameScene = System.getProperty("hermes.game.scene", "scenes/main.json");
+    String assetsPath = System.getProperty("hermes.assets.dir");
+    if (assetsPath == null || assetsPath.isBlank()) {
+      throw new IllegalStateException(
+          "hermes.assets.dir system property is required (set by :game:hermesRunHtml or HTML launcher tasks).");
+    }
 
     File runtimeConfigDir = new File("build/hermes-runtime");
     writeRuntimeProperties(
@@ -58,7 +63,7 @@ public final class TeaVMBuilder {
                     .setWebAssembly(true)
                     .setStartJettyAfterBuild(startJetty)
                     .setJettyPort(8080))
-            .addAssets(new AssetFileHandle("../assets"))
+            .addAssets(new AssetFileHandle(assetsPath))
             .addAssets(new AssetFileHandle(runtimeConfigDir.getPath()))
             .setOptimizationLevel(debug ? TeaVMOptimizationLevel.SIMPLE : TeaVMOptimizationLevel.ADVANCED)
             .setMainClass("dev.hermes.launcher.html.generated.GeneratedTeaVMLauncher")
