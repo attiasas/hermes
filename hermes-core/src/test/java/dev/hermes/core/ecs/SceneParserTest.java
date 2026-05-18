@@ -49,6 +49,45 @@ final class SceneParserTest {
   }
 
   @Test
+  void loadsTransform3dFields() {
+    String json =
+        "{\n"
+            + "  \"entities\": [\n"
+            + "    {\n"
+            + "      \"id\": \"cube\",\n"
+            + "      \"components\": {\n"
+            + "        \"Transform\": {\n"
+            + "          \"x\": 1,\n"
+            + "          \"y\": 2,\n"
+            + "          \"z\": 3,\n"
+            + "          \"rotationX\": 10,\n"
+            + "          \"rotationY\": 20,\n"
+            + "          \"rotationZ\": 30,\n"
+            + "          \"scaleX\": 2,\n"
+            + "          \"scaleY\": 2,\n"
+            + "          \"scaleZ\": 2\n"
+            + "        }\n"
+            + "      }\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n";
+
+    SceneLoader.loadFromString("scenes/test.json", json, world, registry);
+
+    Transform transform = world.getComponent(world.findByName("cube").id(), Transform.class);
+    assertEquals(1f, transform.x());
+    assertEquals(2f, transform.y());
+    assertEquals(3f, transform.z());
+    assertEquals(10f, transform.rotationX());
+    assertEquals(20f, transform.rotationY());
+    assertEquals(30f, transform.rotationZ());
+    assertEquals(2f, transform.scaleX());
+    assertEquals(2f, transform.scaleY());
+    assertEquals(2f, transform.scaleZ());
+    assertEquals(-1f, transform.screenY());
+  }
+
+  @Test
   void unknownComponentTypeFailsWithActionableMessage() {
     String json =
         "{\n"

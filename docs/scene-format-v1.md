@@ -30,8 +30,31 @@ Scene files describe entities and their components. They live under the shared `
 
 | Type | Properties | Description |
 |------|------------|-------------|
-| `Transform` | `x`, `y` (numbers, default 0) | 2D position in pixels. |
+| `Transform` | See below | Position, rotation (degrees), and scale. All fields optional. |
 | `Sprite` | `texture` (string) | Asset path relative to `assets/` (or internal libGDX path). |
+
+### Transform properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `x`, `y`, `z` | `0` | World position. For 2D scenes, omit `z`. |
+| `rotationX`, `rotationY`, `rotationZ` | `0` | Euler rotation in degrees. `rotationZ` is used for 2D sprite drawing. |
+| `scaleX`, `scaleY`, `scaleZ` | `1` | Scale per axis. `scaleX` / `scaleY` affect sprite size; `scaleZ` is stored for future 3D rendering. |
+
+2D rendering sorts by `z` (ascending) and maps world position to screen as `(x, y - z)`. Higher `z` draws on top.
+
+Example with 3D fields:
+
+```json
+"Transform": {
+  "x": 100,
+  "y": 200,
+  "z": 5,
+  "rotationZ": 45,
+  "scaleX": 0.5,
+  "scaleY": 0.5
+}
+```
 
 ## Custom components
 
