@@ -79,6 +79,11 @@ jobs:
           chmod +x .github/scripts/validate-export-zip.sh
           ZIP=$(ls game/build/dist/html/*-html.zip)
           .github/scripts/validate-export-zip.sh html "$ZIP"
+      - name: Write export summary
+        if: success()
+        run: |
+          chmod +x .github/scripts/write-export-summary.sh
+          .github/scripts/write-export-summary.sh "HTML export" export-html "game/build/dist/html/*-html.zip"
       - name: Upload HTML export
         uses: actions/upload-artifact@v4
         with:
@@ -106,6 +111,11 @@ jobs:
           chmod +x .github/scripts/validate-export-zip.sh
           ZIP=$(ls game/build/dist/android/*-android.zip)
           .github/scripts/validate-export-zip.sh android "$ZIP"
+      - name: Write export summary
+        if: success()
+        run: |
+          chmod +x .github/scripts/write-export-summary.sh
+          .github/scripts/write-export-summary.sh "Android export" export-android "game/build/dist/android/*-android.zip"
       - name: Upload Android export
         uses: actions/upload-artifact@v4
         with:
@@ -132,6 +142,11 @@ jobs:
           chmod +x .github/scripts/validate-export-zip.sh
           ZIP=$(ls game/build/dist/desktop/*-linux-x64.zip)
           .github/scripts/validate-export-zip.sh desktop-linux "$ZIP"
+      - name: Write export summary
+        if: success()
+        run: |
+          chmod +x .github/scripts/write-export-summary.sh
+          .github/scripts/write-export-summary.sh "Desktop Linux export" export-desktop-linux "game/build/dist/desktop/*-linux-x64.zip"
       - name: Upload desktop linux zip
         uses: actions/upload-artifact@v4
         with:
@@ -159,6 +174,11 @@ jobs:
           for ZIP in game/build/dist/desktop/*-macos-*.zip; do
             .github/scripts/validate-export-zip.sh desktop-macos "$ZIP"
           done
+      - name: Write export summary
+        if: success()
+        run: |
+          chmod +x .github/scripts/write-export-summary.sh
+          .github/scripts/write-export-summary.sh "Desktop macOS export" export-desktop-macos "game/build/dist/desktop/*-macos-*.zip"
       - name: Upload desktop mac zips
         uses: actions/upload-artifact@v4
         with:
@@ -186,6 +206,12 @@ jobs:
           chmod +x .github/scripts/validate-export-zip.sh
           ZIP=$(ls game/build/dist/desktop/*-windows-x64.zip)
           .github/scripts/validate-export-zip.sh desktop-windows "$ZIP"
+      - name: Write export summary
+        if: success()
+        shell: bash
+        run: |
+          chmod +x .github/scripts/write-export-summary.sh
+          .github/scripts/write-export-summary.sh "Desktop Windows export" export-desktop-windows "game/build/dist/desktop/*-windows-x64.zip"
       - name: Upload desktop windows zip
         uses: actions/upload-artifact@v4
         with:
