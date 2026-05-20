@@ -30,6 +30,17 @@ class HermesPluginIntegrationTest {
   }
 
   @Test
+  void hermesRunDesktop_usesJdk17Toolchain() throws IOException {
+    String source =
+        Files.readString(
+            hermesRoot.toPath().resolve("hermes-gradle-plugin/src/main/java/dev/hermes/gradle/HermesPlugin.java"),
+            StandardCharsets.UTF_8);
+    assertTrue(
+        source.contains("JavaLanguageVersion.of(17)"),
+        "hermesRunDesktop must use JDK 17 to match Construo export runtime");
+  }
+
+  @Test
   void templateProject_onlyGameAndSyncedDesktop(@TempDir Path tempDir) throws IOException {
     Path projectDir = materializeTemplate(tempDir.resolve("demo"));
 

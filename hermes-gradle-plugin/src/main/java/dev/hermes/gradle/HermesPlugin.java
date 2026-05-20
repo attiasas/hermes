@@ -264,7 +264,7 @@ public final class HermesPlugin implements Plugin<Project> {
               task.setWorkingDir(assetsDir);
               JavaToolchainService toolchains = project.getExtensions().getByType(JavaToolchainService.class);
               task.getJavaLauncher()
-                  .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(11))));
+                  .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(17))));
               applyDesktopJvmArgs(task);
               applyDesktopSystemProperties(task, project, extension);
               String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
@@ -280,6 +280,9 @@ public final class HermesPlugin implements Plugin<Project> {
         t -> {
           List<String> args = new ArrayList<>(task.getJvmArgs());
           HermesJvmArgs.stripNativeAccess(args);
+          if (HermesJvmArgs.supportsNativeAccess(task)) {
+            args.add(HermesJvmArgs.NATIVE_ACCESS_FLAG);
+          }
           task.setJvmArgs(args);
         });
   }
@@ -300,6 +303,7 @@ public final class HermesPlugin implements Plugin<Project> {
     jvmArgs.add("-Dhermes.desktop.foregroundFps=" + desktop.getForegroundFps());
     jvmArgs.add("-Dhermes.game.title=" + config.getTitle());
     jvmArgs.add("-Dhermes.game.scene=" + config.getScene());
+    jvmArgs.add("-Dhermes.desktop.gradleRun=true");
     task.setJvmArgs(jvmArgs);
   }
 

@@ -237,7 +237,7 @@ Enable the platform in [`settings.gradle`](settings.gradle) (`platforms.android.
 
 ### Troubleshooting
 
-- **macOS:** `hermesRunDesktop` adds `-XstartOnFirstThread`; `StartupHelper` may restart the JVM when needed.
+- **macOS desktop window frozen until resize / exit 133 / instant exit:** `hermesRunDesktop` uses JDK 17 (matching export), `-XstartOnFirstThread`, and sets `hermes.desktop.gradleRun=true` so `StartupHelper` does not spawn a child JVM (that path exits immediately from Gradle). The macOS Dock icon is set only in exported desktop bundles (from `icons/web/favicon.png`), not during Gradle dev runs. After upgrading Hermes, republish to Maven local and delete `.hermes/platforms/hermes-launcher-desktop` so the synced launcher is refreshed.
 - **Linux + NVIDIA:** `__GL_THREADED_OPTIMIZATIONS=0` is set for Gradle-spawned runs.
 - **Android:** See [Android SDK](#android-sdk); ensure a device/emulator is connected for `hermesRunAndroid`.
 - **HTML:** Enable `platforms.html` in settings, then `hermesRunHtml` serves at http://localhost:8080/ after TeaVM build.

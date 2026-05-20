@@ -11,19 +11,25 @@ public final class Lwjgl3Launcher {
   private Lwjgl3Launcher() {}
 
   public static void main(String[] args) {
-    if (StartupHelper.startNewJvmIfRequired()) {
+    boolean gradleRun = Boolean.getBoolean("hermes.desktop.gradleRun");
+    // Gradle/IDE hermesRunDesktop passes -XstartOnFirstThread and hermes.desktop.gradleRun=true.
+    // StartupHelper must not run there: spawning a child exits immediately or SIGTRAPs the parent.
+    if (!gradleRun && StartupHelper.startNewJvmIfRequired()) {
       return;
     }
-    try {
-      MacOsDockIcon.install();
-    } catch (Throwable ignored) {
-      // Dock icon must never prevent launch.
+    // Dock icon is for exported/native bundles only (AWT before GLFW breaks Gradle dev runs).
+    if (!gradleRun) {
+      try {
+        MacOsDockIcon.install();
+      } catch (Throwable ignored) {
+        // Dock icon must never prevent launch.
+      }
     }
     createApplication();
   }
 
-  private static Lwjgl3Application createApplication() {
-    return new Lwjgl3Application(
+  private static void createApplication() {
+    new Lwjgl3Application(
         new HermesGdxApplication(HermesLauncherSupport.loadApplication()), configuration());
   }
 

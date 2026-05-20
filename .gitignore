@@ -41,6 +41,7 @@ out/
 .project
 .settings/
 nb-configuration.xml
+**/bin/
 
 # Kotlin
 .kotlin/

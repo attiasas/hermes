@@ -55,6 +55,18 @@ class TemplateSupportTest {
   }
 
   @Test
+  void materialize_includesDefaultAssets(@TempDir Path target) throws Exception {
+    materialize(target);
+
+    assertTrue(
+        Files.isRegularFile(target.resolve("game/src/main/resources/assets/hermes-logo.png")),
+        "template must ship hermes-logo.png");
+    assertTrue(
+        Files.isRegularFile(target.resolve("game/src/main/resources/assets/icons/web/favicon.png")),
+        "template must ship favicon under assets/icons");
+  }
+
+  @Test
   void materialize_settingsGradleUsesMavenLocal(@TempDir Path target) throws Exception {
     materialize(target);
 

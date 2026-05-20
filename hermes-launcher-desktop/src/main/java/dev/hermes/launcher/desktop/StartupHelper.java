@@ -173,7 +173,8 @@ public final class StartupHelper {
       boolean isMainThread = JNI.invokePPZ(currentThread, ObjCRuntime.sel_getUid("isMainThread"), objcMsgSend);
       if (isMainThread) return false;
 
-      if ("1".equals(System.getenv("JAVA_STARTED_ON_FIRST_THREAD_" + processID))) return false;
+      // Do not skip restart only because Gradle/IDE passed -XstartOnFirstThread: the JVM sets
+      // JAVA_STARTED_ON_FIRST_THREAD_* even when the Cocoa main thread is not current, which crashes LWJGL3.
     }
 
     // Check whether this JVM process is a child JVM process already.
@@ -195,35 +196,64 @@ public final class StartupHelper {
     }
 
     jvmArgs.add(javaExecPath);
-    if (isMac) jvmArgs.add("-XstartOnFirstThread");
     jvmArgs.add("-D" + JVM_RESTARTED_ARG + "=true");
-    jvmArgs.addAll(ManagementFactory.getRuntimeMXBean().getInputArguments());
+    for (String arg : ManagementFactory.getRuntimeMXBean().getInputArguments()) {
+      if (isMac && "-XstartOnFirstThread".equals(arg)) {
+        continue;
+      }
+      jvmArgs.add(arg);
+    }
+    if (isMac) {
+      jvmArgs.add("-XstartOnFirstThread");
+    }
     jvmArgs.add("-cp");
     jvmArgs.add(System.getProperty("java.class.path"));
     String mainClass = System.getenv("JAVA_MAIN_CLASS_" + processID);
     if (mainClass == null) {
-      StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-      if (trace.length > 0) mainClass = trace[trace.length - 1].getClassName();
-      else {
-        System.err.println("The main class could not be determined.");
-        return false;
-      }
+      mainClass = resolveMainClassFromStack();
+    }
+    if (mainClass == null) {
+      System.err.println("The main class could not be determined.");
+      return false;
     }
     jvmArgs.add(mainClass);
 
     try {
       ProcessBuilder processBuilder = new ProcessBuilder(jvmArgs);
-      if (!isMac) processBuilder.environment().put("__GL_THREADED_OPTIMIZATIONS", "0");
+      if (!isMac) {
+        processBuilder.environment().put("__GL_THREADED_OPTIMIZATIONS", "0");
+      }
+      String workingDir = System.getProperty("user.dir");
+      if (workingDir != null) {
+        processBuilder.directory(new File(workingDir));
+      }
 
-      if (!inheritIO) processBuilder.start();
-      else processBuilder.inheritIO().start().waitFor();
+      if (!inheritIO) {
+        processBuilder.start();
+      } else {
+        int exitCode = processBuilder.inheritIO().start().waitFor();
+        if (exitCode != 0) {
+          System.err.println("Child JVM exited with code " + exitCode);
+          return false;
+        }
+      }
+      return true;
     } catch (Exception e) {
       System.err.println("There was a problem restarting the JVM.");
       // noinspection CallToPrintStackTrace
       e.printStackTrace();
+      return false;
     }
+  }
 
-    return true;
+  /** Finds the class that declared {@code main} on the current stack (not the bottom frame). */
+  private static String resolveMainClassFromStack() {
+    for (StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+      if ("main".equals(frame.getMethodName())) {
+        return frame.getClassName();
+      }
+    }
+    return null;
   }
 
   private static String getJreErrMsg(boolean isMac) {
