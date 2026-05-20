@@ -32,16 +32,16 @@ jobs:
           java-version: "17"
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build and test
         run: ./gradlew clean build publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal :hermes-gradle-plugin:test :hermes-cli:test --no-daemon --stacktrace
 
       - name: Publish test report
-        uses: dorny/test-reporter@v2
+        uses: dorny/test-reporter@v3
         if: always()
         with:
           name: Gradle tests (${{ matrix.os }})
@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-reports-${{ matrix.os }}
           path: |
@@ -71,7 +71,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Export HTML
         run: ./gradlew :game:hermesExportHtml --no-daemon --stacktrace
       - name: Validate HTML export zip
@@ -85,7 +85,7 @@ jobs:
           chmod +x .github/scripts/write-export-summary.sh
           .github/scripts/write-export-summary.sh "HTML export" export-html "game/build/dist/html/*-html.zip"
       - name: Upload HTML export
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: export-html
           path: game/build/dist/html/*.zip
@@ -102,8 +102,8 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Export Android
         run: ./gradlew :game:hermesExportAndroid --no-daemon --stacktrace
       - name: Validate Android export zip
@@ -117,7 +117,7 @@ jobs:
           chmod +x .github/scripts/write-export-summary.sh
           .github/scripts/write-export-summary.sh "Android export" export-android "game/build/dist/android/*-android.zip"
       - name: Upload Android export
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: export-android
           path: game/build/dist/android/*.zip
@@ -134,7 +134,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Export desktop (linuxX64)
         run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop linux export zip
@@ -148,7 +148,7 @@ jobs:
           chmod +x .github/scripts/write-export-summary.sh
           .github/scripts/write-export-summary.sh "Desktop Linux export" export-desktop-linux "game/build/dist/desktop/*-linux-x64.zip"
       - name: Upload desktop linux zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: export-desktop-linux
           path: game/build/dist/desktop/*-linux-x64.zip
@@ -165,7 +165,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Export desktop (mac)
         run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop mac export zips
@@ -180,7 +180,7 @@ jobs:
           chmod +x .github/scripts/write-export-summary.sh
           .github/scripts/write-export-summary.sh "Desktop macOS export" export-desktop-macos "game/build/dist/desktop/*-macos-*.zip"
       - name: Upload desktop mac zips
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: export-desktop-macos
           path: game/build/dist/desktop/*-macos-*.zip
@@ -197,7 +197,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Export desktop (winX64)
         run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop windows export zip
@@ -213,7 +213,7 @@ jobs:
           chmod +x .github/scripts/write-export-summary.sh
           .github/scripts/write-export-summary.sh "Desktop Windows export" export-desktop-windows "game/build/dist/desktop/*-windows-x64.zip"
       - name: Upload desktop windows zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: export-desktop-windows
           path: game/build/dist/desktop/*-windows-x64.zip

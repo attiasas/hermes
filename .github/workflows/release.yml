@@ -24,10 +24,10 @@ jobs:
           java-version: "17"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Build engine and publish to Maven local
         run: ./gradlew clean build publishToMavenLocal --no-daemon --stacktrace
@@ -44,7 +44,7 @@ jobs:
           .github/scripts/validate-export-zip.sh desktop-linux "$(ls game/build/dist/desktop/*-linux-x64.zip)"
 
       - name: Upload engine artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hermes-engine
           if-no-files-found: error
@@ -83,7 +83,7 @@ jobs:
           java-version: "17"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build CLI distribution
         run: ./gradlew :hermes-cli:distZip --no-daemon --stacktrace
@@ -100,7 +100,7 @@ jobs:
           cp "$ZIP" "release-cli/hermes-cli-${VERSION}-${{ matrix.os_id }}-${{ matrix.arch }}.zip"
 
       - name: Upload CLI artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hermes-cli-${{ matrix.os_id }}
           if-no-files-found: error
@@ -111,7 +111,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: dist
           merge-multiple: true
