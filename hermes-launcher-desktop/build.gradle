@@ -125,7 +125,7 @@ tasks.withType(CreateRuntimeImageTask).configureEach { CreateRuntimeImageTask ta
       tasks.named("unzipJdk${target}").map {
         File dir = layout.buildDirectory.dir("construo/jdk/${targetKey}").get().asFile
         File jlink =
-            fileTree(dir).matching { include '**/bin/jlink' }.files.find { it?.isFile() }
+            fileTree(dir).matching { include '**/bin/jlink', '**/bin/jlink.exe' }.files.find { it?.isFile() }
         if (jlink == null) {
           throw new GradleException("No jlink under ${dir} (run unzipJdk${target} first)")
         }

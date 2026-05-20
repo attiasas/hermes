@@ -61,7 +61,7 @@ jobs:
           if-no-files-found: ignore
 
   export-html:
-    name: Export HTML
+    name: Test Export HTML
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
@@ -87,7 +87,7 @@ jobs:
           if-no-files-found: error
 
   export-android:
-    name: Export Android
+    name: Test Export Android
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
@@ -114,7 +114,7 @@ jobs:
           if-no-files-found: error
 
   export-desktop-linux:
-    name: Export Desktop (Linux)
+    name: Test Export Desktop (Linux)
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
@@ -126,7 +126,7 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - name: Export desktop (linuxX64)
-        run: ./gradlew :game:zipHermesExportDesktopLinuxX64 --no-daemon --stacktrace
+        run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop linux export zip
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
@@ -140,7 +140,7 @@ jobs:
           if-no-files-found: error
 
   export-desktop-macos:
-    name: Export Desktop (macOS)
+    name: Test Export Desktop (macOS)
     runs-on: macos-latest
     needs: build
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
@@ -152,7 +152,7 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - name: Export desktop (mac)
-        run: ./gradlew :game:zipHermesExportDesktopMacM1 :game:zipHermesExportDesktopMacX64 --no-daemon --stacktrace
+        run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop mac export zips
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
@@ -167,7 +167,7 @@ jobs:
           if-no-files-found: error
 
   export-desktop-windows:
-    name: Export Desktop (Windows)
+    name: Test Export Desktop (Windows)
     runs-on: windows-latest
     needs: build
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
@@ -179,7 +179,7 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - name: Export desktop (winX64)
-        run: ./gradlew :game:zipHermesExportDesktopWinX64 --no-daemon --stacktrace
+        run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop windows export zip
         shell: bash
         run: |
