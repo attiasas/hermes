@@ -16,6 +16,7 @@ public final class HermesEngineVersions {
     "gdxTeaVMVersion",
     "android.useAndroidX",
     "hermes.androidGradlePluginVersion",
+    "construoVersion",
   };
 
   /** Keys written into generated game {@code gradle.properties} (libGDX versions are injected by the settings plugin). */
@@ -29,6 +30,7 @@ public final class HermesEngineVersions {
   private static final String DEFAULT_GDX_TEAVM_VERSION = "1.5.5";
   private static final String DEFAULT_ANDROID_USE_ANDROIDX = "true";
   private static final String DEFAULT_ANDROID_GRADLE_PLUGIN_VERSION = "8.9.3";
+  private static final String DEFAULT_CONSTRUO_VERSION = "2.1.0";
 
   private HermesEngineVersions() {}
 
@@ -39,6 +41,7 @@ public final class HermesEngineVersions {
     props.setProperty("gdxTeaVMVersion", DEFAULT_GDX_TEAVM_VERSION);
     props.setProperty("android.useAndroidX", DEFAULT_ANDROID_USE_ANDROIDX);
     props.setProperty("hermes.androidGradlePluginVersion", DEFAULT_ANDROID_GRADLE_PLUGIN_VERSION);
+    props.setProperty("construoVersion", DEFAULT_CONSTRUO_VERSION);
     return props;
   }
 

@@ -1,5 +1,6 @@
 package dev.hermes.cli;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Set;

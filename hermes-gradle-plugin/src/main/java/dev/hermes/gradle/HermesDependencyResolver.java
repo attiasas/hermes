@@ -21,7 +21,7 @@ public final class HermesDependencyResolver {
       return;
     }
 
-    String version = HermesEngineVersion.resolve(gameProject, extension);
+    String version = HermesConfig.resolveEngineVersion(gameProject);
     dependencies.add("api", HermesEngineVersion.DEFAULT_GROUP + ":hermes-api:" + version);
     dependencies.add("runtimeOnly", HermesEngineVersion.DEFAULT_GROUP + ":hermes-core:" + version);
     gameProject.getRepositories().mavenLocal();

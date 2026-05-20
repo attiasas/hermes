@@ -9,7 +9,13 @@ public class PlatformsExtension {
   private final AndroidPlatformSpec android = new AndroidPlatformSpec();
 
   public PlatformsExtension() {
-    desktop.setEnabled(true);
+    this(true);
+  }
+
+  PlatformsExtension(boolean defaultDesktopEnabled) {
+    if (defaultDesktopEnabled) {
+      desktop.setEnabled(true);
+    }
   }
 
   public DesktopPlatformSpec getDesktop() {

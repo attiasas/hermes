@@ -136,7 +136,6 @@ public final class HermesDoctor {
   }
 
   private static CheckResult checkEngineResolution(Project gameProject) {
-    HermesExtension extension = gameProject.getExtensions().findByType(HermesExtension.class);
     if (gameProject.findProject(":hermes-api") != null) {
       return new CheckResult("engine", Status.OK, "Using sibling projects hermes-api / hermes-core.", null);
     }
@@ -144,10 +143,7 @@ public final class HermesDoctor {
     if (HermesHomeResolver.isHermesCheckout(home)) {
       return new CheckResult("engine", Status.OK, "HERMES_HOME engine checkout: " + home.getAbsolutePath(), null);
     }
-    String version =
-        extension != null
-            ? HermesEngineVersion.resolve(gameProject, extension)
-            : gameProject.getVersion().toString();
+    String version = HermesConfig.resolveEngineVersion(gameProject);
     File artifact =
         new File(
             System.getProperty("user.home")

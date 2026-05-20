@@ -11,7 +11,7 @@
       "id": "logo",
       "components": {
         "Transform": { "x": 320, "y": 240 },
-        "Sprite": { "texture": "libgdx.png" },
+        "Sprite": { "texture": "hermes-logo.png" },
         "PulseMarker": { "amplitude": 0.15, "speed": 2.5 }
       }
     }

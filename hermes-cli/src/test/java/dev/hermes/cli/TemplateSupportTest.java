@@ -55,6 +55,18 @@ class TemplateSupportTest {
   }
 
   @Test
+  void materialize_includesDefaultAssets(@TempDir Path target) throws Exception {
+    materialize(target);
+
+    assertTrue(
+        Files.isRegularFile(target.resolve("game/src/main/resources/assets/hermes-logo.png")),
+        "template must ship hermes-logo.png");
+    assertTrue(
+        Files.isRegularFile(target.resolve("game/src/main/resources/assets/icons/web/favicon.png")),
+        "template must ship favicon under assets/icons");
+  }
+
+  @Test
   void materialize_settingsGradleUsesMavenLocal(@TempDir Path target) throws Exception {
     materialize(target);
 
@@ -65,8 +77,12 @@ class TemplateSupportTest {
         "must declare repositories for synced launcher modules");
     assertFalse(settings.contains("includeBuild"), "must not composite-include hermes-gradle-plugin in IDE");
     assertTrue(settings.contains("enabled = true"), "desktop should be enabled by default");
-    assertTrue(settings.contains("devServerPort"), "settings.gradle should document html options");
-    assertTrue(settings.contains("screenOrientation"), "settings.gradle should document android options");
+    String gameBuild = Files.readString(target.resolve("game/build.gradle"), StandardCharsets.UTF_8);
+    assertTrue(gameBuild.contains("devServerPort"), "game/build.gradle should configure html options");
+    assertTrue(gameBuild.contains("screenOrientation"), "game/build.gradle should configure android options");
+    assertTrue(gameBuild.contains("platforms {"), "game/build.gradle should own platform details");
+    assertTrue(gameBuild.contains("assetsDirectory"), "game/build.gradle should set assetsDirectory");
+    assertTrue(gameBuild.contains("icons {"), "game/build.gradle should declare icons DSL");
   }
 
   @Test

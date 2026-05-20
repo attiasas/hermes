@@ -106,8 +106,8 @@ Cold-cache build:
 | Source | Purpose |
 |--------|---------|
 | [`game/hermes.json`](game/hermes.json) | **Game data only** — `title`, `scene` (simulation/content). |
-| [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Platform toggles and per-platform settings (desktop / html / android). |
-| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `version`, `applicationClass`, `assetsDirectory`, `debug`. |
+| [`settings.gradle`](settings.gradle) `hermes { platforms { … enabled } }` | Which launchers are included (`desktop` / `html` / `android`). |
+| [`game/build.gradle`](game/build.gradle) `hermes { … }` | `applicationClass`, `assetsDirectory`, `debug`, `icons`, platform details (window size, Android IDs, export targets). |
 
 Example `hermes.json`:
 
@@ -129,12 +129,17 @@ version = '0.1.0'
 
 hermes {
   applicationClass = 'dev.hermes.sample.SampleHermesGame'
-  assetsDirectory = 'src/main/resources/assets'  // default; override to relocate assets
+  assetsDirectory = 'src/main/resources/assets'
   debug = true
+  platforms {
+    desktop { width = 640; height = 480; executableName = 'HermesGame' }
+    html { width = 640; height = 480 }
+    android { applicationId = 'dev.hermes.game' }
+  }
 }
 ```
 
-Enable HTML or Android in [`settings.gradle`](settings.gradle):
+Enable HTML or Android in [`settings.gradle`](settings.gradle) (structural only):
 
 ```groovy
 hermes {
@@ -163,6 +168,26 @@ Then sync Gradle and run:
 | `hermesDoctor` | Validate setup, toolchains, and forbidden libGDX imports |
 | `hermesSyncPlatforms` | Copy launcher stubs into `.hermes/platforms/` for standalone projects |
 | `generateAssetList` | Regenerate `build/generated/hermes-assets/assets.txt` from the assets directory |
+
+---
+
+## Phase 4 — export
+
+Distribution builds use `hermes.debug=false` even when `debug = true` in `game/build.gradle`. Replace icons under `src/main/resources/assets/icons/` (shipped in the empty template).
+
+| Task | Output |
+|------|--------|
+| `hermesExportDesktop` | `game/build/dist/desktop/*-{linux-x64,macos-aarch64,macos-x64,windows-x64}.zip` (native bundles via Construo) |
+| `hermesExportHtml` | `game/build/dist/html/*-html.zip` |
+| `hermesExportAndroid` | `game/build/dist/android/*-android.zip` (unsigned APK) |
+| `hermesExport` | All enabled platform exports |
+
+```bash
+./gradlew :game:hermesExportDesktop
+./gradlew :game:hermesExportHtml
+./gradlew :game:hermesExportAndroid
+./gradlew :game:hermesExport
+```
 
 ### Module graph
 
@@ -212,7 +237,7 @@ Enable the platform in [`settings.gradle`](settings.gradle) (`platforms.android.
 
 ### Troubleshooting
 
-- **macOS:** `hermesRunDesktop` adds `-XstartOnFirstThread`; `StartupHelper` may restart the JVM when needed.
+- **macOS desktop window frozen until resize / exit 133 / instant exit:** `hermesRunDesktop` uses JDK 17 (matching export), `-XstartOnFirstThread`, and sets `hermes.desktop.gradleRun=true` so `StartupHelper` does not spawn a child JVM (that path exits immediately from Gradle). The macOS Dock icon is set only in exported desktop bundles (from `icons/web/favicon.png`), not during Gradle dev runs. After upgrading Hermes, republish to Maven local and delete `.hermes/platforms/hermes-launcher-desktop` so the synced launcher is refreshed.
 - **Linux + NVIDIA:** `__GL_THREADED_OPTIMIZATIONS=0` is set for Gradle-spawned runs.
 - **Android:** See [Android SDK](#android-sdk); ensure a device/emulator is connected for `hermesRunAndroid`.
 - **HTML:** Enable `platforms.html` in settings, then `hermesRunHtml` serves at http://localhost:8080/ after TeaVM build.

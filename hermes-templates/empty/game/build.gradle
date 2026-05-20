@@ -12,5 +12,36 @@ java {
 
 hermes {
   applicationClass = '{{APPLICATION_CLASS}}'
+  assetsDirectory = 'src/main/resources/assets'
   debug = true
+
+  icons {
+    directory = 'icons'
+  }
+
+  platforms {
+    desktop {
+      width = 640
+      height = 480
+      vsync = true
+      resizable = true
+      foregroundFps = 0
+      bundleId = '{{ANDROID_APPLICATION_ID}}'
+      executableName = '{{PROJECT_NAME}}'
+    }
+    html {
+      width = 640
+      height = 480
+      devServerPort = 8080
+      webAssembly = true
+    }
+    android {
+      applicationId = '{{ANDROID_APPLICATION_ID}}'
+      minSdk = 21
+      targetSdk = 35
+      compileSdk = 35
+      versionCode = 1
+      screenOrientation = 'landscape'
+    }
+  }
 }

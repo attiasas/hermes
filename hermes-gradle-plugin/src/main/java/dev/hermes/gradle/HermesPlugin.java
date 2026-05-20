@@ -41,6 +41,7 @@ public final class HermesPlugin implements Plugin<Project> {
     registerRuntimeConfigTask(project);
     registerSyncPlatformsTask(project);
     registerHermesDoctorTask(project);
+    HermesExportTasks.register(project);
 
     project.afterEvaluate(
         evaluated -> {
@@ -80,11 +81,11 @@ public final class HermesPlugin implements Plugin<Project> {
                   t -> {
                     HermesExtension gameExtension =
                         gameProject.getExtensions().getByType(HermesExtension.class);
-                    String engineVersion = HermesEngineVersion.resolve(gameProject, gameExtension);
+                    String engineVersion = HermesConfig.resolveEngineVersion(gameProject);
                     File hermesHome = HermesHomeResolver.resolve(gameProject);
                     HermesPlatformSync.syncAllEnabled(
                         root.getRootDir(),
-                        HermesPlatforms.resolve(gameProject),
+                        HermesConfig.resolveSettingsPlatforms(gameProject),
                         engineVersion,
                         hermesHome);
                   });
@@ -195,6 +196,9 @@ public final class HermesPlugin implements Plugin<Project> {
       if (child.getName().equals("assets.txt")) {
         continue;
       }
+      if (child.getName().equals("icons")) {
+        continue;
+      }
       if (child.isDirectory()) {
         collectAssetPaths(root, child, assetsFile);
       } else {
@@ -260,7 +264,7 @@ public final class HermesPlugin implements Plugin<Project> {
               task.setWorkingDir(assetsDir);
               JavaToolchainService toolchains = project.getExtensions().getByType(JavaToolchainService.class);
               task.getJavaLauncher()
-                  .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(11))));
+                  .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(17))));
               applyDesktopJvmArgs(task);
               applyDesktopSystemProperties(task, project, extension);
               String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
@@ -276,6 +280,9 @@ public final class HermesPlugin implements Plugin<Project> {
         t -> {
           List<String> args = new ArrayList<>(task.getJvmArgs());
           HermesJvmArgs.stripNativeAccess(args);
+          if (HermesJvmArgs.supportsNativeAccess(task)) {
+            args.add(HermesJvmArgs.NATIVE_ACCESS_FLAG);
+          }
           task.setJvmArgs(args);
         });
   }
@@ -296,6 +303,7 @@ public final class HermesPlugin implements Plugin<Project> {
     jvmArgs.add("-Dhermes.desktop.foregroundFps=" + desktop.getForegroundFps());
     jvmArgs.add("-Dhermes.game.title=" + config.getTitle());
     jvmArgs.add("-Dhermes.game.scene=" + config.getScene());
+    jvmArgs.add("-Dhermes.desktop.gradleRun=true");
     task.setJvmArgs(jvmArgs);
   }
 
@@ -403,6 +411,15 @@ public final class HermesPlugin implements Plugin<Project> {
     task.systemProperty("hermes.game.sources.dir", gameProject.file("src/main/java").getAbsolutePath());
     task.systemProperty("hermes.game.title", config.getTitle());
     task.systemProperty("hermes.game.scene", config.getScene());
+  }
+
+  static void registerMissingLauncherTaskStatic(
+      Project project,
+      String taskName,
+      String platformName,
+      String launcherModule,
+      String settingsFile) {
+    registerMissingLauncherTask(project, taskName, platformName, launcherModule, settingsFile);
   }
 
   private static void registerMissingLauncherTask(

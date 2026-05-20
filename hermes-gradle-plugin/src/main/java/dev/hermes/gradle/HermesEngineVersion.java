@@ -11,15 +11,8 @@ public final class HermesEngineVersion {
 
   private HermesEngineVersion() {}
 
-  public static String resolve(Project project, HermesExtension extension) {
-    if (extension.getEngineVersion() != null && !extension.getEngineVersion().isBlank()) {
-      return extension.getEngineVersion();
-    }
-    String fromProperty = readProperty(project, GRADLE_PROPERTY);
-    if (fromProperty != null && !fromProperty.isBlank()) {
-      return fromProperty;
-    }
-    return project.getVersion().toString();
+  public static String resolve(Project project) {
+    return HermesConfig.resolveEngineVersion(project);
   }
 
   public static String resolve(Settings settings, HermesSettingsExtension extension) {

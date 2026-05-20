@@ -51,7 +51,6 @@ dependencies {
   implementation gradleApi()
   implementation localGroovy()
   implementation 'org.apache.groovy:groovy:4.0.26'
-
   testImplementation gradleTestKit()
   testImplementation platform('org.junit:junit-bom:5.11.4')
   testImplementation 'org.junit.jupiter:junit-jupiter'

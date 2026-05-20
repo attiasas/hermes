@@ -38,7 +38,7 @@ public final class SampleHermesGame implements HermesApplication {
     transform.setRotationZ(15f);
     transform.setScaleX(0.75f);
     transform.setScaleY(0.75f);
-    Sprite sprite = new Sprite("libgdx.png");
+    Sprite sprite = new Sprite("hermes-logo.png");
     BounceMarker bounce = new BounceMarker();
     bounce.setAmplitude(14f);
     bounce.setSpeed(2.8f);
