@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
+import dev.hermes.core.debug.DebugOverlay;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.RenderSystem;
 
@@ -18,6 +19,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   private HermesEngineImpl engine;
   private SpriteBatch batch;
   private RenderSystem renderSystem;
+  private DebugOverlay debugOverlay;
 
   public HermesGdxApplication(HermesApplication application) {
     this.application = application;
@@ -40,6 +42,10 @@ public final class HermesGdxApplication implements ApplicationListener {
     engine.addSystem(renderSystem);
 
     application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+    if (HermesLauncherSupport.isDebugEnabled()) {
+      debugOverlay = new DebugOverlay(HermesLauncherSupport::isDebugEnabled);
+    }
   }
 
   @Override
@@ -63,6 +69,10 @@ public final class HermesGdxApplication implements ApplicationListener {
       system.render(engine.world());
     }
 
+    if (debugOverlay != null) {
+      debugOverlay.render(engine.world());
+    }
+
     application.render();
   }
 
@@ -79,6 +89,9 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void dispose() {
     application.dispose();
+    if (debugOverlay != null) {
+      debugOverlay.dispose();
+    }
     if (renderSystem != null) {
       renderSystem.dispose();
     }
