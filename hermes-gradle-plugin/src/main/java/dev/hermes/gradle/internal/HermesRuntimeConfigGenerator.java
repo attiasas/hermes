@@ -1,7 +1,10 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
+import dev.hermes.gradle.HermesGameConfigs;
+import dev.hermes.gradle.HermesPlatforms;
 import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.launch.HermesLaunchProperties;
 import dev.hermes.tooling.platform.DesktopPlatform;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,11 +16,11 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
 /** Writes {@code hermes-runtime.properties} for packaged runtime configuration. */
-final class HermesRuntimeConfigGenerator {
+public final class HermesRuntimeConfigGenerator {
 
   private HermesRuntimeConfigGenerator() {}
 
-  static void write(Project gameProject, HermesExtension extension, File outputDir) {
+  public static void write(Project gameProject, HermesExtension extension, File outputDir) {
     HermesGameConfig gameConfig = HermesGameConfigs.parse(gameProject);
     DesktopPlatform desktop = HermesPlatforms.resolve(gameProject).getDesktop();
 
@@ -25,19 +28,20 @@ final class HermesRuntimeConfigGenerator {
       throw new GradleException("Could not create " + outputDir.getAbsolutePath());
     }
 
-    Properties properties = new Properties();
-    properties.setProperty("hermes.applicationClass", extension.getApplicationClass());
     boolean debug =
         HermesDistributionMode.isDistributionExport(gameProject) ? false : extension.isDebug();
-    properties.setProperty("hermes.debug", Boolean.toString(debug));
-    properties.setProperty("hermes.window.width", Integer.toString(desktop.getWidth()));
-    properties.setProperty("hermes.window.height", Integer.toString(desktop.getHeight()));
-    properties.setProperty("hermes.window.title", gameConfig.getTitle());
-    properties.setProperty("hermes.desktop.vsync", Boolean.toString(desktop.isVsync()));
-    properties.setProperty("hermes.desktop.resizable", Boolean.toString(desktop.isResizable()));
-    properties.setProperty("hermes.desktop.foregroundFps", Integer.toString(desktop.getForegroundFps()));
-    properties.setProperty("hermes.game.title", gameConfig.getTitle());
-    properties.setProperty("hermes.game.scene", gameConfig.getScene());
+    Properties properties = new Properties();
+    HermesLaunchProperties.builder()
+        .applicationClass(extension.getApplicationClass())
+        .debug(debug)
+        .windowTitle(gameConfig.getTitle())
+        .windowSize(desktop.getWidth(), desktop.getHeight())
+        .scene(gameConfig.getScene())
+        .desktopVsync(desktop.isVsync())
+        .desktopResizable(desktop.isResizable())
+        .desktopForegroundFps(desktop.getForegroundFps())
+        .build()
+        .applyTo(properties);
 
     File file = new File(outputDir, "hermes-runtime.properties");
     try (OutputStreamWriter writer =

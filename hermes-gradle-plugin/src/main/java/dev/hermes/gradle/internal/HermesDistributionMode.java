@@ -1,8 +1,11 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
+import dev.hermes.gradle.HermesGameConfigs;
+import dev.hermes.gradle.HermesPlatforms;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.launch.HermesLaunchProperties;
 import dev.hermes.tooling.platform.DesktopPlatform;
 import dev.hermes.tooling.platform.HtmlPlatform;
 import java.util.ArrayList;
@@ -10,7 +13,7 @@ import java.util.List;
 import org.gradle.api.tasks.JavaExec;
 
 /** Forces distribution (non-debug) flags on export-related tasks without mutating {@link HermesExtension}. */
-final class HermesDistributionMode {
+public final class HermesDistributionMode {
 
   static final String EXPORT_ACTIVE_PROPERTY = "hermesDistributionExportActive";
 
@@ -46,36 +49,42 @@ final class HermesDistributionMode {
 
   static void applyDesktop(JavaExec task, ProjectHermesContext context) {
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
-    HermesJvmArgs.stripNativeAccess(jvmArgs);
-    jvmArgs.add("-Dhermes.applicationClass=" + context.applicationClass());
-    jvmArgs.add("-Dhermes.debug=false");
+    dev.hermes.gradle.HermesJvmArgs.stripNativeAccess(jvmArgs);
     DesktopPlatform desktop = context.config().getPlatforms().getDesktop();
     HermesGameConfig gameConfig = context.gameConfig();
-    jvmArgs.add("-Dhermes.window.width=" + desktop.getWidth());
-    jvmArgs.add("-Dhermes.window.height=" + desktop.getHeight());
-    jvmArgs.add("-Dhermes.window.title=" + gameConfig.getTitle());
-    jvmArgs.add("-Dhermes.desktop.vsync=" + desktop.isVsync());
-    jvmArgs.add("-Dhermes.desktop.resizable=" + desktop.isResizable());
-    jvmArgs.add("-Dhermes.desktop.foregroundFps=" + desktop.getForegroundFps());
-    jvmArgs.add("-Dhermes.game.title=" + gameConfig.getTitle());
-    jvmArgs.add("-Dhermes.game.scene=" + gameConfig.getScene());
+    jvmArgs.addAll(
+        HermesLaunchProperties.builder()
+            .applicationClass(context.applicationClass())
+            .debug(false)
+            .windowTitle(gameConfig.getTitle())
+            .windowSize(desktop.getWidth(), desktop.getHeight())
+            .scene(gameConfig.getScene())
+            .desktopVsync(desktop.isVsync())
+            .desktopResizable(desktop.isResizable())
+            .desktopForegroundFps(desktop.getForegroundFps())
+            .build()
+            .toJvmArgs());
     task.setJvmArgs(jvmArgs);
   }
 
   static void applyHtml(JavaExec task, ProjectHermesContext context, java.io.File assetsDir) {
     HtmlPlatform html = context.config().getPlatforms().getHtml();
     HermesGameConfig gameConfig = context.gameConfig();
-    task.systemProperty("hermes.applicationClass", context.applicationClass());
-    task.systemProperty("hermes.debug", "false");
-    task.systemProperty("hermes.window.width", String.valueOf(html.getWidth()));
-    task.systemProperty("hermes.window.height", String.valueOf(html.getHeight()));
-    task.systemProperty("hermes.window.title", gameConfig.getTitle());
-    task.systemProperty("hermes.html.devServerPort", String.valueOf(html.getDevServerPort()));
-    task.systemProperty("hermes.html.webAssembly", String.valueOf(html.isWebAssembly()));
-    task.systemProperty("hermes.assets.dir", assetsDir.getAbsolutePath());
-    task.systemProperty("hermes.game.sources.dir", context.gameProject().file("src/main/java").getAbsolutePath());
-    task.systemProperty("hermes.game.title", gameConfig.getTitle());
-    task.systemProperty("hermes.game.scene", gameConfig.getScene());
+    HermesLaunchProperties props =
+        HermesLaunchProperties.builder()
+            .applicationClass(context.applicationClass())
+            .debug(false)
+            .windowTitle(gameConfig.getTitle())
+            .windowSize(html.getWidth(), html.getHeight())
+            .scene(gameConfig.getScene())
+            .htmlDevServerPort(html.getDevServerPort())
+            .htmlWebAssembly(html.isWebAssembly())
+            .assetsDir(assetsDir.getAbsolutePath())
+            .gameSourcesDir(context.gameProject().file("src/main/java").getAbsolutePath())
+            .build();
+    for (var entry : props.asMap().entrySet()) {
+      task.systemProperty(entry.getKey(), entry.getValue());
+    }
   }
 
   record ProjectHermesContext(

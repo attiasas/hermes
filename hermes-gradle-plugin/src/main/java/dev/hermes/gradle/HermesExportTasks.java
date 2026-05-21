@@ -1,6 +1,7 @@
 package dev.hermes.gradle;
 
 import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.internal.HermesDistributionMode;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.platform.DesktopPlatform;
 import java.io.File;

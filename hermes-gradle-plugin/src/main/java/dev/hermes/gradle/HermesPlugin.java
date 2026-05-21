@@ -3,7 +3,9 @@ package dev.hermes.gradle;
 import dev.hermes.gradle.doctor.HermesDoctor;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;
+import dev.hermes.gradle.internal.HermesRuntimeConfigGenerator;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.launch.HermesLaunchProperties;
 import dev.hermes.tooling.platform.DesktopPlatform;
 import dev.hermes.tooling.platform.HtmlPlatform;
 import java.io.File;
@@ -299,21 +301,22 @@ public final class HermesPlugin implements Plugin<Project> {
     HermesGameConfig config = HermesGameConfigs.parse(gameProject);
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
     HermesJvmArgs.stripNativeAccess(jvmArgs);
-    jvmArgs.add("-Dhermes.applicationClass=" + extension.getApplicationClass());
-    jvmArgs.add("-Dhermes.debug=" + extension.isDebug());
-    jvmArgs.add("-Dhermes.window.width=" + desktop.getWidth());
-    jvmArgs.add("-Dhermes.window.height=" + desktop.getHeight());
-    jvmArgs.add("-Dhermes.window.title=" + config.getTitle());
-    jvmArgs.add("-Dhermes.desktop.vsync=" + desktop.isVsync());
-    jvmArgs.add("-Dhermes.desktop.resizable=" + desktop.isResizable());
-    jvmArgs.add("-Dhermes.desktop.foregroundFps=" + desktop.getForegroundFps());
-    jvmArgs.add("-Dhermes.game.title=" + config.getTitle());
-    jvmArgs.add("-Dhermes.game.scene=" + config.getScene());
-    jvmArgs.add("-Dhermes.desktop.gradleRun=true");
+    HermesLaunchProperties.Builder launch =
+        HermesLaunchProperties.builder()
+            .applicationClass(extension.getApplicationClass())
+            .debug(extension.isDebug())
+            .windowTitle(config.getTitle())
+            .windowSize(desktop.getWidth(), desktop.getHeight())
+            .scene(config.getScene())
+            .desktopVsync(desktop.isVsync())
+            .desktopResizable(desktop.isResizable())
+            .desktopForegroundFps(desktop.getForegroundFps())
+            .desktopGradleRun();
     int smokeFrames = resolveSmokeFrames(gameProject);
     if (smokeFrames > 0) {
-      jvmArgs.add("-Dhermes.desktop.smokeFrames=" + smokeFrames);
+      launch.desktopSmokeFrames(smokeFrames);
     }
+    jvmArgs.addAll(launch.build().toJvmArgs());
     task.setJvmArgs(jvmArgs);
   }
 
@@ -429,17 +432,21 @@ public final class HermesPlugin implements Plugin<Project> {
       JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
     HtmlPlatform html = HermesPlatforms.resolve(gameProject).getHtml();
     HermesGameConfig config = HermesGameConfigs.parse(gameProject);
-    task.systemProperty("hermes.applicationClass", extension.getApplicationClass());
-    task.systemProperty("hermes.debug", String.valueOf(extension.isDebug()));
-    task.systemProperty("hermes.window.width", String.valueOf(html.getWidth()));
-    task.systemProperty("hermes.window.height", String.valueOf(html.getHeight()));
-    task.systemProperty("hermes.window.title", config.getTitle());
-    task.systemProperty("hermes.html.devServerPort", String.valueOf(html.getDevServerPort()));
-    task.systemProperty("hermes.html.webAssembly", String.valueOf(html.isWebAssembly()));
-    task.systemProperty("hermes.assets.dir", assetsDir.getAbsolutePath());
-    task.systemProperty("hermes.game.sources.dir", gameProject.file("src/main/java").getAbsolutePath());
-    task.systemProperty("hermes.game.title", config.getTitle());
-    task.systemProperty("hermes.game.scene", config.getScene());
+    HermesLaunchProperties props =
+        HermesLaunchProperties.builder()
+            .applicationClass(extension.getApplicationClass())
+            .debug(extension.isDebug())
+            .windowTitle(config.getTitle())
+            .windowSize(html.getWidth(), html.getHeight())
+            .scene(config.getScene())
+            .htmlDevServerPort(html.getDevServerPort())
+            .htmlWebAssembly(html.isWebAssembly())
+            .assetsDir(assetsDir.getAbsolutePath())
+            .gameSourcesDir(gameProject.file("src/main/java").getAbsolutePath())
+            .build();
+    for (var entry : props.asMap().entrySet()) {
+      task.systemProperty(entry.getKey(), entry.getValue());
+    }
   }
 
   static void registerMissingLauncherTaskStatic(
