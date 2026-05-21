@@ -24,6 +24,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   private HermesEngineImpl engine;
   private SpriteBatch batch;
   private RenderPipelineExecutor renderPipeline;
+  private HermesFatalErrorScreen fatalErrorScreen;
 
   public HermesGdxApplication(HermesApplication application) {
     this.application = application;
@@ -31,40 +32,48 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void create() {
-    engine = new HermesEngineImpl();
-    engine.bindApplication(application);
-    batch = new SpriteBatch();
-    RenderPassRegistry passRegistry = new RenderPassRegistry();
-    application.configureRendering(new HermesRenderConfigurator(passRegistry));
-    renderPipeline =
-        new RenderPipelineExecutor(
-            batch, HermesLauncherSupport.gameRenderPipelinePath(), passRegistry);
+    fatalErrorScreen = new HermesFatalErrorScreen();
+    try {
+      engine = new HermesEngineImpl();
+      engine.bindApplication(application);
+      batch = new SpriteBatch();
+      RenderPassRegistry passRegistry = new RenderPassRegistry();
+      application.configureRendering(new HermesRenderConfigurator(passRegistry));
+      renderPipeline =
+          new RenderPipelineExecutor(
+              batch, HermesLauncherSupport.gameRenderPipelinePath(), passRegistry);
 
-    String scenePath = HermesLauncherSupport.gameScenePath();
-    if (scenePath != null && !scenePath.isBlank()) {
-      engine.scenes().registry().register("main", scenePath);
+      String scenePath = HermesLauncherSupport.gameScenePath();
+      if (scenePath != null && !scenePath.isBlank()) {
+        engine.scenes().registry().register("main", scenePath);
+      }
+
+      application.onCreate(engine);
+
+      if (scenePath != null && !scenePath.isBlank()) {
+        engine.scenes().request(SceneChangeRequest.goTo("main"));
+        engine.scenes().processPending();
+      }
+
+      int width = Gdx.graphics.getWidth();
+      int height = Gdx.graphics.getHeight();
+      if (width <= 0 || height <= 0) {
+        width = HermesLauncherSupport.windowWidth();
+        height = HermesLauncherSupport.windowHeight();
+      }
+      renderPipeline.resize(width, height);
+
+      application.resize(width, height);
+    } catch (Throwable error) {
+      enterFatalState(error);
     }
-
-    application.onCreate(engine);
-
-    if (scenePath != null && !scenePath.isBlank()) {
-      engine.scenes().request(SceneChangeRequest.goTo("main"));
-      engine.scenes().processPending();
-    }
-
-    int width = Gdx.graphics.getWidth();
-    int height = Gdx.graphics.getHeight();
-    if (width <= 0 || height <= 0) {
-      width = HermesLauncherSupport.windowWidth();
-      height = HermesLauncherSupport.windowHeight();
-    }
-    renderPipeline.resize(width, height);
-
-    application.resize(width, height);
   }
 
   @Override
   public void resize(int width, int height) {
+    if (fatalErrorScreen != null && fatalErrorScreen.isActive()) {
+      return;
+    }
     if (renderPipeline != null) {
       renderPipeline.resize(width, height);
     }
@@ -73,29 +82,46 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void render() {
-    engine.scenes().processPending();
-
-    float delta = Gdx.graphics.getDeltaTime();
-    boolean hasActiveScene = engine.scenes().stackDepth() > 0;
-    SceneStackPolicy stackPolicy = engine.scenes().stackPolicy();
-
-    for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
-      if (entry.scope() == SystemScope.GLOBAL) {
-        updateGlobalSystem(entry, engine.scenes().updateScenes(), delta, hasActiveScene, stackPolicy);
-      }
+    int width = Gdx.graphics.getWidth();
+    int height = Gdx.graphics.getHeight();
+    if (width <= 0 || height <= 0) {
+      width = HermesLauncherSupport.windowWidth();
+      height = HermesLauncherSupport.windowHeight();
     }
-    if (hasActiveScene) {
-      World activeWorld = engine.scenes().activeWorld();
+
+    if (fatalErrorScreen != null && fatalErrorScreen.isActive()) {
+      fatalErrorScreen.render(width, height);
+      return;
+    }
+
+    try {
+      engine.scenes().processPending();
+
+      float delta = Gdx.graphics.getDeltaTime();
+      boolean hasActiveScene = engine.scenes().stackDepth() > 0;
+      SceneStackPolicy stackPolicy = engine.scenes().stackPolicy();
+
       for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
-        if (entry.scope() == SystemScope.ACTIVE_SCENE) {
-          entry.system().update(activeWorld, delta);
+        if (entry.scope() == SystemScope.GLOBAL) {
+          updateGlobalSystem(entry, engine.scenes().updateScenes(), delta, hasActiveScene, stackPolicy);
         }
       }
+      if (hasActiveScene) {
+        World activeWorld = engine.scenes().activeWorld();
+        for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+          if (entry.scope() == SystemScope.ACTIVE_SCENE) {
+            entry.system().update(activeWorld, delta);
+          }
+        }
+      }
+
+      renderPipeline.execute(engine.scenes().visibleScenes());
+
+      application.render();
+    } catch (Throwable error) {
+      enterFatalState(error);
+      fatalErrorScreen.render(width, height);
     }
-
-    renderPipeline.execute(engine.scenes().visibleScenes());
-
-    application.render();
   }
 
   @Override
@@ -106,6 +132,13 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void resume() {
     application.resume();
+  }
+
+  private void enterFatalState(Throwable error) {
+    if (fatalErrorScreen == null) {
+      fatalErrorScreen = new HermesFatalErrorScreen();
+    }
+    fatalErrorScreen.report(error);
   }
 
   private static void updateGlobalSystem(
@@ -139,6 +172,9 @@ public final class HermesGdxApplication implements ApplicationListener {
     }
     if (batch != null) {
       batch.dispose();
+    }
+    if (fatalErrorScreen != null) {
+      fatalErrorScreen.dispose();
     }
   }
 }
