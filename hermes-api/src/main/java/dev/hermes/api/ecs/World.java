@@ -10,6 +10,10 @@ public interface World {
 
   Entity createEntity(String name);
 
+  Entity createEntity(String name, EntityKind kind);
+
+  void clear();
+
   void removeEntity(EntityId id);
 
   Entity findByName(String name);
@@ -27,6 +31,8 @@ public interface World {
   Collection<Entity> entities();
 
   <T extends Component> Collection<Entity> entitiesWith(Class<T> componentType);
+
+  Collection<Entity> entitiesWithKind(EntityKind kind);
 
   int entityCount();
 }

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
+import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,6 +98,38 @@ final class SceneParserTest {
 
     assertTrue(error.getMessage().contains("entities[0]"));
     assertTrue(error.getMessage().contains("must be an object"));
+  }
+
+  @Test
+  void loadsEntityKindFromJson() {
+    String json =
+        "{\n"
+            + "  \"entities\": [\n"
+            + "    {\n"
+            + "      \"id\": \"player\",\n"
+            + "      \"kind\": \"character\",\n"
+            + "      \"components\": {\n"
+            + "        \"Transform\": { \"x\": 0, \"y\": 0 }\n"
+            + "      }\n"
+            + "    },\n"
+            + "    {\n"
+            + "      \"id\": \"logo\",\n"
+            + "      \"components\": {\n"
+            + "        \"Sprite\": { \"texture\": \"logo.png\" }\n"
+            + "      }\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n";
+
+    SceneLoader.loadFromString("scenes/main.json", json, world, registry);
+
+    Entity player = world.findByName("player");
+    assertNotNull(player);
+    assertEquals(EntityKind.of("character"), player.kind());
+
+    Entity logo = world.findByName("logo");
+    assertNotNull(logo);
+    assertEquals(EntityKind.UNSET, logo.kind());
   }
 
   @Test
