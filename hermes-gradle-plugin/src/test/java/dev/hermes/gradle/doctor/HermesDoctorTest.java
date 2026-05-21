@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.doctor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
