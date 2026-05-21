@@ -43,6 +43,28 @@ final class CameraParserTest {
   }
 
   @Test
+  void loadsRenderTargetWhenPresent() {
+    String json =
+        "{\n"
+            + "  \"entities\": [\n"
+            + "    {\n"
+            + "      \"id\": \"cam\",\n"
+            + "      \"components\": {\n"
+            + "        \"Transform\": { \"x\": 0, \"y\": 0, \"z\": 0 },\n"
+            + "        \"Camera\": { \"renderTarget\": \"sceneColor\" }\n"
+            + "      }\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n";
+
+    WorldImpl world = new WorldImpl();
+    SceneLoader.loadFromString("scenes/test.json", json, world, registry);
+
+    Camera camera = world.getComponent(world.findByName("cam").id(), Camera.class);
+    assertEquals("sceneColor", camera.renderTarget());
+  }
+
+  @Test
   void loadsPerspectiveCamera() {
     String json =
         "{\n"

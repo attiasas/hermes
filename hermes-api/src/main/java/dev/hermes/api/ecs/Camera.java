@@ -21,6 +21,8 @@ public final class Camera implements Component {
   private float far = 3000f;
   private float viewportWidth;
   private float viewportHeight;
+  /** Optional pipeline framebuffer id; reserved for future camera-target routing. */
+  private String renderTarget;
 
   public Projection projection() {
     return projection;
@@ -86,5 +88,21 @@ public final class Camera implements Component {
 
   public void setViewportHeight(float viewportHeight) {
     this.viewportHeight = viewportHeight;
+  }
+
+  /**
+   * Optional render pipeline framebuffer id this camera renders into.
+   * {@code null} or blank means the default pass target. Not yet applied by the engine.
+   */
+  public String renderTarget() {
+    return renderTarget;
+  }
+
+  public void setRenderTarget(String renderTarget) {
+    if (renderTarget == null || renderTarget.isBlank()) {
+      this.renderTarget = null;
+    } else {
+      this.renderTarget = renderTarget.trim();
+    }
   }
 }

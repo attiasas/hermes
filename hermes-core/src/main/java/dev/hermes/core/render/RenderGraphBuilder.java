@@ -9,6 +9,7 @@ import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,22 +20,62 @@ public final class RenderGraphBuilder {
 
   public RenderGraph build(PipelineDocument document, SpriteBatch batch) {
     ShaderRegistry shaderRegistry = new ShaderRegistry(document.shaders());
-    List<RenderGraphPass> passes = new ArrayList<>();
-    for (PipelineDocument.PassDef passDef : document.passes()) {
-      Set<RenderLayer.Layer> layers = parseLayers(passDef.layers());
-      passes.add(createPass(passDef, batch, layers, shaderRegistry));
-    }
-    return new RenderGraph(document.clearColor(), passes, sharedModelCache, shaderRegistry);
+    FramebufferPool pool = new FramebufferPool(document.framebuffers());
+    validatePassTargets(document);
+    List<RenderGraphPass> passes = createPasses(document, batch, shaderRegistry, pool);
+    return new RenderGraph(
+        document.clearColor(), passes, sharedModelCache, shaderRegistry, pool);
   }
 
   /** Builds a graph with no-op passes for unit tests (same order and validation as {@link #build}). */
   RenderGraph buildWithStubs(PipelineDocument document) {
+    FramebufferPool pool = new FramebufferPool(document.framebuffers(), false);
+    validatePassTargets(document);
+    List<RenderGraphPass> passes = createStubPasses(document, pool);
+    return new RenderGraph(document.clearColor(), passes, null, null, pool);
+  }
+
+  private List<RenderGraphPass> createPasses(
+      PipelineDocument document,
+      SpriteBatch batch,
+      ShaderRegistry shaderRegistry,
+      FramebufferPool pool) {
+    List<RenderGraphPass> passes = new ArrayList<>();
+    for (PipelineDocument.PassDef passDef : document.passes()) {
+      Set<RenderLayer.Layer> layers = parseLayers(passDef.layers());
+      RenderGraphPass pass = createPass(passDef, batch, layers, shaderRegistry);
+      passes.add(new TargetBindingGraphPass(passDef.target(), pass, pool));
+    }
+    return passes;
+  }
+
+  private List<RenderGraphPass> createStubPasses(
+      PipelineDocument document, FramebufferPool pool) {
     List<RenderGraphPass> passes = new ArrayList<>();
     for (PipelineDocument.PassDef passDef : document.passes()) {
       parseLayers(passDef.layers());
-      passes.add(new StubRenderGraphPass(passDef.id()));
+      RenderGraphPass pass = new StubRenderGraphPass(passDef.id());
+      passes.add(new TargetBindingGraphPass(passDef.target(), pass, pool));
     }
-    return new RenderGraph(document.clearColor(), passes, null);
+    return passes;
+  }
+
+  private static void validatePassTargets(PipelineDocument document) {
+    Set<String> framebufferIds = new HashSet<>();
+    for (PipelineDocument.FramebufferDef def : document.framebuffers()) {
+      framebufferIds.add(def.id());
+    }
+    for (PipelineDocument.PassDef pass : document.passes()) {
+      String target = pass.target();
+      if (!"screen".equals(target) && !framebufferIds.contains(target)) {
+        throw new PipelineParseException(
+            "pass \""
+                + pass.id()
+                + "\" targets unknown framebuffer: "
+                + target
+                + " (declare it in \"framebuffers\")");
+      }
+    }
   }
 
   private RenderGraphPass createPass(

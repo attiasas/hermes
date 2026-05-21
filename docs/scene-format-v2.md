@@ -133,6 +133,7 @@ Example with tint:
 | `fieldOfView` | `67` | Perspective vertical FOV in degrees |
 | `near`, `far` | `0.1`, `3000` | Clip planes |
 | `viewportWidth`, `viewportHeight` | `0` | `0` = match window size |
+| `renderTarget` | *(unset)* | Optional pipeline framebuffer id; stored for future camera routing (see [render-pipeline.md](render-pipeline.md)) |
 
 Orthographic mode sorts drawables by world `z`. Perspective mode sorts by distance from the camera (farther first).
 

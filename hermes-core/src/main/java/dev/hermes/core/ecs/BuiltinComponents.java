@@ -60,6 +60,9 @@ public final class BuiltinComponents {
           camera.setFar(data.getFloat("far", 3000f));
           camera.setViewportWidth(data.getFloat("viewportWidth", 0f));
           camera.setViewportHeight(data.getFloat("viewportHeight", 0f));
+          if (data.has("renderTarget")) {
+            camera.setRenderTarget(data.getString("renderTarget", ""));
+          }
           return camera;
         });
     registry.register(
