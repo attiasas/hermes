@@ -66,10 +66,16 @@ public final class RenderGraphBuilder {
     List<RenderGraphPass> passes = new ArrayList<>();
     for (PipelineDocument.PassDef passDef : document.passes()) {
       parseLayers(passDef.layers());
-      RenderGraphPass pass =
-          passDef.type() == PipelineDocument.PassType.CUSTOM
-              ? new CustomGraphPass(passDef.id(), passRegistry.require(passDef.handler()))
-              : new StubRenderGraphPass(passDef.id());
+      RenderGraphPass pass;
+      if (passDef.type() == PipelineDocument.PassType.CUSTOM) {
+        pass = new CustomGraphPass(passDef.id(), passRegistry.require(passDef.handler()));
+      } else if (passDef.type() == PipelineDocument.PassType.POST
+          || passDef.type() == PipelineDocument.PassType.PARTICLES
+          || passDef.type() == PipelineDocument.PassType.COMPUTE) {
+        pass = new UnimplementedGraphPass(passDef.id(), passDef.type());
+      } else {
+        pass = new StubRenderGraphPass(passDef.id());
+      }
       passes.add(new TargetBindingGraphPass(passDef.target(), pass, pool));
     }
     return passes;
@@ -109,10 +115,15 @@ public final class RenderGraphBuilder {
         return new SpritesGraphPass(
             passDef.id(), new SpritesPass(batch, shaderRegistry), layers, passDef.depthTest());
       case UI:
-        return new UiGraphPass(passDef.id(), new UiPass(batch), layers, passDef.depthTest());
+        return new UiGraphPass(
+            passDef.id(), new UiPass(batch, passDef.camera()), layers, passDef.depthTest());
       case CUSTOM:
         return new CustomGraphPass(
             passDef.id(), passRegistry.require(passDef.handler()));
+      case POST:
+      case PARTICLES:
+      case COMPUTE:
+        return new UnimplementedGraphPass(passDef.id(), passDef.type());
       default:
         throw new PipelineParseException("unsupported pass type: " + passDef.type());
     }

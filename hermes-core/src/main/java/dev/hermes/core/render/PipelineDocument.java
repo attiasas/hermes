@@ -17,12 +17,19 @@ public final class PipelineDocument {
     WORLD3D("world3d"),
     SPRITES("sprites"),
     UI("ui"),
-    CUSTOM("custom");
+    CUSTOM("custom"),
+    POST("post"),
+    PARTICLES("particles"),
+    COMPUTE("compute");
 
     private final String jsonName;
 
     PassType(String jsonName) {
       this.jsonName = jsonName;
+    }
+
+    String jsonName() {
+      return jsonName;
     }
 
     static PassType fromJson(String value) {
@@ -93,6 +100,7 @@ public final class PipelineDocument {
     private final String target;
     private final List<String> layers;
     private final boolean depthTest;
+    private final String camera;
 
     public PassDef(
         String id,
@@ -100,13 +108,15 @@ public final class PipelineDocument {
         String handler,
         String target,
         List<String> layers,
-        boolean depthTest) {
+        boolean depthTest,
+        String camera) {
       this.id = id;
       this.type = type;
       this.handler = handler;
       this.target = target;
       this.layers = layers;
       this.depthTest = depthTest;
+      this.camera = camera;
     }
 
     public String id() {
@@ -132,6 +142,11 @@ public final class PipelineDocument {
 
     public boolean depthTest() {
       return depthTest;
+    }
+
+    /** Optional camera entity id for {@link PassType#UI} passes. */
+    public String camera() {
+      return camera;
     }
   }
 
@@ -264,7 +279,8 @@ public final class PipelineDocument {
       String target = entry.getString("target", "screen");
       List<String> layers = parseLayers(entry.get("layers"));
       boolean depthTest = entry.getBoolean("depthTest", true);
-      result.add(new PassDef(id, type, handler, target, layers, depthTest));
+      String camera = parseOptionalString(entry, "camera");
+      result.add(new PassDef(id, type, handler, target, layers, depthTest, camera));
     }
     return result;
   }
@@ -285,6 +301,15 @@ public final class PipelineDocument {
       layers.add(layer.asString());
     }
     return Collections.unmodifiableList(layers);
+  }
+
+  private static String parseOptionalString(JsonValue object, String field) {
+    JsonValue value = object.get(field);
+    if (value == null || !value.isString()) {
+      return null;
+    }
+    String text = value.asString().trim();
+    return text.isEmpty() ? null : text;
   }
 
   private static String requireString(JsonValue object, String field, String context) {

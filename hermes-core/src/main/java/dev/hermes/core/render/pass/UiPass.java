@@ -2,7 +2,6 @@ package dev.hermes.core.render.pass;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -13,6 +12,9 @@ import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.ecs.ActiveCamera;
+import dev.hermes.core.ecs.CameraResolver;
+import dev.hermes.core.ecs.SceneCamera;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -21,26 +23,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Renders UI-layer sprites in screen space (bottom-left origin). */
+/** Renders UI-layer sprites using an optional named scene camera or screen-space ortho. */
 public final class UiPass {
 
   private final SpriteBatch batch;
   private final Map<String, TextureRegion> regions = new HashMap<>();
-  private final OrthographicCamera uiCamera = new OrthographicCamera();
+  private final SceneCamera sceneCamera = new SceneCamera();
+  private final String cameraEntityName;
   private float windowWidth = 640f;
   private float windowHeight = 480f;
 
   public UiPass(SpriteBatch batch) {
+    this(batch, null);
+  }
+
+  public UiPass(SpriteBatch batch, String cameraEntityName) {
     this.batch = batch;
-    uiCamera.setToOrtho(false);
-    resize((int) windowWidth, (int) windowHeight);
+    this.cameraEntityName = cameraEntityName;
+    sceneCamera.resize(windowWidth, windowHeight);
   }
 
   public void resize(int width, int height) {
     windowWidth = Math.max(1, width);
     windowHeight = Math.max(1, height);
-    uiCamera.setToOrtho(false, windowWidth, windowHeight);
-    uiCamera.update();
+    sceneCamera.resize(windowWidth, windowHeight);
   }
 
   public void render(World world, Set<RenderLayer.Layer> layers) {
@@ -52,7 +58,11 @@ public final class UiPass {
     drawables.sort(
         Comparator.comparingDouble(e -> world.getComponent(e.id(), Transform.class).z()));
 
-    batch.setProjectionMatrix(uiCamera.combined);
+    ActiveCamera active =
+        CameraResolver.resolveNamed(world, cameraEntityName, windowWidth, windowHeight);
+    sceneCamera.apply(active);
+
+    batch.setProjectionMatrix(sceneCamera.combined());
     batch.begin();
     for (Entity entity : drawables) {
       drawSprite(world, entity);

@@ -74,6 +74,46 @@ final class PipelineDocumentTest {
   }
 
   @Test
+  void parse_futurePassTypes_postParticlesCompute() {
+    String json =
+        "{\n"
+            + "  \"version\": 1,\n"
+            + "  \"passes\": [\n"
+            + "    { \"id\": \"post\", \"type\": \"post\", \"target\": \"screen\" },\n"
+            + "    { \"id\": \"fx\", \"type\": \"particles\", \"target\": \"screen\" },\n"
+            + "    { \"id\": \"cull\", \"type\": \"compute\", \"target\": \"screen\" }\n"
+            + "  ]\n"
+            + "}\n";
+
+    PipelineDocument doc = PipelineDocument.parse(json);
+
+    assertEquals(PipelineDocument.PassType.POST, doc.passes().get(0).type());
+    assertEquals(PipelineDocument.PassType.PARTICLES, doc.passes().get(1).type());
+    assertEquals(PipelineDocument.PassType.COMPUTE, doc.passes().get(2).type());
+  }
+
+  @Test
+  void parse_uiPassOptionalCamera() {
+    String json =
+        "{\n"
+            + "  \"version\": 1,\n"
+            + "  \"passes\": [\n"
+            + "    {\n"
+            + "      \"id\": \"ui\",\n"
+            + "      \"type\": \"ui\",\n"
+            + "      \"target\": \"screen\",\n"
+            + "      \"layers\": [\"UI\"],\n"
+            + "      \"camera\": \"ui-camera\"\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n";
+
+    PipelineDocument doc = PipelineDocument.parse(json);
+
+    assertEquals("ui-camera", doc.passes().get(0).camera());
+  }
+
+  @Test
   void parse_unsupportedVersionThrows() {
     String json = "{ \"version\": 99, \"passes\": [] }";
 

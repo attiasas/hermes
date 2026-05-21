@@ -96,6 +96,34 @@ The field is parsed and stored on the component for future routing (e.g. binding
 
 A scene may set `"renderPipeline": "render/ui-overlay.json"` to use a different graph (for example a UI-only pause menu). Resolution order: scene JSON override → `SceneDefinition.renderPipeline` → project default from `hermes.json`.
 
+## UI pass camera
+
+UI passes may pin the scene camera by entity id:
+
+```json
+{ "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "camera": "ui-camera", "depthTest": false }
+```
+
+The entity `ui-camera` must have `Transform` + `Camera` (usually orthographic). When omitted, the pass uses the active scene camera.
+
+## HUD framebuffer (future UI system)
+
+A UI pass may target a dedicated framebuffer (for example `"target": "hud"`) declared under `framebuffers`. A later composite pass can blit `hud` to `screen` for engine-managed HUD layers. Declare `hud` with `depth: false` for pure 2D overlays.
+
+## Future passes (not implemented yet)
+
+| `type` | Planned use |
+|--------|-------------|
+| `post` | Full-screen post-processing chain (bloom, color grade, etc.) |
+| `particles` | World or entity particle emitters |
+| `compute` | GPU compute prepass (desktop only; skipped on HTML/TeaVM) |
+
+These types parse successfully in pipeline JSON today. At runtime the engine logs once per pass id and skips drawing until implemented.
+
+## HTML and custom GLSL
+
+TeaVM/HTML supports **builtin** shaders only in v1 (`shaders/default.vert` and `shaders/default.frag`). `hermesDoctor` **fails** when the HTML platform is enabled and `assets/shaders/` contains any other `.vert` / `.frag` files. Use desktop-only custom shaders or disable HTML in `settings.gradle`.
+
 ## Builtin default
 
 `assets/render/builtin-forward.json` in `hermes-core` is the canonical forward pipeline (world3d → sprites → ui to screen). Templates copy or reference an equivalent `pipeline.json`.
