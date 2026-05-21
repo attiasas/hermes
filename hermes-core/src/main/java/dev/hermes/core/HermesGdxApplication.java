@@ -5,7 +5,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
+import dev.hermes.api.ecs.SystemScope;
+import dev.hermes.api.ecs.World;
 import dev.hermes.api.scene.SceneChangeRequest;
+import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.RenderSystem;
 
@@ -41,7 +44,7 @@ public final class HermesGdxApplication implements ApplicationListener {
     application.onCreate(engine);
 
     renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    engine.addSystem(renderSystem);
+    engine.addSystem(renderSystem, SystemScope.GLOBAL);
 
     application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
   }
@@ -59,13 +62,30 @@ public final class HermesGdxApplication implements ApplicationListener {
     Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1f);
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+    engine.scenes().processPending();
+
     float delta = Gdx.graphics.getDeltaTime();
-    var world = engine.scenes().activeWorld();
+    World activeWorld = engine.scenes().activeWorld();
+    boolean hasActiveScene = engine.scenes().stackDepth() > 0;
+
     for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
-      entry.system().update(world, delta);
+      if (entry.scope() == SystemScope.GLOBAL) {
+        entry.system().update(activeWorld, delta);
+      }
     }
-    for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
-      entry.system().render(world);
+    if (hasActiveScene) {
+      for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+        if (entry.scope() == SystemScope.ACTIVE_SCENE) {
+          entry.system().update(activeWorld, delta);
+        }
+      }
+    }
+
+    for (SceneHandle scene : engine.scenes().visibleScenes()) {
+      World world = scene.world();
+      for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+        entry.system().render(world);
+      }
     }
 
     application.render();
