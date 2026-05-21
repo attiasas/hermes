@@ -87,13 +87,22 @@ public final class HermesRunTasks {
             "hermesRunDesktop",
             JavaExec.class,
             task -> {
+              int smokeFrames = resolveSmokeFrames(project);
+              boolean smokeRun = smokeFrames > 0;
               task.setGroup("hermes");
-              task.setDescription("Run the game on desktop (LWJGL3)");
+              task.setDescription(
+                  smokeRun
+                      ? "Run the game on desktop (headless smoke, " + smokeFrames + " frames)"
+                      : "Run the game on desktop (LWJGL3)");
               task.dependsOn(
                   launcher.getTasks().named("classes"),
                   project.getTasks().named("classes"),
                   "generateAssetList");
-              task.getMainClass().set("dev.hermes.launcher.desktop.Lwjgl3Launcher");
+              task.getMainClass()
+                  .set(
+                      smokeRun
+                          ? "dev.hermes.launcher.desktop.HeadlessSmokeLauncher"
+                          : "dev.hermes.launcher.desktop.Lwjgl3Launcher");
               SourceSet launcherMain =
                   launcher.getExtensions().getByType(SourceSetContainer.class).getByName("main");
               SourceSet gameMain =
@@ -105,11 +114,13 @@ public final class HermesRunTasks {
                   .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(17))));
               applyDesktopJvmArgs(task);
               applyDesktopSystemProperties(task, project, extension);
-              String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-              if (os.contains("mac")) {
-                task.jvmArgs("-XstartOnFirstThread");
+              if (!smokeRun) {
+                String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
+                if (os.contains("mac")) {
+                  task.jvmArgs("-XstartOnFirstThread");
+                }
+                task.environment("__GL_THREADED_OPTIMIZATIONS", "0");
               }
-              task.environment("__GL_THREADED_OPTIMIZATIONS", "0");
             });
   }
 

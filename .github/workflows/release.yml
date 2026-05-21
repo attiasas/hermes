@@ -59,9 +59,9 @@ jobs:
             game/build/libs/*.jar
             game/build/dist/**/*.zip
 
-  desktop-smoke-macos:
+  desktop-smoke:
     needs: build-engine
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -129,7 +129,7 @@ jobs:
           path: release-cli/*.zip
 
   release:
-    needs: [build-engine, desktop-smoke-macos, build-cli]
+    needs: [build-engine, desktop-smoke, build-cli]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts

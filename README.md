@@ -22,7 +22,7 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Gam
 
 You should see a 640×480 window with the libGDX logo. Game logic lives in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes `-Dhermes.applicationClass` at launch.
 
-Automated smoke (exits after 2 frames, no window interaction):
+Automated smoke (headless backend, exits after 2 frames, no window):
 
 ```bash
 ./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2

@@ -67,13 +67,13 @@ Validate ZIP layout with `.github/scripts/validate-export-zip.sh` when debugging
 
 Expect a 640×480 window with the sample scene. Game class is set via `hermes { applicationClass = '…' }` in `game/build.gradle`.
 
-**Automated smoke (Phase 2b)** — headless-friendly run with a frame cap (not yet in all branches; documented for upcoming CI):
+**Automated smoke** — headless libGDX backend with a frame cap (CI-friendly, no display required):
 
 ```bash
 ./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2
 ```
 
-Use this in scripts/CI to verify startup without a human closing the window. Until Phase 2b lands in your branch, prefer `:game:hermesDoctor` and `:hermes-core:test` for gate checks.
+Use this in scripts and CI to verify startup and a few render ticks without closing a window manually.
 
 ## CLI development
 

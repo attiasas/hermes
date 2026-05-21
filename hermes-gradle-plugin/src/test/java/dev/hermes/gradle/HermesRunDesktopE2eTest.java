@@ -10,6 +10,7 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+/** Verifies smoke-mode {@code hermesRunDesktop} wiring via headless launcher (no GLFW/display). */
 class HermesRunDesktopE2eTest {
 
   private static File hermesRoot;

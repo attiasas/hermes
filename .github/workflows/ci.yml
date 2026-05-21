@@ -43,8 +43,7 @@ jobs:
       - name: Build and test
         run: ./gradlew build publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal :hermes-core:test hermes-tooling-test :hermes-gradle-plugin:test :hermes-cli:test --no-daemon --stacktrace
 
-      - name: Desktop smoke (macOS)
-        if: matrix.os == 'macos'
+      - name: Desktop smoke (headless)
         run: ./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2 --no-daemon --stacktrace
 
       - name: Publish test report
