@@ -21,7 +21,7 @@ public final class ShaderRegistry implements Disposable {
 
   public static final String DEFAULT_UNLIT = "default/unlit";
 
-  private final Map<String, ShaderProgram> programs = new HashMap<>();
+  private final Map<String, RegisteredShader> shaders = new HashMap<>();
   private final Set<String> builtinIds = new HashSet<>();
 
   public ShaderRegistry(Map<String, PipelineDocument.ShaderDef> shaders) {
@@ -33,7 +33,7 @@ public final class ShaderRegistry implements Disposable {
   }
 
   public boolean isRegistered(String shaderId) {
-    return usesBuiltin(shaderId) || programs.containsKey(shaderId);
+    return usesBuiltin(shaderId) || shaders.containsKey(shaderId);
   }
 
   public boolean usesBuiltin(String shaderId) {
@@ -41,11 +41,11 @@ public final class ShaderRegistry implements Disposable {
   }
 
   public ShaderProgram requireProgram(String shaderId) {
-    ShaderProgram program = programs.get(shaderId);
-    if (program == null) {
+    RegisteredShader shader = shaders.get(shaderId);
+    if (shader == null) {
       throw new ShaderCompileException("shader not registered: " + shaderId);
     }
-    return program;
+    return shader.spriteProgram();
   }
 
   /**
@@ -56,10 +56,21 @@ public final class ShaderRegistry implements Disposable {
     if (usesBuiltin(shaderId)) {
       return null;
     }
-    ShaderProgram program = requireProgram(shaderId);
+    RegisteredShader sources = shaders.get(shaderId);
+    if (sources == null) {
+      throw new ShaderCompileException("shader not registered: " + shaderId);
+    }
     Renderable scoped = renderable;
     scoped.environment = environment;
-    return new DefaultShader(scoped, new DefaultShader.Config(), program);
+    DefaultShader shader =
+        new DefaultShader(
+            scoped,
+            new DefaultShader.Config(),
+            "",
+            sources.vertexSource(),
+            sources.fragmentSource());
+    shader.init();
+    return shader;
   }
 
   private void register(String id, PipelineDocument.ShaderDef def) {
@@ -97,15 +108,52 @@ public final class ShaderRegistry implements Disposable {
               + "): "
               + program.getLog());
     }
-    programs.put(id, program);
+    program.dispose();
+    shaders.put(id, new RegisteredShader(vertexSource, fragmentSource));
   }
 
   @Override
   public void dispose() {
-    for (ShaderProgram program : programs.values()) {
-      program.dispose();
+    for (RegisteredShader shader : shaders.values()) {
+      shader.dispose();
     }
-    programs.clear();
+    shaders.clear();
     builtinIds.clear();
+  }
+
+  private static final class RegisteredShader {
+    private final String vertexSource;
+    private final String fragmentSource;
+    private ShaderProgram spriteProgram;
+
+    private RegisteredShader(String vertexSource, String fragmentSource) {
+      this.vertexSource = vertexSource;
+      this.fragmentSource = fragmentSource;
+    }
+
+    private String vertexSource() {
+      return vertexSource;
+    }
+
+    private String fragmentSource() {
+      return fragmentSource;
+    }
+
+    private ShaderProgram spriteProgram() {
+      if (spriteProgram == null) {
+        spriteProgram = new ShaderProgram(vertexSource, fragmentSource);
+        if (!spriteProgram.isCompiled()) {
+          throw new ShaderCompileException("failed to compile sprite shader: " + spriteProgram.getLog());
+        }
+      }
+      return spriteProgram;
+    }
+
+    private void dispose() {
+      if (spriteProgram != null) {
+        spriteProgram.dispose();
+        spriteProgram = null;
+      }
+    }
   }
 }

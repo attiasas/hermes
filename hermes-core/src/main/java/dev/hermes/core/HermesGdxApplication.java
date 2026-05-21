@@ -52,9 +52,15 @@ public final class HermesGdxApplication implements ApplicationListener {
       engine.scenes().processPending();
     }
 
-    renderPipeline.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    int width = Gdx.graphics.getWidth();
+    int height = Gdx.graphics.getHeight();
+    if (width <= 0 || height <= 0) {
+      width = HermesLauncherSupport.windowWidth();
+      height = HermesLauncherSupport.windowHeight();
+    }
+    renderPipeline.resize(width, height);
 
-    application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    application.resize(width, height);
   }
 
   @Override

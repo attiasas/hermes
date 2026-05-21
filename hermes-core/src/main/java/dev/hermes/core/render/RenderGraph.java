@@ -1,5 +1,6 @@
 package dev.hermes.core.render;
 
+import com.badlogic.gdx.Gdx;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
@@ -13,6 +14,8 @@ public final class RenderGraph {
   private final ModelCache sharedModelCache;
   private final ShaderRegistry shaderRegistry;
   private final FramebufferPool framebufferPool;
+  private int backbufferWidth = -1;
+  private int backbufferHeight = -1;
 
   RenderGraph(float[] clearColor, List<RenderGraphPass> passes, ModelCache sharedModelCache) {
     this(clearColor, passes, sharedModelCache, null, null);
@@ -65,17 +68,31 @@ public final class RenderGraph {
   }
 
   public void resize(int width, int height) {
+    backbufferWidth = Math.max(1, width);
+    backbufferHeight = Math.max(1, height);
     if (framebufferPool != null) {
-      framebufferPool.resize(width, height);
+      framebufferPool.resize(backbufferWidth, backbufferHeight);
     }
     for (RenderGraphPass pass : passes) {
-      pass.resize(width, height);
+      pass.resize(backbufferWidth, backbufferHeight);
     }
   }
 
   public void render(World world) {
+    syncBackbufferSize();
     for (RenderGraphPass pass : passes) {
       pass.render(world);
+    }
+  }
+
+  private void syncBackbufferSize() {
+    int width = Gdx.graphics.getWidth();
+    int height = Gdx.graphics.getHeight();
+    if (width <= 0 || height <= 0) {
+      return;
+    }
+    if (width != backbufferWidth || height != backbufferHeight) {
+      resize(width, height);
     }
   }
 

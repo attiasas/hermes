@@ -1,6 +1,5 @@
 package dev.hermes.core.render.pass;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -61,7 +60,6 @@ public final class SpritesPass {
   }
 
   public void render(World world, Set<RenderLayer.Layer> layers) {
-    syncWindowSize();
     ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
     sceneCamera.apply(active);
 
@@ -138,14 +136,6 @@ public final class SpritesPass {
       return null;
     }
     return shaderRegistry.requireProgram(shaderId);
-  }
-
-  private void syncWindowSize() {
-    int width = Gdx.graphics.getWidth();
-    int height = Gdx.graphics.getHeight();
-    if (width > 0 && height > 0 && (width != (int) windowWidth || height != (int) windowHeight)) {
-      resize(width, height);
-    }
   }
 
   private static List<Entity> collectDrawableEntities(World world, Set<RenderLayer.Layer> layers) {

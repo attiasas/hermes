@@ -1,6 +1,5 @@
 package dev.hermes.core.render.pass;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -50,7 +49,6 @@ public final class UiPass {
   }
 
   public void render(World world, Set<RenderLayer.Layer> layers) {
-    syncWindowSize();
     List<Entity> drawables = collectDrawableEntities(world, layers);
     if (drawables.isEmpty()) {
       return;
@@ -102,14 +100,6 @@ public final class UiPass {
         1f,
         1f,
         transform.rotationZ());
-  }
-
-  private void syncWindowSize() {
-    int width = Gdx.graphics.getWidth();
-    int height = Gdx.graphics.getHeight();
-    if (width > 0 && height > 0 && (width != (int) windowWidth || height != (int) windowHeight)) {
-      resize(width, height);
-    }
   }
 
   private static List<Entity> collectDrawableEntities(World world, Set<RenderLayer.Layer> layers) {

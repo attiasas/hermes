@@ -20,6 +20,7 @@ final class FramebufferGlMock {
   static final class RecordingGl implements InvocationHandler {
     private final GL20 delegate = ShaderCompileGlMock.create();
     private final List<Integer> bindFramebufferCalls = new ArrayList<>();
+    private final List<int[]> viewportCalls = new ArrayList<>();
     private int nextFramebufferId = 10;
     private int nextTextureId = 20;
 
@@ -29,6 +30,14 @@ final class FramebufferGlMock {
 
     List<Integer> bindFramebufferCalls() {
       return List.copyOf(bindFramebufferCalls);
+    }
+
+    List<int[]> viewportCalls() {
+      return List.copyOf(viewportCalls);
+    }
+
+    void clearViewportCalls() {
+      viewportCalls.clear();
     }
 
     @Override
@@ -48,9 +57,19 @@ final class FramebufferGlMock {
         case "glTexImage2D":
         case "glTexParameteri":
         case "glFramebufferTexture2D":
-        case "glViewport":
         case "glClear":
         case "glClearColor":
+          return null;
+        case "glViewport":
+          if (args != null && args.length >= 4) {
+            viewportCalls.add(
+                new int[] {
+                  ((Number) args[0]).intValue(),
+                  ((Number) args[1]).intValue(),
+                  ((Number) args[2]).intValue(),
+                  ((Number) args[3]).intValue()
+                });
+          }
           return null;
         case "glGetIntegerv":
           if (args != null && args.length >= 2 && args[1] instanceof IntBuffer) {
