@@ -6,11 +6,11 @@ import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 
 /** Selects the active scene camera from ECS entities. */
-final class CameraResolver {
+public final class CameraResolver {
 
   private CameraResolver() {}
 
-  static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
+  public static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
     Entity activeEntity = null;
     Camera activeCamera = null;
     Entity fallbackEntity = null;

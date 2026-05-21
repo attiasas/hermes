@@ -11,7 +11,7 @@ import dev.hermes.api.ecs.Transform;
 import java.util.HashMap;
 import java.util.Map;
 
-final class BuiltinComponents {
+public final class BuiltinComponents {
 
   static final String TRANSFORM = "Transform";
   static final String SPRITE = "Sprite";
@@ -22,7 +22,7 @@ final class BuiltinComponents {
 
   private BuiltinComponents() {}
 
-  static void register(ComponentRegistry registry) {
+  public static void register(ComponentRegistry registry) {
     registry.register(
         TRANSFORM,
         Transform.class,

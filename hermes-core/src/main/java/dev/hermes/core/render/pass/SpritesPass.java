@@ -1,32 +1,37 @@
-package dev.hermes.core.ecs;
+package dev.hermes.core.render.pass;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import dev.hermes.core.HermesAssetPaths;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector3;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Sprite;
-import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
+import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.ecs.ActiveCamera;
+import dev.hermes.core.ecs.CameraResolver;
+import dev.hermes.core.ecs.SceneCamera;
+import dev.hermes.core.ecs.SpriteDrawOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /** Renders sprites in world space using the active scene camera projection. */
-public final class RenderSystem implements System {
+public final class SpritesPass {
 
   private final SpriteBatch batch;
   private final Map<String, TextureRegion> regions = new HashMap<>();
   private final SceneCamera sceneCamera = new SceneCamera();
+  private final Vector3 projected = new Vector3();
   private float windowWidth = 640f;
   private float windowHeight = 480f;
 
-  public RenderSystem(SpriteBatch batch) {
+  public SpritesPass(SpriteBatch batch) {
     this.batch = batch;
     sceneCamera.resize(windowWidth, windowHeight);
   }
@@ -37,7 +42,6 @@ public final class RenderSystem implements System {
     sceneCamera.resize(windowWidth, windowHeight);
   }
 
-  @Override
   public void render(World world) {
     syncWindowSize();
     ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
@@ -49,12 +53,12 @@ public final class RenderSystem implements System {
     batch.setProjectionMatrix(sceneCamera.combined());
     batch.begin();
     for (Entity entity : drawables) {
-      drawSprite(world, entity);
+      drawSprite(world, entity, active, sceneCamera);
     }
     batch.end();
   }
 
-  private void drawSprite(World world, Entity entity) {
+  private void drawSprite(World world, Entity entity, ActiveCamera active, SceneCamera sceneCamera) {
     Transform transform = world.getComponent(entity.id(), Transform.class);
     Sprite sprite = world.getComponent(entity.id(), Sprite.class);
     if (transform == null || sprite == null) {
@@ -73,17 +77,19 @@ public final class RenderSystem implements System {
             });
     float width = region.getRegionWidth() * transform.scaleX();
     float height = region.getRegionHeight() * transform.scaleY();
-    batch.draw(
-        region,
-        transform.x(),
-        transform.y(),
-        width * 0.5f,
-        height * 0.5f,
-        width,
-        height,
-        1f,
-        1f,
-        transform.rotationZ());
+    float originX = width * 0.5f;
+    float originY = height * 0.5f;
+    float x = transform.x();
+    float y = transform.y();
+    float rotation = transform.rotationZ();
+
+    if (active.projection() == Camera.Projection.PERSPECTIVE) {
+      projected.set(x, y, transform.z());
+      sceneCamera.gdxCamera().project(projected);
+      batch.draw(region, projected.x, projected.y, originX, originY, width, height, 1f, 1f, rotation);
+    } else {
+      batch.draw(region, x, y, originX, originY, width, height, 1f, 1f, rotation);
+    }
   }
 
   private void syncWindowSize() {

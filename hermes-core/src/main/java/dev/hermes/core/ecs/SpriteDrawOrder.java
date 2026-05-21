@@ -8,11 +8,11 @@ import java.util.Comparator;
 import java.util.List;
 
 /** Sorts drawable entities for the active camera projection. */
-final class SpriteDrawOrder {
+public final class SpriteDrawOrder {
 
   private SpriteDrawOrder() {}
 
-  static void sort(List<Entity> entities, World world, ActiveCamera camera) {
+  public static void sort(List<Entity> entities, World world, ActiveCamera camera) {
     if (camera.projection() == Camera.Projection.PERSPECTIVE) {
       sortByDistanceFromCamera(entities, world, camera);
     } else {

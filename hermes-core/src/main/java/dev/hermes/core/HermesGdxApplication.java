@@ -8,9 +8,8 @@ import dev.hermes.api.HermesApplication;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.World;
 import dev.hermes.api.scene.SceneChangeRequest;
-import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.ecs.HermesEngineImpl;
-import dev.hermes.core.ecs.RenderSystem;
+import dev.hermes.core.render.RenderPipelineExecutor;
 
 /**
  * libGDX {@link ApplicationListener} that delegates lifecycle to a {@link HermesApplication}. Rendering uses libGDX
@@ -21,7 +20,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   private final HermesApplication application;
   private HermesEngineImpl engine;
   private SpriteBatch batch;
-  private RenderSystem renderSystem;
+  private RenderPipelineExecutor renderPipeline;
 
   public HermesGdxApplication(HermesApplication application) {
     this.application = application;
@@ -32,7 +31,7 @@ public final class HermesGdxApplication implements ApplicationListener {
     engine = new HermesEngineImpl();
     engine.bindApplication(application);
     batch = new SpriteBatch();
-    renderSystem = new RenderSystem(batch);
+    renderPipeline = new RenderPipelineExecutor(batch);
 
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {
@@ -46,16 +45,15 @@ public final class HermesGdxApplication implements ApplicationListener {
       engine.scenes().processPending();
     }
 
-    renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    engine.addSystem(renderSystem, SystemScope.GLOBAL);
+    renderPipeline.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
     application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
   }
 
   @Override
   public void resize(int width, int height) {
-    if (renderSystem != null) {
-      renderSystem.resize(width, height);
+    if (renderPipeline != null) {
+      renderPipeline.resize(width, height);
     }
     application.resize(width, height);
   }
@@ -63,7 +61,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void render() {
     Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1f);
-    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
     engine.scenes().processPending();
 
@@ -84,12 +82,7 @@ public final class HermesGdxApplication implements ApplicationListener {
       }
     }
 
-    for (SceneHandle scene : engine.scenes().visibleScenes()) {
-      World world = scene.world();
-      for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
-        entry.system().render(world);
-      }
-    }
+    renderPipeline.execute(engine.scenes().visibleScenes());
 
     application.render();
   }
@@ -107,8 +100,8 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void dispose() {
     application.dispose();
-    if (renderSystem != null) {
-      renderSystem.dispose();
+    if (renderPipeline != null) {
+      renderPipeline.dispose();
     }
     if (batch != null) {
       batch.dispose();
