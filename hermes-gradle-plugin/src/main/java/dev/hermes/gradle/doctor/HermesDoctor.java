@@ -1,55 +1,24 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.doctor;
 
-import dev.hermes.tooling.AndroidSdkValidator;
-import dev.hermes.tooling.HermesDoctorSupport;
+import dev.hermes.gradle.HermesConfig;
+import dev.hermes.gradle.HermesHomeGradle;
+import dev.hermes.tooling.android.AndroidSdkLocator;
+import dev.hermes.tooling.config.HermesConfigException;
+import dev.hermes.tooling.config.HermesGameConfigParser;
+import dev.hermes.tooling.doctor.HermesDoctorSupport;
+import dev.hermes.tooling.doctor.HermesDoctorSupport.CheckResult;
+import dev.hermes.tooling.doctor.HermesDoctorSupport.Status;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import org.gradle.api.GradleException;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 
-/** Validates Hermes projects and environment; Gradle task and CLI entry points. */
+/** Validates Hermes projects and environment; Gradle {@code hermesDoctor} task entry point. */
 public final class HermesDoctor {
 
   private HermesDoctor() {}
-
-  public enum Status {
-    OK,
-    WARN,
-    FAIL
-  }
-
-  public static final class CheckResult {
-    private final String name;
-    private final Status status;
-    private final String message;
-    private final String fix;
-
-    public CheckResult(String name, Status status, String message, String fix) {
-      this.name = name;
-      this.status = status;
-      this.message = message;
-      this.fix = fix;
-    }
-
-    public String name() {
-      return name;
-    }
-
-    public Status status() {
-      return status;
-    }
-
-    public String message() {
-      return message;
-    }
-
-    public String fix() {
-      return fix;
-    }
-  }
 
   public static void runGradle(Project gameProject) {
     java.util.List<CheckResult> results = new java.util.ArrayList<>();
@@ -62,49 +31,11 @@ public final class HermesDoctor {
     printAndThrow(results);
   }
 
-  public static java.util.List<CheckResult> runStandalone(java.nio.file.Path projectDir) {
-    java.util.List<CheckResult> results = new java.util.ArrayList<>();
-    for (HermesDoctorSupport.CheckResult support : HermesDoctorSupport.runStandalone(projectDir)) {
-      results.add(fromSupport(support));
-    }
-    return results;
-  }
-
-  public static void printResults(java.util.List<CheckResult> results) {
-    for (CheckResult result : results) {
-      System.out.println("[" + result.status() + "] " + result.name() + ": " + result.message());
-      if (result.fix() != null && !result.fix().isBlank() && result.status() != Status.OK) {
-        System.out.println("       fix: " + result.fix());
-      }
-    }
-  }
-
-  public static boolean hasFailure(java.util.List<CheckResult> results) {
-    for (CheckResult result : results) {
-      if (result.status() == Status.FAIL) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static void printAndThrow(java.util.List<CheckResult> results) {
-    printResults(results);
-    if (hasFailure(results)) {
+  private static void printAndThrow(java.util.List<CheckResult> results) {
+    HermesDoctorSupport.printResults(results);
+    if (HermesDoctorSupport.hasFailure(results)) {
       throw new GradleException("hermesDoctor found failures (see above).");
     }
-  }
-
-  static java.util.List<String> findForbiddenImports(java.nio.file.Path srcRoot) {
-    return HermesDoctorSupport.findForbiddenImports(srcRoot);
-  }
-
-  private static CheckResult fromSupport(HermesDoctorSupport.CheckResult support) {
-    return new CheckResult(
-        support.name(),
-        Status.valueOf(support.status().name()),
-        support.message(),
-        support.fix());
   }
 
   private static CheckResult checkJdk() {
@@ -130,7 +61,7 @@ public final class HermesDoctor {
     try {
       HermesGameConfigParser.parse(file);
       return new CheckResult("hermes.json", Status.OK, "Valid: " + file.getAbsolutePath(), null);
-    } catch (GradleException e) {
+    } catch (HermesConfigException e) {
       return new CheckResult("hermes.json", Status.FAIL, e.getMessage(), "Fix JSON syntax and required fields.");
     }
   }
@@ -139,8 +70,8 @@ public final class HermesDoctor {
     if (gameProject.findProject(":hermes-api") != null) {
       return new CheckResult("engine", Status.OK, "Using sibling projects hermes-api / hermes-core.", null);
     }
-    File home = HermesHomeResolver.resolve(gameProject);
-    if (HermesHomeResolver.isHermesCheckout(home)) {
+    File home = HermesHomeGradle.resolve(gameProject);
+    if (HermesHomeGradle.isHermesCheckout(home)) {
       return new CheckResult("engine", Status.OK, "HERMES_HOME engine checkout: " + home.getAbsolutePath(), null);
     }
     String version = HermesConfig.resolveEngineVersion(gameProject);
@@ -168,7 +99,7 @@ public final class HermesDoctor {
     if (!srcRoot.isDirectory()) {
       return results;
     }
-    java.util.List<String> violations = findForbiddenImports(srcRoot.toPath());
+    java.util.List<String> violations = HermesDoctorSupport.findForbiddenImports(srcRoot.toPath());
     if (violations.isEmpty()) {
       results.add(
           new CheckResult(
@@ -191,8 +122,8 @@ public final class HermesDoctor {
     java.util.List<CheckResult> results = new java.util.ArrayList<>();
     Project root = gameProject.getRootProject();
     if (root.findProject(":hermes-launcher-android") != null) {
-      File sdk = resolveAndroidSdk(root);
-      if (!AndroidSdkValidator.isValidSdk(sdk)) {
+      File sdk = AndroidSdkLocator.locate(root.getRootDir());
+      if (sdk == null) {
         results.add(
             new CheckResult(
                 "android-sdk",
@@ -204,38 +135,6 @@ public final class HermesDoctor {
       }
     }
     return results;
-  }
-
-  private static File resolveAndroidSdk(Project root) {
-    File localProperties = root.file("local.properties");
-    if (localProperties.isFile()) {
-      try {
-        for (String line : Files.readAllLines(localProperties.toPath(), StandardCharsets.UTF_8)) {
-          if (line.startsWith("sdk.dir=")) {
-            String path = line.substring("sdk.dir=".length()).trim();
-            if (!path.isBlank()) {
-              File sdk = new File(path);
-              if (AndroidSdkValidator.isValidSdk(sdk)) {
-                return sdk;
-              }
-            }
-          }
-        }
-      } catch (IOException ignored) {
-        // fall through
-      }
-    }
-    String fromEnv = System.getenv("ANDROID_SDK_ROOT");
-    if (fromEnv == null || fromEnv.isBlank()) {
-      fromEnv = System.getenv("ANDROID_HOME");
-    }
-    if (fromEnv != null && !fromEnv.isBlank()) {
-      File sdk = new File(fromEnv);
-      if (AndroidSdkValidator.isValidSdk(sdk)) {
-        return sdk;
-      }
-    }
-    return null;
   }
 
   private static CheckResult checkWritableDirs(Project gameProject) {

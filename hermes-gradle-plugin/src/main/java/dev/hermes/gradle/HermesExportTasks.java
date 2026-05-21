@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.config.HermesGameConfig;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -264,7 +265,7 @@ final class HermesExportTasks {
   }
 
   private static void configureDesktopLauncher(Project gameProject, Project launcher, HermesConfig config) {
-    HermesGameConfig gameConfig = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
+    HermesGameConfig gameConfig = HermesGameConfigs.parse(gameProject);
     DesktopPlatformSpec desktop = config.getPlatforms().getDesktop();
     String executableName = desktop.getExecutableName();
     if (executableName == null || executableName.isBlank()) {

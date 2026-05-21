@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.config.HermesGameConfig;
 import java.util.ArrayList;
 import java.util.List;
 import org.gradle.api.tasks.JavaExec;
@@ -85,7 +86,7 @@ final class HermesDistributionMode {
           gameProject,
           config,
           config.getGame().getApplicationClass(),
-          HermesGameConfigParser.parse(gameProject.file("hermes.json")));
+          HermesGameConfigs.parse(gameProject));
     }
   }
 }

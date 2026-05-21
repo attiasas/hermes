@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.config.HermesGameConfig;
 import java.lang.reflect.Method;
 import org.gradle.api.Project;
 
@@ -20,7 +21,7 @@ final class HermesAndroidLauncherConfigurer {
 
   private static void configure(Project gameProject, Project launcher, HermesExtension gameExtension) {
     AndroidPlatformSpec android = HermesPlatforms.resolve(gameProject).getAndroid();
-    HermesGameConfig gameConfig = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
+    HermesGameConfig gameConfig = HermesGameConfigs.parse(gameProject);
     String applicationClass = gameExtension.getApplicationClass();
     String versionName = gameProject.getVersion().toString();
 

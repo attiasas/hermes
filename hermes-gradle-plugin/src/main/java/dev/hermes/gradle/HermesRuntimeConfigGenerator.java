@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.config.HermesGameConfig;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,7 +16,7 @@ final class HermesRuntimeConfigGenerator {
   private HermesRuntimeConfigGenerator() {}
 
   static void write(Project gameProject, HermesExtension extension, File outputDir) {
-    HermesGameConfig gameConfig = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
+    HermesGameConfig gameConfig = HermesGameConfigs.parse(gameProject);
     DesktopPlatformSpec desktop = HermesPlatforms.resolve(gameProject).getDesktop();
 
     if (!outputDir.exists() && !outputDir.mkdirs()) {

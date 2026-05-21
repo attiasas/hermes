@@ -3,7 +3,7 @@ package dev.hermes.gradle;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.hermes.tooling.HermesDoctorSupport;
+import dev.hermes.tooling.doctor.HermesDoctorSupport;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;

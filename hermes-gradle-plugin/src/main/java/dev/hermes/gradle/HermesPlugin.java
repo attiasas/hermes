@@ -1,5 +1,7 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.doctor.HermesDoctor;
+import dev.hermes.tooling.config.HermesGameConfig;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +65,7 @@ public final class HermesPlugin implements Plugin<Project> {
   }
 
   private static HermesGameConfig loadGameConfig(Project project) {
-    return HermesGameConfigParser.parse(project.file("hermes.json"));
+    return HermesGameConfigs.parse(project);
   }
 
   private static void registerSyncPlatformsTask(Project gameProject) {
@@ -82,7 +84,7 @@ public final class HermesPlugin implements Plugin<Project> {
                     HermesExtension gameExtension =
                         gameProject.getExtensions().getByType(HermesExtension.class);
                     String engineVersion = HermesConfig.resolveEngineVersion(gameProject);
-                    File hermesHome = HermesHomeResolver.resolve(gameProject);
+                    File hermesHome = HermesHomeGradle.resolve(gameProject);
                     HermesPlatformSync.syncAllEnabled(
                         root.getRootDir(),
                         HermesConfig.resolveSettingsPlatforms(gameProject),
@@ -290,7 +292,7 @@ public final class HermesPlugin implements Plugin<Project> {
   private static void applyDesktopSystemProperties(
       JavaExec task, Project gameProject, HermesExtension extension) {
     DesktopPlatformSpec desktop = HermesPlatforms.resolve(gameProject).getDesktop();
-    HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
+    HermesGameConfig config = HermesGameConfigs.parse(gameProject);
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
     HermesJvmArgs.stripNativeAccess(jvmArgs);
     jvmArgs.add("-Dhermes.applicationClass=" + extension.getApplicationClass());
@@ -399,7 +401,7 @@ public final class HermesPlugin implements Plugin<Project> {
   private static void applyHtmlSystemProperties(
       JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
     HtmlPlatformSpec html = HermesPlatforms.resolve(gameProject).getHtml();
-    HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
+    HermesGameConfig config = HermesGameConfigs.parse(gameProject);
     task.systemProperty("hermes.applicationClass", extension.getApplicationClass());
     task.systemProperty("hermes.debug", String.valueOf(extension.isDebug()));
     task.systemProperty("hermes.window.width", String.valueOf(html.getWidth()));

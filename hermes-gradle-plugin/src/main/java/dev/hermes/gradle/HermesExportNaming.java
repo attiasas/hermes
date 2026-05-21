@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.config.HermesGameConfig;
 import java.util.Locale;
 
 final class HermesExportNaming {
@@ -20,7 +21,7 @@ final class HermesExportNaming {
   }
 
   static String zipBaseName(org.gradle.api.Project gameProject, String suffix) {
-    HermesGameConfig config = HermesGameConfigParser.parse(gameProject.file("hermes.json"));
+    HermesGameConfig config = HermesGameConfigs.parse(gameProject);
     return sanitizeTitle(config.getTitle()) + "-" + version(gameProject) + "-" + suffix;
   }
 
