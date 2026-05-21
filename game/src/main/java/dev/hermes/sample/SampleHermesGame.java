@@ -5,6 +5,7 @@ import dev.hermes.api.HermesApplication;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
+import dev.hermes.api.ecs.World;
 
 /**
  * Internal sample; compiles only against {@code hermes-api} (no libGDX imports).
@@ -33,7 +34,8 @@ public final class SampleHermesGame implements HermesApplication {
   }
 
   private static void spawnCodeEntity(HermesEngine engine) {
-    Entity marker = engine.world().createEntity("code-marker");
+    World world = engine.scenes().activeWorld();
+    Entity marker = world.createEntity("code-marker");
     Transform transform = new Transform(80f, 80f, 2f);
     transform.setRotationZ(15f);
     transform.setScaleX(0.75f);
@@ -43,9 +45,9 @@ public final class SampleHermesGame implements HermesApplication {
     bounce.setAmplitude(14f);
     bounce.setSpeed(2.8f);
 
-    engine.world().addComponent(marker.id(), transform);
-    engine.world().addComponent(marker.id(), sprite);
-    engine.world().addComponent(marker.id(), bounce);
+    world.addComponent(marker.id(), transform);
+    world.addComponent(marker.id(), sprite);
+    world.addComponent(marker.id(), bounce);
   }
 
   @Override

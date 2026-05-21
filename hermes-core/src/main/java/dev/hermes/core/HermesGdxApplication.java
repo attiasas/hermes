@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
+import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.RenderSystem;
 
@@ -26,6 +27,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void create() {
     engine = new HermesEngineImpl();
+    engine.bindApplication(application);
     batch = new SpriteBatch();
     renderSystem = new RenderSystem(batch);
 
@@ -33,7 +35,9 @@ public final class HermesGdxApplication implements ApplicationListener {
 
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {
-      engine.loadScene(scenePath);
+      engine.scenes().registry().register("main", scenePath);
+      engine.scenes().request(SceneChangeRequest.goTo("main"));
+      engine.scenes().processPending();
     }
 
     renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -56,11 +60,12 @@ public final class HermesGdxApplication implements ApplicationListener {
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
     float delta = Gdx.graphics.getDeltaTime();
-    for (dev.hermes.api.ecs.System system : engine.systems()) {
-      system.update(engine.world(), delta);
+    var world = engine.scenes().activeWorld();
+    for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+      entry.system().update(world, delta);
     }
-    for (dev.hermes.api.ecs.System system : engine.systems()) {
-      system.render(engine.world());
+    for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+      entry.system().render(world);
     }
 
     application.render();

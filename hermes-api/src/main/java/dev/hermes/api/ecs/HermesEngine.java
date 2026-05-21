@@ -1,13 +1,15 @@
 package dev.hermes.api.ecs;
 
+import dev.hermes.api.scene.SceneManager;
+
 /** Runtime engine context exposed to user applications during bootstrap. */
 public interface HermesEngine {
 
-  World world();
+  SceneManager scenes();
 
   ComponentRegistry registry();
 
   void addSystem(System system);
 
-  void loadScene(String scenePath);
+  void addSystem(System system, SystemScope scope);
 }
