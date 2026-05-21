@@ -25,9 +25,12 @@ import java.util.stream.Stream;
 
 public final class TemplateSupport {
 
+  private static final Set<String> SUPPORTED_TEMPLATES = Set.of("minimal", "multi-scene");
+
   private TemplateSupport() {}
 
-  public static void materializeEmptyTemplate(
+  public static void materializeTemplate(
+      String templateId,
       Path targetDir,
       String projectName,
       String packageName,
@@ -35,6 +38,7 @@ public final class TemplateSupport {
       Set<String> enabledPlatforms,
       Path androidSdk)
       throws IOException {
+    validateTemplateId(templateId);
     if (Files.exists(targetDir)) {
       try (Stream<Path> entries = Files.list(targetDir)) {
         if (entries.findAny().isPresent()) {
@@ -43,7 +47,7 @@ public final class TemplateSupport {
       }
     }
     Files.createDirectories(targetDir);
-    Path templateRoot = locateTemplateRoot();
+    Path templateRoot = locateTemplateRoot(templateId);
     Map<String, String> tokens = buildTokens(projectName, packageName, engineVersion, enabledPlatforms);
     copyAndSubstitute(templateRoot, targetDir, tokens);
     mergeHermesKeysIntoGradleProperties(targetDir);
@@ -51,6 +55,25 @@ public final class TemplateSupport {
       configureAndroidSdk(targetDir, androidSdk);
     }
     makeGradleWrapperExecutable(targetDir);
+  }
+
+  public static Path locateTemplateRoot(String templateId) throws IOException {
+    validateTemplateId(templateId);
+    Path fromFilesystem = findTemplateOnFilesystem(templateId);
+    if (fromFilesystem != null) {
+      return fromFilesystem;
+    }
+    String resourcePrefix = "/hermes-templates/" + templateId;
+    try (InputStream marker =
+        TemplateSupport.class.getResourceAsStream(resourcePrefix + "/settings.gradle")) {
+      if (marker == null) {
+        throw new IOException(
+            "Template hermes-templates/" + templateId + " not found in CLI resources. Rebuild hermes-cli.");
+      }
+    }
+    Path extracted = Files.createTempDirectory("hermes-template-" + templateId);
+    extractResourceTree(resourcePrefix, extracted);
+    return extracted;
   }
 
   public static Set<String> parsePlatforms(String platforms) throws IOException {
@@ -69,6 +92,15 @@ public final class TemplateSupport {
       throw new IOException("At least one platform is required in --platforms");
     }
     return result;
+  }
+
+  private static void validateTemplateId(String templateId) throws IOException {
+    if (templateId == null || templateId.isBlank()) {
+      throw new IOException("Template id is required");
+    }
+    if (!SUPPORTED_TEMPLATES.contains(templateId)) {
+      throw new IOException("Unknown template: " + templateId + " (supported: minimal, multi-scene)");
+    }
   }
 
   private static void mergeHermesKeysIntoGradleProperties(Path targetDir) throws IOException {
@@ -142,23 +174,6 @@ public final class TemplateSupport {
     }
   }
 
-  private static Path locateTemplateRoot() throws IOException {
-    Path fromFilesystem = findTemplateOnFilesystem();
-    if (fromFilesystem != null) {
-      return fromFilesystem;
-    }
-    try (InputStream marker =
-        TemplateSupport.class.getResourceAsStream("/hermes-templates/empty/settings.gradle")) {
-      if (marker == null) {
-        throw new IOException(
-            "Template hermes-templates/empty not found in CLI resources. Rebuild hermes-cli.");
-      }
-    }
-    Path extracted = Files.createTempDirectory("hermes-template-empty");
-    extractResourceTree("/hermes-templates/empty", extracted);
-    return extracted;
-  }
-
   private static void extractResourceTree(String resourcePrefix, Path targetDir) throws IOException {
     java.net.URL rootUrl = TemplateSupport.class.getResource(resourcePrefix);
     if (rootUrl == null) {
@@ -196,10 +211,10 @@ public final class TemplateSupport {
     }
   }
 
-  private static Path findTemplateOnFilesystem() {
+  private static Path findTemplateOnFilesystem(String templateId) {
     Path current = Path.of(System.getProperty("user.dir")).toAbsolutePath();
     for (int i = 0; i < 8 && current != null; i++) {
-      Path candidate = current.resolve("hermes-templates/empty");
+      Path candidate = current.resolve("hermes-templates/" + templateId);
       if (Files.isDirectory(candidate)) {
         return candidate;
       }

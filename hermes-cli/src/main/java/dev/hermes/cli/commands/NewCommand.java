@@ -11,6 +11,8 @@ import picocli.CommandLine.Parameters;
 @Command(name = "new", description = "Create a new Hermes game project from a template")
 public final class NewCommand implements Runnable {
 
+  private static final Set<String> SUPPORTED_TEMPLATES = Set.of("minimal", "multi-scene");
+
   @Parameters(index = "0", description = "Target directory for the new project")
   Path targetDir;
 
@@ -20,7 +22,10 @@ public final class NewCommand implements Runnable {
   @Option(names = "--package", description = "Java package (default: dev.hermes.<dir>)")
   String packageName;
 
-  @Option(names = "--template", defaultValue = "empty", description = "Template id (only 'empty' for now)")
+  @Option(
+      names = "--template",
+      defaultValue = "minimal",
+      description = "Template id: minimal (default) or multi-scene")
   String template;
 
   @Option(
@@ -42,8 +47,14 @@ public final class NewCommand implements Runnable {
 
   @Override
   public void run() {
-    if (!"empty".equals(template)) {
-      System.err.println("Unknown template: " + template + " (supported: empty)");
+    if ("empty".equals(template)) {
+      System.err.println("Template 'empty' was renamed to 'minimal'. Use --template minimal.");
+      throw new picocli.CommandLine.ParameterException(
+          new picocli.CommandLine(NewCommand.class),
+          "Template 'empty' was renamed to 'minimal'");
+    }
+    if (!SUPPORTED_TEMPLATES.contains(template)) {
+      System.err.println("Unknown template: " + template + " (supported: minimal, multi-scene)");
       throw new picocli.CommandLine.ParameterException(
           new picocli.CommandLine(NewCommand.class), "Unknown template: " + template);
     }
@@ -55,8 +66,14 @@ public final class NewCommand implements Runnable {
     Set<String> enabledPlatforms;
     try {
       enabledPlatforms = TemplateSupport.parsePlatforms(platforms);
-      TemplateSupport.materializeEmptyTemplate(
-          targetDir.toAbsolutePath(), projectName, pkg, engineVersion, enabledPlatforms, androidSdk);
+      TemplateSupport.materializeTemplate(
+          template,
+          targetDir.toAbsolutePath(),
+          projectName,
+          pkg,
+          engineVersion,
+          enabledPlatforms,
+          androidSdk);
       System.out.println("Created Hermes project at " + targetDir.toAbsolutePath());
       System.out.println("Next:");
       System.out.println("  cd " + targetDir);

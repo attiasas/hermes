@@ -101,7 +101,7 @@ Logical subpackages to grow into (names illustrative; flat packages today):
 
 ## Platform template model
 
-- **Project templates** live under `hermes-templates/empty/`. `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
+- **Project templates** live under `hermes-templates/minimal/` and `hermes-templates/multi-scene/`. `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
 - **Platform build templates** live under `hermes-templates/platforms/<launcher-module>/build.gradle.tpl`. `HermesPlatformSync` copies launcher **sources** (Java, resources, manifests) from the plugin JAR or `HERMES_HOME`, then renders `build.gradle` with `PlatformTemplateRenderer` and `PlatformSyncContext` (no regex patching).
 - **Launchers** are not copied into the user repo as first-class modules; they are synced into `.hermes/platforms/` and included by path via `settings.project(...).setProjectDir(synced)`.
 - **Engine JARs** come from Maven local at `hermes.engineVersion`; templates intentionally avoid `includeBuild('hermes-gradle-plugin')` so IDEs show only `game`.

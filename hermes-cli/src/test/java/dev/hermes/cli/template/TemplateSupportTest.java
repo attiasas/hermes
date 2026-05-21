@@ -16,8 +16,8 @@ class TemplateSupportTest {
       "game/src/main/resources/META-INF/services/dev.hermes.api.ecs.ComponentRegistration";
 
   private static void materialize(Path target) throws Exception {
-    TemplateSupport.materializeEmptyTemplate(
-        target, "MyGame", "dev.hermes.mygame", "0.1.0-SNAPSHOT", Set.of("desktop"), null);
+    TemplateSupport.materializeTemplate(
+        "minimal", target, "MyGame", "dev.hermes.mygame", "0.1.0-SNAPSHOT", Set.of("desktop"), null);
   }
 
   @Test
@@ -95,8 +95,8 @@ class TemplateSupportTest {
         sdk != null && !sdk.isBlank(),
         "ANDROID_SDK_ROOT or ANDROID_HOME required for this test");
 
-    TemplateSupport.materializeEmptyTemplate(
-        target, "MyGame", "dev.hermes.mygame", "0.1.0-SNAPSHOT", Set.of("android"), Path.of(sdk));
+    TemplateSupport.materializeTemplate(
+        "minimal", target, "MyGame", "dev.hermes.mygame", "0.1.0-SNAPSHOT", Set.of("android"), Path.of(sdk));
 
     String props = Files.readString(target.resolve("gradle.properties"), StandardCharsets.UTF_8);
     assertFalse(props.contains("hermes.android.sdk="), "SDK path belongs in local.properties only");
