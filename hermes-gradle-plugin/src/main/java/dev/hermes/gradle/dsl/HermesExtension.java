@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.dsl;
 
 import groovy.lang.Closure;
 
@@ -7,8 +7,8 @@ public class HermesExtension {
 
   private String applicationClass;
   private String assetsDirectory;
-  private boolean debug = false;
-  private final GamePlatformsExtension platforms = new GamePlatformsExtension();
+  private boolean debug;
+  private final PlatformsExtension platforms = new PlatformsExtension();
   private final IconsExtension icons = new IconsExtension();
 
   public String getApplicationClass() {
@@ -35,7 +35,7 @@ public class HermesExtension {
     this.debug = debug;
   }
 
-  public GamePlatformsExtension getPlatforms() {
+  public PlatformsExtension getPlatforms() {
     return platforms;
   }
 

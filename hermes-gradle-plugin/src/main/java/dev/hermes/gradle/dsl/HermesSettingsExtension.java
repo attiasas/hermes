@@ -1,7 +1,7 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.dsl;
 
-import java.io.File;
 import groovy.lang.Closure;
+import java.io.File;
 
 /** Engine and platform toggles configured in {@code settings.gradle}. */
 public class HermesSettingsExtension {

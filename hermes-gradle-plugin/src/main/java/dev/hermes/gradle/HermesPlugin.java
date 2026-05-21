@@ -1,7 +1,11 @@
 package dev.hermes.gradle;
 
 import dev.hermes.gradle.doctor.HermesDoctor;
+import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.platform.DesktopPlatform;
+import dev.hermes.tooling.platform.HtmlPlatform;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -291,7 +295,7 @@ public final class HermesPlugin implements Plugin<Project> {
 
   private static void applyDesktopSystemProperties(
       JavaExec task, Project gameProject, HermesExtension extension) {
-    DesktopPlatformSpec desktop = HermesPlatforms.resolve(gameProject).getDesktop();
+    DesktopPlatform desktop = HermesPlatforms.resolve(gameProject).getDesktop();
     HermesGameConfig config = HermesGameConfigs.parse(gameProject);
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
     HermesJvmArgs.stripNativeAccess(jvmArgs);
@@ -306,7 +310,30 @@ public final class HermesPlugin implements Plugin<Project> {
     jvmArgs.add("-Dhermes.game.title=" + config.getTitle());
     jvmArgs.add("-Dhermes.game.scene=" + config.getScene());
     jvmArgs.add("-Dhermes.desktop.gradleRun=true");
+    int smokeFrames = resolveSmokeFrames(gameProject);
+    if (smokeFrames > 0) {
+      jvmArgs.add("-Dhermes.desktop.smokeFrames=" + smokeFrames);
+    }
     task.setJvmArgs(jvmArgs);
+  }
+
+  private static int resolveSmokeFrames(Project gameProject) {
+    if (gameProject.hasProperty("hermes.desktop.smokeFrames")) {
+      try {
+        return Integer.parseInt(gameProject.property("hermes.desktop.smokeFrames").toString().trim());
+      } catch (NumberFormatException ignored) {
+        return 0;
+      }
+    }
+    Project root = gameProject.getRootProject();
+    if (root.hasProperty("hermes.desktop.smokeFrames")) {
+      try {
+        return Integer.parseInt(root.property("hermes.desktop.smokeFrames").toString().trim());
+      } catch (NumberFormatException ignored) {
+        return 0;
+      }
+    }
+    return 0;
   }
 
   private static void wireHtmlRun(Project project, HermesExtension extension, File assetsDir) {
@@ -400,7 +427,7 @@ public final class HermesPlugin implements Plugin<Project> {
 
   private static void applyHtmlSystemProperties(
       JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
-    HtmlPlatformSpec html = HermesPlatforms.resolve(gameProject).getHtml();
+    HtmlPlatform html = HermesPlatforms.resolve(gameProject).getHtml();
     HermesGameConfig config = HermesGameConfigs.parse(gameProject);
     task.systemProperty("hermes.applicationClass", extension.getApplicationClass());
     task.systemProperty("hermes.debug", String.valueOf(extension.isDebug()));

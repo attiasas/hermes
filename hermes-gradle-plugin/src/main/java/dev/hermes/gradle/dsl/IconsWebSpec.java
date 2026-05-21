@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.dsl;
 
 public final class IconsWebSpec {
 

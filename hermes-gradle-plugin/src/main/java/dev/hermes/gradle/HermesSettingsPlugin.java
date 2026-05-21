@@ -1,5 +1,8 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.dsl.HermesSettingsExtension;
+import dev.hermes.gradle.dsl.SettingsPlatformsExtension;
 import java.io.File;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;

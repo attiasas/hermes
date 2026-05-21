@@ -1,6 +1,8 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.platform.DesktopPlatform;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,7 +19,7 @@ final class HermesRuntimeConfigGenerator {
 
   static void write(Project gameProject, HermesExtension extension, File outputDir) {
     HermesGameConfig gameConfig = HermesGameConfigs.parse(gameProject);
-    DesktopPlatformSpec desktop = HermesPlatforms.resolve(gameProject).getDesktop();
+    DesktopPlatform desktop = HermesPlatforms.resolve(gameProject).getDesktop();
 
     if (!outputDir.exists() && !outputDir.mkdirs()) {
       throw new GradleException("Could not create " + outputDir.getAbsolutePath());

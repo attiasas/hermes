@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesSettingsExtension;
 import dev.hermes.tooling.gradle.HermesHomeResolver;
 import java.io.File;
 import org.gradle.api.Project;

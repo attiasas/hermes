@@ -1,6 +1,10 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.platform.DesktopPlatform;
+import dev.hermes.tooling.platform.HtmlPlatform;
 import java.util.ArrayList;
 import java.util.List;
 import org.gradle.api.tasks.JavaExec;
@@ -45,7 +49,7 @@ final class HermesDistributionMode {
     HermesJvmArgs.stripNativeAccess(jvmArgs);
     jvmArgs.add("-Dhermes.applicationClass=" + context.applicationClass());
     jvmArgs.add("-Dhermes.debug=false");
-    DesktopPlatformSpec desktop = context.config().getPlatforms().getDesktop();
+    DesktopPlatform desktop = context.config().getPlatforms().getDesktop();
     HermesGameConfig gameConfig = context.gameConfig();
     jvmArgs.add("-Dhermes.window.width=" + desktop.getWidth());
     jvmArgs.add("-Dhermes.window.height=" + desktop.getHeight());
@@ -59,7 +63,7 @@ final class HermesDistributionMode {
   }
 
   static void applyHtml(JavaExec task, ProjectHermesContext context, java.io.File assetsDir) {
-    HtmlPlatformSpec html = context.config().getPlatforms().getHtml();
+    HtmlPlatform html = context.config().getPlatforms().getHtml();
     HermesGameConfig gameConfig = context.gameConfig();
     task.systemProperty("hermes.applicationClass", context.applicationClass());
     task.systemProperty("hermes.debug", "false");

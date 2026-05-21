@@ -1,19 +1,21 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.dsl;
 
+import dev.hermes.gradle.HermesEngineVersion;
+import dev.hermes.tooling.platform.Platforms;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 
 /** Merged Hermes configuration: settings enable flags + {@code :game} DSL. */
 public final class HermesConfig {
 
-  static final String SETTINGS_PLATFORMS_PROPERTY = "hermesSettingsPlatforms";
-  static final String ENGINE_VERSION_PROPERTY = "hermesEngineVersion";
+  public static final String SETTINGS_PLATFORMS_PROPERTY = "hermesSettingsPlatforms";
+  public static final String ENGINE_VERSION_PROPERTY = "hermesEngineVersion";
 
   private final Project gameProject;
   private final HermesExtension game;
-  private final PlatformsExtension platforms;
+  private final Platforms platforms;
 
-  private HermesConfig(Project gameProject, HermesExtension game, PlatformsExtension platforms) {
+  private HermesConfig(Project gameProject, HermesExtension game, Platforms platforms) {
     this.gameProject = gameProject;
     this.game = game;
     this.platforms = platforms;
@@ -22,7 +24,7 @@ public final class HermesConfig {
   public static HermesConfig resolve(Project gameProject) {
     HermesExtension game = gameProject.getExtensions().getByType(HermesExtension.class);
     SettingsPlatformsExtension settingsPlatforms = resolveSettingsPlatforms(gameProject);
-    PlatformsExtension merged = mergePlatforms(settingsPlatforms, game.getPlatforms());
+    Platforms merged = Platforms.merge(settingsPlatforms.asPlatforms(), game.getPlatforms().asPlatforms());
     return new HermesConfig(gameProject, game, merged);
   }
 
@@ -34,7 +36,7 @@ public final class HermesConfig {
     return game;
   }
 
-  public PlatformsExtension getPlatforms() {
+  public Platforms getPlatforms() {
     return platforms;
   }
 
@@ -72,47 +74,5 @@ public final class HermesConfig {
       return gameProject.property(HermesEngineVersion.GRADLE_PROPERTY).toString();
     }
     return gameProject.getVersion().toString();
-  }
-
-  private static PlatformsExtension mergePlatforms(
-      SettingsPlatformsExtension settings, GamePlatformsExtension game) {
-    PlatformsExtension merged = new PlatformsExtension(false);
-    mergeDesktop(merged.getDesktop(), settings.getDesktop(), game.getDesktop());
-    mergeHtml(merged.getHtml(), settings.getHtml(), game.getHtml());
-    mergeAndroid(merged.getAndroid(), settings.getAndroid(), game.getAndroid());
-    return merged;
-  }
-
-  private static void mergeDesktop(
-      DesktopPlatformSpec target, PlatformEnableSpec enabled, GameDesktopPlatformSpec game) {
-    target.setEnabled(enabled.isEnabled());
-    target.setWidth(game.getWidth());
-    target.setHeight(game.getHeight());
-    target.setVsync(game.isVsync());
-    target.setResizable(game.isResizable());
-    target.setForegroundFps(game.getForegroundFps());
-    target.setBundleId(game.getBundleId());
-    target.setExecutableName(game.getExecutableName());
-    target.setExportTargets(game.getExportTargets());
-  }
-
-  private static void mergeHtml(
-      HtmlPlatformSpec target, PlatformEnableSpec enabled, GameHtmlPlatformSpec game) {
-    target.setEnabled(enabled.isEnabled());
-    target.setWidth(game.getWidth());
-    target.setHeight(game.getHeight());
-    target.setDevServerPort(game.getDevServerPort());
-    target.setWebAssembly(game.isWebAssembly());
-  }
-
-  private static void mergeAndroid(
-      AndroidPlatformSpec target, PlatformEnableSpec enabled, GameAndroidPlatformSpec game) {
-    target.setEnabled(enabled.isEnabled());
-    target.setApplicationId(game.getApplicationId());
-    target.setMinSdk(game.getMinSdk());
-    target.setTargetSdk(game.getTargetSdk());
-    target.setCompileSdk(game.getCompileSdk());
-    target.setVersionCode(game.getVersionCode());
-    target.setScreenOrientation(game.getScreenOrientation());
   }
 }

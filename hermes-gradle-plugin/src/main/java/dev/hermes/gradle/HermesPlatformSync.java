@@ -1,5 +1,7 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesSettingsExtension;
+import dev.hermes.gradle.dsl.SettingsPlatformsExtension;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

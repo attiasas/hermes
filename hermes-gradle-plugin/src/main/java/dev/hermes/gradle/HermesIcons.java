@@ -1,5 +1,6 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesExtension;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;

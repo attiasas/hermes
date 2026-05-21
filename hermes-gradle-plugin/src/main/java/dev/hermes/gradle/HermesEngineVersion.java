@@ -1,5 +1,7 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.dsl.HermesSettingsExtension;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 

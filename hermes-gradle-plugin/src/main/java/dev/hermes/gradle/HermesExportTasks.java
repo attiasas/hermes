@@ -1,6 +1,8 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.tooling.platform.DesktopPlatform;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -208,7 +210,7 @@ final class HermesExportTasks {
       return;
     }
     configureDesktopLauncher(gameProject, launcher, config);
-    DesktopPlatformSpec desktop = config.getPlatforms().getDesktop();
+    DesktopPlatform desktop = config.getPlatforms().getDesktop();
     List<String> targets = HermesDesktopExportTargets.forCurrentHost(desktop.getExportTargets());
     List<String> zipTasks = new ArrayList<>();
     File distRoot = gameProject.file("build/dist/desktop");
@@ -266,7 +268,7 @@ final class HermesExportTasks {
 
   private static void configureDesktopLauncher(Project gameProject, Project launcher, HermesConfig config) {
     HermesGameConfig gameConfig = HermesGameConfigs.parse(gameProject);
-    DesktopPlatformSpec desktop = config.getPlatforms().getDesktop();
+    DesktopPlatform desktop = config.getPlatforms().getDesktop();
     String executableName = desktop.getExecutableName();
     if (executableName == null || executableName.isBlank()) {
       executableName = HermesExportNaming.sanitizeTitle(gameConfig.getTitle());

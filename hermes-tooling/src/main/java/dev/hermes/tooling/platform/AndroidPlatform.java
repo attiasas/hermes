@@ -1,13 +1,23 @@
-package dev.hermes.gradle;
+package dev.hermes.tooling.platform;
 
-public final class AndroidPlatformSpec extends PlatformEnableSpec {
+/** Android platform configuration. */
+public final class AndroidPlatform {
 
+  private boolean enabled;
   private String applicationId = "dev.hermes.game";
   private int minSdk = 21;
   private int targetSdk = 35;
   private int compileSdk = 35;
   private int versionCode = 1;
   private String screenOrientation = "landscape";
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
 
   public String getApplicationId() {
     return applicationId;
@@ -55,5 +65,15 @@ public final class AndroidPlatformSpec extends PlatformEnableSpec {
 
   public void setScreenOrientation(String screenOrientation) {
     this.screenOrientation = screenOrientation;
+  }
+
+  /** Copies all fields except {@code enabled} from {@code source}. */
+  public void copyDetailsFrom(AndroidPlatform source) {
+    setApplicationId(source.getApplicationId());
+    setMinSdk(source.getMinSdk());
+    setTargetSdk(source.getTargetSdk());
+    setCompileSdk(source.getCompileSdk());
+    setVersionCode(source.getVersionCode());
+    setScreenOrientation(source.getScreenOrientation());
   }
 }

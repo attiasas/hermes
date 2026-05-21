@@ -1,17 +1,30 @@
-package dev.hermes.gradle;
+package dev.hermes.tooling.platform;
 
-public final class DesktopPlatformSpec extends PlatformEnableSpec {
+import java.util.Arrays;
+import java.util.List;
 
+/** Desktop (LWJGL3) platform configuration. */
+public final class DesktopPlatform {
+
+  private boolean enabled;
   private int width = 640;
   private int height = 480;
   private boolean vsync = true;
   private boolean resizable = true;
   /** 0 = match display refresh rate + 1 (libGDX default behavior). */
-  private int foregroundFps = 0;
+  private int foregroundFps;
   private String bundleId;
   private String executableName;
-  private java.util.List<String> exportTargets =
-      java.util.Arrays.asList("linuxX64", "macM1", "macX64", "winX64");
+  private List<String> exportTargets =
+      Arrays.asList("linuxX64", "macM1", "macX64", "winX64");
+
+  public boolean isEnabled() {
+    return enabled;
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
+  }
 
   public int getWidth() {
     return width;
@@ -69,11 +82,23 @@ public final class DesktopPlatformSpec extends PlatformEnableSpec {
     this.executableName = executableName;
   }
 
-  public java.util.List<String> getExportTargets() {
+  public List<String> getExportTargets() {
     return exportTargets;
   }
 
-  public void setExportTargets(java.util.List<String> exportTargets) {
+  public void setExportTargets(List<String> exportTargets) {
     this.exportTargets = exportTargets;
+  }
+
+  /** Copies all fields except {@code enabled} from {@code source}. */
+  public void copyDetailsFrom(DesktopPlatform source) {
+    setWidth(source.getWidth());
+    setHeight(source.getHeight());
+    setVsync(source.isVsync());
+    setResizable(source.isResizable());
+    setForegroundFps(source.getForegroundFps());
+    setBundleId(source.getBundleId());
+    setExecutableName(source.getExecutableName());
+    setExportTargets(source.getExportTargets());
   }
 }
