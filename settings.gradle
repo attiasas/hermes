@@ -22,4 +22,4 @@ hermes {
   }
 }
 
-include 'hermes-api', 'hermes-core', 'hermes-tooling', 'game', 'hermes-cli', 'hermes-debug-api', 'hermes-studio-core'
+include 'hermes-api', 'hermes-core', 'hermes-tooling', 'game', 'hermes-cli', 'hermes-debug-api', 'hermes-studio-core', 'hermes-studio-ui', 'hermes-studio-app'
