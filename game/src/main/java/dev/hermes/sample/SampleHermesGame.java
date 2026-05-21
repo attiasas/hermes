@@ -38,7 +38,7 @@ public final class SampleHermesGame implements HermesApplication {
               return bounce;
             });
     engine.scenes().registry().register("pause", "scenes/pause.json");
-    engine.scenes().registry().register("advanced-render", "scenes/advanced-render.json");
+    engine.scenes().registry().register("advanced-render", "demos/advanced-render.json");
     engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
     engine.addSystem(new SceneNavigationSystem(engine.scenes(), 4f));
   }

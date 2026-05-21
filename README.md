@@ -48,7 +48,7 @@ Full build:
 
 ## Scenes and ECS
 
-Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) is a config-only 3D scene (`Mesh` + `Material` + perspective `Camera`). [`advanced-render.json`](game/src/main/resources/assets/scenes/advanced-render.json) demonstrates a custom render pipeline and `WaterPass`. A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v2.md](docs/scene-format-v2.md) and [docs/scene-management.md](docs/scene-management.md).
+Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) is a config-only 3D scene (`Mesh` + `Material` + perspective `Camera`). [`advanced-render.json`](game/src/main/resources/assets/demos/advanced-render.json) demonstrates a custom render pipeline and `WaterPass` (opt-in demo, not scanned by `hermesDoctor` HTML shader check). A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v2.md](docs/scene-format-v2.md) and [docs/scene-management.md](docs/scene-management.md).
 
 ### Custom components
 

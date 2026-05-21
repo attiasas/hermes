@@ -1,6 +1,11 @@
 package dev.hermes.tooling.doctor;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import dev.hermes.tooling.config.HermesConfigException;
+import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.config.HermesGameConfigParser;
 import dev.hermes.tooling.gradle.HermesHomeResolver;
 import java.io.File;
@@ -9,14 +14,28 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Environment and source checks shared by Gradle {@code hermesDoctor} and the CLI. */
 public final class HermesDoctorSupport {
 
   private static final Pattern FORBIDDEN_IMPORT =
       Pattern.compile("^\\s*import\\s+com\\.badlogicgames\\.gdx\\b.*");
+
+  private static final Set<String> BUILTIN_SHADER_FILES =
+      Set.of("default.vert", "default.frag");
+
+  private static final Set<String> BUILTIN_SHADER_PATHS =
+      Set.of("shaders/default.vert", "shaders/default.frag");
+
+  private static final Gson GSON = new Gson();
 
   public enum Status {
     OK,
@@ -170,6 +189,178 @@ public final class HermesDoctorSupport {
         Status.FAIL,
         "HERMES_HOME does not look like a Hermes checkout: " + home,
         "Point HERMES_HOME at the engine repo root.");
+  }
+
+  /**
+   * Fails when the HTML platform is enabled and a referenced render pipeline JSON declares
+   * non-builtin shader paths (only {@code shaders/default.vert} and {@code shaders/default.frag}
+   * are allowed for TeaVM v1).
+   */
+  public static CheckResult checkHtmlCustomShaders(Path projectRoot) {
+    if (projectRoot == null || !Files.isDirectory(projectRoot)) {
+      return new CheckResult(
+          "html-custom-shaders", Status.OK, "No project root; skipped HTML shader check.", null);
+    }
+    if (!isHtmlPlatformEnabled(projectRoot)) {
+      return new CheckResult(
+          "html-custom-shaders",
+          Status.OK,
+          "HTML platform disabled; custom GLSL allowed for desktop.",
+          null);
+    }
+    List<String> nonBuiltin = findNonBuiltinShaderPathsInReferencedPipelines(projectRoot);
+    if (nonBuiltin.isEmpty()) {
+      return new CheckResult(
+          "html-custom-shaders",
+          Status.OK,
+          "HTML enabled; referenced pipelines use builtin shaders only.",
+          null);
+    }
+    return new CheckResult(
+        "html-custom-shaders",
+        Status.FAIL,
+        "HTML platform is enabled but referenced pipelines declare custom GLSL: "
+            + String.join(", ", nonBuiltin),
+        "Disable HTML in settings.gradle (hermes { platforms { html { enabled = false } } }), "
+            + "or use only shaders/default.vert and shaders/default.frag in every referenced "
+            + "render pipeline (TeaVM supports builtin shaders only in v1).");
+  }
+
+  static List<String> findNonBuiltinShaderPathsInReferencedPipelines(Path projectRoot) {
+    Path assets = projectRoot.resolve("game/src/main/resources/assets");
+    Set<String> pipelinePaths = collectReferencedPipelinePaths(projectRoot);
+    List<String> violations = new ArrayList<>();
+    for (String relative : pipelinePaths) {
+      Path pipelineFile = assets.resolve(relative);
+      if (!Files.isRegularFile(pipelineFile)) {
+        continue;
+      }
+      collectNonBuiltinShaderPaths(pipelineFile, violations);
+    }
+    return violations.stream().distinct().sorted().collect(Collectors.toList());
+  }
+
+  static Set<String> collectReferencedPipelinePaths(Path projectRoot) {
+    LinkedHashSet<String> paths = new LinkedHashSet<>();
+    Path hermesJson = projectRoot.resolve("game/hermes.json");
+    if (Files.isRegularFile(hermesJson)) {
+      try {
+        HermesGameConfig config = HermesGameConfigParser.parse(hermesJson.toFile());
+        paths.add(config.getRenderPipeline());
+      } catch (HermesConfigException ignored) {
+        // hermes.json validity is reported by a separate check
+      }
+    }
+    Path scenesDir = projectRoot.resolve("game/src/main/resources/assets/scenes");
+    if (Files.isDirectory(scenesDir)) {
+      try (Stream<Path> sceneFiles = Files.list(scenesDir)) {
+        sceneFiles
+            .filter(Files::isRegularFile)
+            .filter(path -> path.getFileName().toString().endsWith(".json"))
+            .forEach(scene -> addScenePipelineOverride(scene, paths));
+      } catch (IOException e) {
+        paths.add("scan-error:scenes:" + e.getMessage());
+      }
+    }
+    return paths;
+  }
+
+  private static void addScenePipelineOverride(Path sceneFile, Set<String> paths) {
+    try {
+      JsonObject root = GSON.fromJson(Files.readString(sceneFile, StandardCharsets.UTF_8), JsonObject.class);
+      if (root == null || !root.has("renderPipeline")) {
+        return;
+      }
+      String renderPipeline = root.get("renderPipeline").getAsString().trim();
+      if (!renderPipeline.isEmpty()) {
+        paths.add(renderPipeline);
+      }
+    } catch (IOException | JsonParseException | IllegalStateException ignored) {
+      // invalid scene JSON is handled elsewhere
+    }
+  }
+
+  private static void collectNonBuiltinShaderPaths(Path pipelineFile, List<String> violations) {
+    try {
+      JsonObject root =
+          GSON.fromJson(Files.readString(pipelineFile, StandardCharsets.UTF_8), JsonObject.class);
+      if (root == null || !root.has("shaders")) {
+        return;
+      }
+      JsonObject shaders = root.getAsJsonObject("shaders");
+      for (Map.Entry<String, JsonElement> entry : shaders.entrySet()) {
+        if (!entry.getValue().isJsonObject()) {
+          continue;
+        }
+        JsonObject def = entry.getValue().getAsJsonObject();
+        if (def.has("vertex")) {
+          noteShaderPath(def.get("vertex").getAsString(), violations);
+        }
+        if (def.has("fragment")) {
+          noteShaderPath(def.get("fragment").getAsString(), violations);
+        }
+      }
+    } catch (IOException e) {
+      violations.add("scan-error:" + pipelineFile.getFileName() + ":" + e.getMessage());
+    } catch (JsonParseException | IllegalStateException e) {
+      violations.add("scan-error:" + pipelineFile.getFileName() + ":" + e.getMessage());
+    }
+  }
+
+  private static void noteShaderPath(String path, List<String> violations) {
+    if (path == null || path.isBlank()) {
+      return;
+    }
+    String normalized = path.trim();
+    if (!BUILTIN_SHADER_PATHS.contains(normalized)) {
+      violations.add(normalized);
+    }
+  }
+
+  static boolean isHtmlPlatformEnabled(Path projectRoot) {
+    Path settings = projectRoot.resolve("settings.gradle");
+    if (!Files.isRegularFile(settings)) {
+      return false;
+    }
+    try {
+      String content = Files.readString(settings);
+      if (content.contains("hermes-launcher-html")) {
+        return true;
+      }
+      return parseHtmlEnabledFromHermesBlock(content);
+    } catch (IOException e) {
+      return false;
+    }
+  }
+
+  private static boolean parseHtmlEnabledFromHermesBlock(String settingsContent) {
+    String lower = settingsContent.toLowerCase(Locale.ROOT);
+    if (lower.contains("html { enabled = false") || lower.contains("html {enabled = false")) {
+      return false;
+    }
+    return lower.contains("html { enabled = true")
+        || lower.contains("html {enabled = true")
+        || lower.contains("html { enabled=true")
+        || lower.contains("html {enabled=true");
+  }
+
+  static List<String> findCustomShaderFiles(Path shadersDir) {
+    List<String> custom = new ArrayList<>();
+    if (!Files.isDirectory(shadersDir)) {
+      return custom;
+    }
+    try (Stream<Path> paths = Files.list(shadersDir)) {
+      paths
+          .filter(Files::isRegularFile)
+          .map(path -> path.getFileName().toString())
+          .filter(name -> name.endsWith(".vert") || name.endsWith(".frag"))
+          .filter(name -> !BUILTIN_SHADER_FILES.contains(name))
+          .sorted()
+          .forEach(name -> custom.add("assets/shaders/" + name));
+    } catch (IOException e) {
+      custom.add("scan-error: " + e.getMessage());
+    }
+    return custom;
   }
 
   /** Engine resolution for Gradle {@code hermesDoctor} (sibling modules, Maven local, or HERMES_HOME). */
