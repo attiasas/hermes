@@ -14,7 +14,14 @@ class DoctorCommandTest {
   @Test
   void doctor_minimalLayoutExitsZero(@TempDir Path dir) throws Exception {
     Files.createDirectories(dir.resolve("game"));
-    Files.writeString(dir.resolve("game/hermes.json"), "{}", java.nio.charset.StandardCharsets.UTF_8);
+    Files.writeString(
+        dir.resolve("game/hermes.json"),
+        "{\n"
+            + "  \"title\": \"Test\",\n"
+            + "  \"scene\": \"scenes/main.json\",\n"
+            + "  \"renderPipeline\": \"render/pipeline.json\"\n"
+            + "}\n",
+        java.nio.charset.StandardCharsets.UTF_8);
 
     int exit = new CommandLine(new HermesCli()).execute("doctor", dir.toString(), "--no-gradle");
 

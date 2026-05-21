@@ -3,7 +3,7 @@ package dev.hermes.core.ecs;
 import dev.hermes.api.ecs.Camera;
 
 /** Resolved view state for the active scene camera (or the engine default). */
-final class ActiveCamera {
+public final class ActiveCamera {
 
   private final Camera.Projection projection;
   private final float x;
@@ -19,7 +19,7 @@ final class ActiveCamera {
   private final float viewportWidth;
   private final float viewportHeight;
 
-  ActiveCamera(
+  public ActiveCamera(
       Camera.Projection projection,
       float x,
       float y,
@@ -48,19 +48,19 @@ final class ActiveCamera {
     this.viewportHeight = viewportHeight;
   }
 
-  Camera.Projection projection() {
+  public Camera.Projection projection() {
     return projection;
   }
 
-  float x() {
+  public float x() {
     return x;
   }
 
-  float y() {
+  public float y() {
     return y;
   }
 
-  float z() {
+  public float z() {
     return z;
   }
 

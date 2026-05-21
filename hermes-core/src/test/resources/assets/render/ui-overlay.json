@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "clearColor": [0, 0, 0, 0],
+  "passes": [
+    {
+      "id": "ui",
+      "type": "ui",
+      "target": "screen",
+      "layers": ["UI"],
+      "depthTest": false,
+      "camera": "ui-camera"
+    }
+  ]
+}

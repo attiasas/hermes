@@ -4,14 +4,17 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-/** Parses scene JSON into entity specifications. */
+/** Parses scene JSON into entity specifications and optional scene metadata. */
 final class SceneDocument {
 
   private final List<EntitySpec> entities;
+  private final String renderPipeline;
 
-  private SceneDocument(List<EntitySpec> entities) {
+  private SceneDocument(List<EntitySpec> entities, String renderPipeline) {
     this.entities = entities;
+    this.renderPipeline = renderPipeline;
   }
 
   static SceneDocument parse(String scenePath, String json) {
@@ -40,7 +43,15 @@ final class SceneDocument {
           entities.add(new EntitySpec(id, kind, components));
         }
       }
-      return new SceneDocument(entities);
+      String renderPipeline = null;
+      if (root.has("renderPipeline")) {
+        renderPipeline = root.getString("renderPipeline", "").trim();
+        if (renderPipeline.isEmpty()) {
+          throw new SceneParseException(
+              "Scene '" + scenePath + "': \"renderPipeline\" must be non-empty when set.");
+        }
+      }
+      return new SceneDocument(entities, renderPipeline);
     } catch (SceneParseException e) {
       throw e;
     } catch (Exception e) {
@@ -50,6 +61,10 @@ final class SceneDocument {
 
   List<EntitySpec> entities() {
     return entities;
+  }
+
+  Optional<String> renderPipeline() {
+    return Optional.ofNullable(renderPipeline);
   }
 
   static final class EntitySpec {

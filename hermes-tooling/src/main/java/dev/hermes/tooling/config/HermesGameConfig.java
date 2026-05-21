@@ -5,6 +5,7 @@ public final class HermesGameConfig {
 
   private String title = "HermesGame";
   private String scene = "scenes/main.json";
+  private String renderPipeline = "render/pipeline.json";
 
   public String getTitle() {
     return title;
@@ -20,5 +21,13 @@ public final class HermesGameConfig {
 
   public void setScene(String scene) {
     this.scene = scene;
+  }
+
+  public String getRenderPipeline() {
+    return renderPipeline;
+  }
+
+  public void setRenderPipeline(String renderPipeline) {
+    this.renderPipeline = renderPipeline;
   }
 }

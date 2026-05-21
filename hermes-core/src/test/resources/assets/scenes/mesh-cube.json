@@ -1,0 +1,19 @@
+{
+  "entities": [
+    {
+      "id": "cam",
+      "components": {
+        "Transform": { "x": 0, "y": 2, "z": 5 },
+        "Camera": { "projection": "perspective", "active": true }
+      }
+    },
+    {
+      "id": "cube",
+      "components": {
+        "Transform": { "z": 0 },
+        "Mesh": { "model": "models/cube.obj" },
+        "Material": { "shader": "default/unlit" }
+      }
+    }
+  ]
+}

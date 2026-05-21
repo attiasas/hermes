@@ -27,6 +27,8 @@ public final class HermesDoctor {
     results.add(checkEngineResolution(gameProject));
     results.addAll(checkForbiddenImports(gameProject));
     results.addAll(checkPlatforms(gameProject));
+    results.add(
+        HermesDoctorSupport.checkHtmlCustomShaders(gameProject.getRootProject().getRootDir().toPath()));
     results.add(checkWritableDirs(gameProject));
     printAndThrow(results);
   }

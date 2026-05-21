@@ -37,6 +37,7 @@ public final class HermesRuntimeConfigGenerator {
         .windowTitle(gameConfig.getTitle())
         .windowSize(desktop.getWidth(), desktop.getHeight())
         .scene(gameConfig.getScene())
+        .renderPipeline(gameConfig.getRenderPipeline())
         .desktopVsync(desktop.isVsync())
         .desktopResizable(desktop.isResizable())
         .desktopForegroundFps(desktop.getForegroundFps())

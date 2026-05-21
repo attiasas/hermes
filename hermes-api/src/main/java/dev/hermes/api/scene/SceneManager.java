@@ -16,7 +16,15 @@ public interface SceneManager {
 
   List<SceneHandle> visibleScenes();
 
+  /** Scenes that receive system updates this frame (stack policy may differ from {@link #visibleScenes()}). */
+  List<SceneHandle> updateScenes();
+
   SceneRegistry registry();
 
   int stackDepth();
+
+  /** Policy for stacked scene updates and rendering; defaults to active scene only. */
+  void setStackPolicy(SceneStackPolicy policy);
+
+  SceneStackPolicy stackPolicy();
 }

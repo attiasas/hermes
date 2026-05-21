@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}}
 
-Hermes game project generated from the minimal template.
+Hermes game project generated from the **minimal** template (single-scene **3D**: perspective camera + `models/cube.obj`).
 
 ## Prerequisites
 
@@ -148,6 +148,18 @@ Re-run the relevant `hermesExport*` task after changing icons.
 | `hermesSyncPlatforms` | Refresh launcher stubs under `.hermes/platforms/` |
 
 Root task: `./gradlew hermesSyncPlatforms` (same sync, run from project root).
+
+## 3D scene and render pipeline
+
+The bootstrap scene is **config-only 3D**: perspective camera, `models/cube.obj`, and `Material` with the default `default/unlit` shader. No custom Java rendering code is required.
+
+| Asset | Purpose |
+|-------|---------|
+| [`game/src/main/resources/assets/scenes/main.json`](game/src/main/resources/assets/scenes/main.json) | Entities: camera + mesh cube + `PulseMarker` |
+| [`game/src/main/resources/assets/render/pipeline.json`](game/src/main/resources/assets/render/pipeline.json) | Forward pipeline (`world3d`, `sprites`, `ui`) |
+| [`game/src/main/resources/assets/models/cube.obj`](game/src/main/resources/assets/models/cube.obj) | Unit cube mesh |
+
+`hermes.json` references `renderPipeline: "render/pipeline.json"`.
 
 ## Custom components
 

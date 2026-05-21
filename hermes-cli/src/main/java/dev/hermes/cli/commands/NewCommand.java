@@ -11,7 +11,7 @@ import picocli.CommandLine.Parameters;
 @Command(name = "new", description = "Create a new Hermes game project from a template")
 public final class NewCommand implements Runnable {
 
-  private static final Set<String> SUPPORTED_TEMPLATES = Set.of("minimal", "multi-scene");
+  private static final Set<String> SUPPORTED_TEMPLATES = Set.of("minimal", "2d", "multi-scene");
 
   @Parameters(index = "0", description = "Target directory for the new project")
   Path targetDir;
@@ -25,7 +25,7 @@ public final class NewCommand implements Runnable {
   @Option(
       names = "--template",
       defaultValue = "minimal",
-      description = "Template id: minimal (default) or multi-scene")
+      description = "Template id: minimal (3D, default), 2d (orthographic sprites), or multi-scene")
   String template;
 
   @Option(
@@ -47,14 +47,8 @@ public final class NewCommand implements Runnable {
 
   @Override
   public void run() {
-    if ("empty".equals(template)) {
-      System.err.println("Template 'empty' was renamed to 'minimal'. Use --template minimal.");
-      throw new picocli.CommandLine.ParameterException(
-          new picocli.CommandLine(NewCommand.class),
-          "Template 'empty' was renamed to 'minimal'");
-    }
     if (!SUPPORTED_TEMPLATES.contains(template)) {
-      System.err.println("Unknown template: " + template + " (supported: minimal, multi-scene)");
+      System.err.println("Unknown template: " + template + " (supported: minimal, 2d, multi-scene)");
       throw new picocli.CommandLine.ParameterException(
           new picocli.CommandLine(NewCommand.class), "Unknown template: " + template);
     }

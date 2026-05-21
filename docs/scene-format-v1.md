@@ -2,6 +2,10 @@
 
 Scene files describe entities and their components. They live under the game module assets directory (default `src/main/resources/assets/`, configurable via `hermes.assetsDirectory` in `game/build.gradle`) and are referenced from `hermes.json` via the `scene` field.
 
+Hermes is **pre-release**; the scene format stays **v1** until 1.0. JSON rules may change — update this doc in the same PR when they do.
+
+Every entity with a `Sprite` or `Mesh` component **must** also include a `Material` component. Scenes without it fail at load time with `SceneParseException`.
+
 ## Top-level shape
 
 ```json
@@ -11,7 +15,8 @@ Scene files describe entities and their components. They live under the game mod
       "id": "logo",
       "components": {
         "Transform": { "x": 140, "y": 210 },
-        "Sprite": { "texture": "hermes-logo.png" }
+        "Sprite": { "texture": "hermes-logo.png" },
+        "Material": { "shader": "default/unlit" }
       }
     }
   ]
@@ -27,13 +32,17 @@ Scene files describe entities and their components. They live under the game mod
 | `entities[].id` | No | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime. |
 | `entities[].kind` | No | Optional logical type tag (e.g. `"character"`, `"prop"`). Omitted entities use the unset kind. Used for `World.entitiesWithKind` and future save/load; does not affect component parsing. |
 | `entities[].components` | No | Map of component type name → property object. |
+| `renderPipeline` | No | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 
 ## Built-in component types
 
 | Type | Properties | Description |
 |------|------------|-------------|
 | `Transform` | See below | Position, rotation (degrees), and scale. All fields optional. |
-| `Sprite` | `texture` (string) | Asset path relative to the assets root (or internal libGDX path). |
+| `Sprite` | `texture` (string) | 2D texture path relative to the assets root. **Requires `Material` on the same entity.** |
+| `Mesh` | `model` (string), `texture` (optional string) | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
+| `Material` | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`. |
+| `RenderLayer` | `layer` (string) | `"WORLD"` (default) or `"UI"` — world-space vs overlay draw order. |
 | `Camera` | See below | View/projection settings; pair with `Transform` on the same entity. |
 
 ### Transform properties
@@ -42,38 +51,81 @@ Scene files describe entities and their components. They live under the game mod
 |----------|---------|-------------|
 | `x`, `y`, `z` | `0` | World position. For 2D scenes, omit `z`. |
 | `rotationX`, `rotationY`, `rotationZ` | `0` | Euler rotation in degrees. `rotationZ` is used for 2D sprite drawing. |
-| `scaleX`, `scaleY`, `scaleZ` | `1` | Scale per axis. `scaleX` / `scaleY` affect sprite size; `scaleZ` is stored for future 3D rendering. |
+| `scaleX`, `scaleY`, `scaleZ` | `1` | Scale per axis. `scaleX` / `scaleY` affect sprite size; all axes apply to meshes. |
 
-Sprites are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity) defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
+Sprites and meshes are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity) defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
 
-Example with optional kind:
+### Sprite + Material
 
 ```json
 {
-  "id": "player",
-  "kind": "character",
+  "id": "logo",
   "components": {
-    "Transform": { "x": 100, "y": 200 }
+    "Transform": { "x": 320, "y": 240 },
+    "Sprite": { "texture": "hermes-logo.png" },
+    "Material": { "shader": "default/unlit" }
   }
 }
 ```
 
-Example with 3D fields:
+### Mesh + Material (3D)
+
+Place models under `assets/models/` (e.g. `models/cube.obj`). Templates ship a minimal unit cube for experimentation.
 
 ```json
-"Transform": {
-  "x": 100,
-  "y": 200,
-  "z": 5,
-  "rotationZ": 45,
-  "scaleX": 0.5,
-  "scaleY": 0.5
+{
+  "id": "cube",
+  "components": {
+    "Transform": { "z": 0 },
+    "Mesh": { "model": "models/cube.obj" },
+    "Material": { "shader": "default/unlit" }
+  }
 }
 ```
 
+Optional texture on the mesh:
+
+```json
+"Mesh": { "model": "models/cube.obj", "texture": "brick.png" }
+```
+
+Use a perspective camera for 3D scenes:
+
+```json
+{
+  "id": "cam",
+  "components": {
+    "Transform": { "x": 0, "y": 2, "z": 5 },
+    "Camera": { "projection": "perspective", "active": true }
+  }
+}
+```
+
+### Material properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `shader` | `default/unlit` | Built-in or registered shader id (path-style name). |
+| `uniforms` | — | Map of uniform name → float array, e.g. `"u_tint": [1, 0, 0, 1]`. |
+
+Example with tint:
+
+```json
+"Material": {
+  "shader": "default/unlit",
+  "uniforms": { "u_tint": [1, 0, 0, 1] }
+}
+```
+
+### RenderLayer properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `layer` | `"WORLD"` | `"WORLD"` for scene geometry/sprites, `"UI"` for screen-space overlays. |
+
 ### Camera properties
 
-**Required:** a `Transform` on the same entity (camera position and rotation). Camera entities are never drawn, even if they also have a `Sprite`.
+**Required:** a `Transform` on the same entity (camera position and rotation). Camera entities are never drawn, even if they also have a `Sprite` or `Mesh`.
 
 | Property | Default | Description |
 |----------|---------|-------------|
@@ -83,30 +135,12 @@ Example with 3D fields:
 | `fieldOfView` | `67` | Perspective vertical FOV in degrees |
 | `near`, `far` | `0.1`, `3000` | Clip planes |
 | `viewportWidth`, `viewportHeight` | `0` | `0` = match window size |
-
-Example:
-
-```json
-{
-  "id": "main-camera",
-  "components": {
-    "Transform": { "x": 320, "y": 240, "z": 0 },
-    "Camera": { "projection": "orthographic", "active": true, "zoom": 1 }
-  }
-}
-```
+| `renderTarget` | *(unset)* | Optional pipeline framebuffer id; stored for future camera routing (see [render-pipeline.md](render-pipeline.md)) |
 
 Orthographic mode sorts drawables by world `z`. Perspective mode sorts by distance from the camera (farther first).
 
 ## Custom components
 
 Register types in `onCreate(HermesEngine engine)` via `engine.registry().register(...)`, and add matching logic with `engine.addSystem(...)`. Alternatively, provide a `META-INF/services/dev.hermes.api.ecs.ComponentRegistration` implementation that registers both the component deserializer and any systems.
-
-The sample game demonstrates both paths:
-
-| Component | Registration | Behavior |
-|-----------|--------------|----------|
-| `SpinMarker` | ServiceLoader only | Orbits the entity around `centerX` / `centerY` at `radius` |
-| `BounceMarker` | `onCreate` only | Vertical sine offset on top of the current `Transform.y` |
 
 Unknown component type names fail at load time with a message naming the scene file, entity, and type.

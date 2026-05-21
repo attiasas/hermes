@@ -20,7 +20,7 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Gam
 ./gradlew :game:hermesRunDesktop
 ```
 
-You should see a 640×480 window with the libGDX logo. Game logic lives in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes `-Dhermes.applicationClass` at launch.
+You should see a 640×480 window with a textured 3D cube (config-only scene JSON). Game logic lives in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes `-Dhermes.applicationClass` at launch. Every 12 seconds the sample auto-switches to the `advanced-render` demo (animated water plane + cube); you can also `goTo("advanced-render")` manually.
 
 Full build:
 
@@ -48,7 +48,7 @@ Full build:
 
 ## Scenes and ECS
 
-Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`). A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v1.md](docs/scene-format-v1.md) and [docs/scene-management.md](docs/scene-management.md).
+Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) is a config-only 3D scene (`Mesh` + `Material` + perspective `Camera`). [`advanced-render.json`](game/src/main/resources/assets/demos/advanced-render.json) demonstrates a custom render pipeline and `WaterPass` (opt-in demo, not scanned by `hermesDoctor` HTML shader check). A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v1.md](docs/scene-format-v1.md) and [docs/scene-management.md](docs/scene-management.md).
 
 ### Custom components
 

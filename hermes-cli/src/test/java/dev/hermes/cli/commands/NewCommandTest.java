@@ -36,12 +36,33 @@ class NewCommandTest {
   }
 
   @Test
-  void new_emptyTemplateRejected(@TempDir Path parent) {
+  void new_unknownTemplateRejected(@TempDir Path parent) {
     Path target = parent.resolve("legacy-empty");
 
     int exit = new CommandLine(new HermesCli()).execute("new", target.toString(), "--template", "empty");
 
     assertEquals(2, exit);
+  }
+
+  @Test
+  void new_2dTemplate(@TempDir Path parent) throws Exception {
+    Path target = parent.resolve("2d-game");
+
+    int exit =
+        new CommandLine(new HermesCli())
+            .execute("new", target.toString(), "--template", "2d", "--package", "dev.hermes.twod");
+
+    assertEquals(0, exit);
+    assertTrue(Files.isRegularFile(target.resolve("game/src/main/resources/assets/scenes/main.json")));
+    assertTrue(
+        !Files.exists(target.resolve("game/src/main/resources/assets/models/cube.obj")),
+        "2d template must not ship cube.obj");
+    String scene =
+        Files.readString(
+            target.resolve("game/src/main/resources/assets/scenes/main.json"),
+            StandardCharsets.UTF_8);
+    assertTrue(scene.contains("\"projection\": \"orthographic\""));
+    assertTrue(scene.contains("\"Sprite\""));
   }
 
   @Test

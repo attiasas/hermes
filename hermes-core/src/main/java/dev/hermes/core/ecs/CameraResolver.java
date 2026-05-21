@@ -6,11 +6,11 @@ import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 
 /** Selects the active scene camera from ECS entities. */
-final class CameraResolver {
+public final class CameraResolver {
 
   private CameraResolver() {}
 
-  static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
+  public static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
     Entity activeEntity = null;
     Camera activeCamera = null;
     Entity fallbackEntity = null;
@@ -61,6 +61,33 @@ final class CameraResolver {
         chosenCamera.viewportHeight() > 0f ? chosenCamera.viewportHeight() : windowHeight;
 
     return fromComponents(transform, chosenCamera, viewportWidth, viewportHeight);
+  }
+
+  /** Resolves the camera on a named entity; falls back to {@link #resolve} when not found. */
+  public static ActiveCamera resolveNamed(
+      World world, String entityName, float windowWidth, float windowHeight) {
+    if (entityName == null || entityName.isBlank()) {
+      return resolve(world, windowWidth, windowHeight);
+    }
+    Entity entity = world.findByName(entityName);
+    if (entity == null) {
+      System.err.println(
+          "Warning: UI pass camera entity '" + entityName + "' not found; using active camera.");
+      return resolve(world, windowWidth, windowHeight);
+    }
+    Camera camera = world.getComponent(entity.id(), Camera.class);
+    Transform transform = world.getComponent(entity.id(), Transform.class);
+    if (camera == null || transform == null) {
+      throw new IllegalStateException(
+          "Camera entity '"
+              + entityName
+              + "' must have Camera and Transform components on the same entity.");
+    }
+    float viewportWidth =
+        camera.viewportWidth() > 0f ? camera.viewportWidth() : windowWidth;
+    float viewportHeight =
+        camera.viewportHeight() > 0f ? camera.viewportHeight() : windowHeight;
+    return fromComponents(transform, camera, viewportWidth, viewportHeight);
   }
 
   private static ActiveCamera fromComponents(

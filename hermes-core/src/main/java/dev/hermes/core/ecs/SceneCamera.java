@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Matrix4;
 import dev.hermes.api.ecs.Camera;
 
 /** Owns libGDX cameras and applies {@link ActiveCamera} view state each frame. */
-final class SceneCamera {
+public final class SceneCamera {
 
   private static final float ORTHO_EYE_Z = 100f;
 
@@ -14,13 +14,13 @@ final class SceneCamera {
   private final PerspectiveCamera perspective = new PerspectiveCamera();
   private Camera.Projection projection = Camera.Projection.ORTHOGRAPHIC;
 
-  void resize(float windowWidth, float windowHeight) {
+  public void resize(float windowWidth, float windowHeight) {
     orthographic.setToOrtho(false, windowWidth, windowHeight);
     perspective.viewportWidth = windowWidth;
     perspective.viewportHeight = windowHeight;
   }
 
-  void apply(ActiveCamera active) {
+  public void apply(ActiveCamera active) {
     projection = active.projection();
     if (projection == Camera.Projection.PERSPECTIVE) {
       applyPerspective(active);
@@ -29,12 +29,17 @@ final class SceneCamera {
     }
   }
 
-  Camera.Projection projection() {
+  public Camera.Projection projection() {
     return projection;
   }
 
-  Matrix4 combined() {
+  public Matrix4 combined() {
     return projection == Camera.Projection.PERSPECTIVE ? perspective.combined : orthographic.combined;
+  }
+
+  /** Active libGDX camera for batched 3D rendering. */
+  public com.badlogic.gdx.graphics.Camera gdxCamera() {
+    return projection == Camera.Projection.PERSPECTIVE ? perspective : orthographic;
   }
 
   private void applyOrthographic(ActiveCamera active) {

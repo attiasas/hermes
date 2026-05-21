@@ -14,28 +14,33 @@ import org.junit.jupiter.api.io.TempDir;
 class HermesGameConfigParserTest {
 
   @Test
-  void parse_readsTitleAndScene(@TempDir Path dir) throws IOException {
+  void parse_readsTitleSceneAndRenderPipeline(@TempDir Path dir) throws IOException {
     Path file = dir.resolve("hermes.json");
     Files.writeString(
         file,
-        "{\n  \"title\": \"My Game\",\n  \"scene\": \"scenes/custom.json\"\n}\n",
+        "{\n"
+            + "  \"title\": \"My Game\",\n"
+            + "  \"scene\": \"scenes/custom.json\",\n"
+            + "  \"renderPipeline\": \"render/custom-pipeline.json\"\n"
+            + "}\n",
         StandardCharsets.UTF_8);
 
     HermesGameConfig config = HermesGameConfigParser.parse(file.toFile());
 
     assertEquals("My Game", config.getTitle());
     assertEquals("scenes/custom.json", config.getScene());
+    assertEquals("render/custom-pipeline.json", config.getRenderPipeline());
   }
 
   @Test
-  void parse_emptyObjectUsesDefaults(@TempDir Path dir) throws IOException {
+  void parse_missingRenderPipelineThrows(@TempDir Path dir) throws IOException {
     Path file = dir.resolve("hermes.json");
     Files.writeString(file, "{}", StandardCharsets.UTF_8);
 
-    HermesGameConfig config = HermesGameConfigParser.parse(file.toFile());
+    HermesConfigException error =
+        assertThrows(HermesConfigException.class, () -> HermesGameConfigParser.parse(file.toFile()));
 
-    assertEquals("HermesGame", config.getTitle());
-    assertEquals("scenes/main.json", config.getScene());
+    assertTrue(error.getMessage().contains("renderPipeline"));
   }
 
   @Test

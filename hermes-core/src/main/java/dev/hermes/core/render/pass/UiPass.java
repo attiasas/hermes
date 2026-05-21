@@ -1,33 +1,44 @@
-package dev.hermes.core.ecs;
+package dev.hermes.core.render.pass;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import dev.hermes.core.HermesAssetPaths;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Sprite;
-import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
+import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.ecs.ActiveCamera;
+import dev.hermes.core.ecs.CameraResolver;
+import dev.hermes.core.ecs.SceneCamera;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-/** Renders sprites in world space using the active scene camera projection. */
-public final class RenderSystem implements System {
+/** Renders UI-layer sprites using an optional named scene camera or screen-space ortho. */
+public final class UiPass {
 
   private final SpriteBatch batch;
   private final Map<String, TextureRegion> regions = new HashMap<>();
   private final SceneCamera sceneCamera = new SceneCamera();
+  private final String cameraEntityName;
   private float windowWidth = 640f;
   private float windowHeight = 480f;
 
-  public RenderSystem(SpriteBatch batch) {
+  public UiPass(SpriteBatch batch) {
+    this(batch, null);
+  }
+
+  public UiPass(SpriteBatch batch, String cameraEntityName) {
     this.batch = batch;
+    this.cameraEntityName = cameraEntityName;
     sceneCamera.resize(windowWidth, windowHeight);
   }
 
@@ -37,14 +48,17 @@ public final class RenderSystem implements System {
     sceneCamera.resize(windowWidth, windowHeight);
   }
 
-  @Override
-  public void render(World world) {
-    syncWindowSize();
-    ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
-    sceneCamera.apply(active);
+  public void render(World world, Set<RenderLayer.Layer> layers) {
+    List<Entity> drawables = collectDrawableEntities(world, layers);
+    if (drawables.isEmpty()) {
+      return;
+    }
+    drawables.sort(
+        Comparator.comparingDouble(e -> world.getComponent(e.id(), Transform.class).z()));
 
-    List<Entity> drawables = collectDrawableEntities(world);
-    SpriteDrawOrder.sort(drawables, world, active);
+    ActiveCamera active =
+        CameraResolver.resolveNamed(world, cameraEntityName, windowWidth, windowHeight);
+    sceneCamera.apply(active);
 
     batch.setProjectionMatrix(sceneCamera.combined());
     batch.begin();
@@ -73,12 +87,14 @@ public final class RenderSystem implements System {
             });
     float width = region.getRegionWidth() * transform.scaleX();
     float height = region.getRegionHeight() * transform.scaleY();
+    float originX = width * 0.5f;
+    float originY = height * 0.5f;
     batch.draw(
         region,
         transform.x(),
         transform.y(),
-        width * 0.5f,
-        height * 0.5f,
+        originX,
+        originY,
         width,
         height,
         1f,
@@ -86,23 +102,24 @@ public final class RenderSystem implements System {
         transform.rotationZ());
   }
 
-  private void syncWindowSize() {
-    int width = Gdx.graphics.getWidth();
-    int height = Gdx.graphics.getHeight();
-    if (width > 0 && height > 0 && (width != (int) windowWidth || height != (int) windowHeight)) {
-      resize(width, height);
-    }
-  }
-
-  private static List<Entity> collectDrawableEntities(World world) {
+  private static List<Entity> collectDrawableEntities(World world, Set<RenderLayer.Layer> layers) {
+    Set<RenderLayer.Layer> allowed =
+        layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.UI) : layers;
     List<Entity> result = new ArrayList<>();
     for (Entity entity : world.entitiesWith(Sprite.class)) {
       if (world.hasComponent(entity.id(), Camera.class)) {
         continue;
       }
-      if (world.hasComponent(entity.id(), Transform.class)) {
-        result.add(entity);
+      if (!world.hasComponent(entity.id(), Transform.class)) {
+        continue;
       }
+      RenderLayer renderLayer = world.getComponent(entity.id(), RenderLayer.class);
+      RenderLayer.Layer layer =
+          renderLayer == null ? RenderLayer.Layer.WORLD : renderLayer.layer();
+      if (!allowed.contains(layer)) {
+        continue;
+      }
+      result.add(entity);
     }
     return result;
   }
