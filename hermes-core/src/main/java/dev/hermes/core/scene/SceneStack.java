@@ -1,0 +1,162 @@
+package dev.hermes.core.scene;
+
+import dev.hermes.api.HermesSession;
+import dev.hermes.api.ecs.ComponentRegistry;
+import dev.hermes.api.ecs.HermesEngine;
+import dev.hermes.api.ecs.World;
+import dev.hermes.api.scene.SceneContext;
+import dev.hermes.api.scene.SceneDefinition;
+import dev.hermes.api.scene.SceneLifecycle;
+import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.ecs.SceneRegistryImpl;
+import dev.hermes.core.ecs.WorldImpl;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Objects;
+
+/** Stack of loaded scenes with go-to, push, and pop transitions. */
+public final class SceneStack {
+
+  private final SceneRegistryImpl sceneRegistry;
+  private final ComponentRegistry componentRegistry;
+  private final Deque<SceneInstance> stack = new ArrayDeque<>();
+  private HermesEngine engine;
+  private HermesSession session = HermesSession.EMPTY;
+
+  public SceneStack(SceneRegistryImpl sceneRegistry) {
+    this.sceneRegistry = Objects.requireNonNull(sceneRegistry, "sceneRegistry");
+    this.componentRegistry = sceneRegistry.componentRegistry();
+  }
+
+  public void bind(HermesEngine engine, HermesSession session) {
+    this.engine = engine;
+    this.session = session == null ? HermesSession.EMPTY : session;
+  }
+
+  public void goTo(String sceneId) {
+    while (!stack.isEmpty()) {
+      exitScene(stack.pop());
+    }
+    SceneDefinition definition = requireDefinition(sceneId);
+    SceneInstance instance = loadScene(definition);
+    stack.push(instance);
+    enterScene(instance);
+  }
+
+  public void push(String sceneId) {
+    SceneInstance current = stack.peek();
+    if (current != null) {
+      pauseScene(current);
+    }
+    SceneDefinition definition = requireDefinition(sceneId);
+    SceneInstance instance = loadScene(definition);
+    stack.push(instance);
+    enterScene(instance);
+  }
+
+  public void pop() {
+    if (stack.isEmpty()) {
+      throw new IllegalStateException("Cannot pop an empty scene stack");
+    }
+    SceneInstance exiting = stack.pop();
+    exitScene(exiting);
+    SceneInstance resumed = stack.peek();
+    if (resumed != null) {
+      resumeScene(resumed);
+    }
+  }
+
+  public int depth() {
+    return stack.size();
+  }
+
+  public SceneInstance active() {
+    return stack.peek();
+  }
+
+  private SceneInstance loadScene(SceneDefinition definition) {
+    WorldImpl world = new WorldImpl();
+    SceneLoadContext ctx =
+        new SceneLoadContext() {
+          @Override
+          public World world() {
+            return world;
+          }
+
+          @Override
+          public ComponentRegistry registry() {
+            return componentRegistry;
+          }
+        };
+    definition.source().populate(ctx);
+    return new SceneInstance(definition.id(), world, definition, false);
+  }
+
+  private void enterScene(SceneInstance instance) {
+    SceneLifecycle lifecycle = instance.definition().lifecycle();
+    if (lifecycle != null) {
+      lifecycle.onEnter(sceneContext(instance));
+    }
+  }
+
+  private void exitScene(SceneInstance instance) {
+    SceneLifecycle lifecycle = instance.definition().lifecycle();
+    if (lifecycle != null) {
+      lifecycle.onExit(sceneContext(instance));
+    }
+    instance.world().clear();
+  }
+
+  private void pauseScene(SceneInstance instance) {
+    instance.setPaused(true);
+    SceneLifecycle lifecycle = instance.definition().lifecycle();
+    if (lifecycle != null) {
+      lifecycle.onPause(sceneContext(instance));
+    }
+  }
+
+  private void resumeScene(SceneInstance instance) {
+    instance.setPaused(false);
+    SceneLifecycle lifecycle = instance.definition().lifecycle();
+    if (lifecycle != null) {
+      lifecycle.onResume(sceneContext(instance));
+    }
+  }
+
+  private SceneDefinition requireDefinition(String sceneId) {
+    SceneDefinition definition = sceneRegistry.get(sceneId);
+    if (definition == null) {
+      throw new IllegalStateException("Scene '" + sceneId + "' is not registered");
+    }
+    return definition;
+  }
+
+  private SceneContext sceneContext(SceneInstance instance) {
+    return new SceneContext() {
+      @Override
+      public String sceneId() {
+        return instance.id();
+      }
+
+      @Override
+      public World world() {
+        return instance.world();
+      }
+
+      @Override
+      public ComponentRegistry registry() {
+        return componentRegistry;
+      }
+
+      @Override
+      public HermesEngine engine() {
+        return engine;
+      }
+
+      @Override
+      public HermesSession session() {
+        return session;
+      }
+    };
+  }
+}

@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-final class WorldImpl implements World {
+public final class WorldImpl implements World {
 
   private long nextId = 1;
   private final Map<EntityId, EntityImpl> entities = new LinkedHashMap<>();
