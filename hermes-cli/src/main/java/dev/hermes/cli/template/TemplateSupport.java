@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 
 public final class TemplateSupport {
 
-  private static final Set<String> SUPPORTED_TEMPLATES = Set.of("minimal", "multi-scene");
+  private static final Set<String> SUPPORTED_TEMPLATES = Set.of("minimal", "2d", "multi-scene");
 
   private TemplateSupport() {}
 
@@ -99,7 +99,7 @@ public final class TemplateSupport {
       throw new IOException("Template id is required");
     }
     if (!SUPPORTED_TEMPLATES.contains(templateId)) {
-      throw new IOException("Unknown template: " + templateId + " (supported: minimal, multi-scene)");
+      throw new IOException("Unknown template: " + templateId + " (supported: minimal, 2d, multi-scene)");
     }
   }
 

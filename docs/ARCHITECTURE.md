@@ -101,7 +101,7 @@ Logical subpackages to grow into (names illustrative; flat packages today):
 
 ## Platform template model
 
-- **Project templates** live under `hermes-templates/minimal/` and `hermes-templates/multi-scene/`. `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
+- **Project templates** live under `hermes-templates/minimal/` (3D), `hermes-templates/2d/` (orthographic sprites), and `hermes-templates/multi-scene/` (3D main + 2D overlay). `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
 - **Platform build templates** live under `hermes-templates/platforms/<launcher-module>/build.gradle.tpl`. `HermesPlatformSync` copies launcher **sources** (Java, resources, manifests) from the plugin JAR or `HERMES_HOME`, then renders `build.gradle` with `PlatformTemplateRenderer` and `PlatformSyncContext` (no regex patching).
 - **Launchers** are not copied into the user repo as first-class modules; they are synced into `.hermes/platforms/` and included by path via `settings.project(...).setProjectDir(synced)`.
 - **Engine JARs** come from Maven local at `hermes.engineVersion`; templates intentionally avoid `includeBuild('hermes-gradle-plugin')` so IDEs show only `game`.
@@ -117,14 +117,9 @@ pluginManagement {
 
 Dogfood builds use the composite plugin. CI and releases also run `:hermes-gradle-plugin:publishToMavenLocal` so integration tests and templates match the published plugin.
 
-## Pre-release breaking-change policy
+## Pre-release policy
 
-Hermes is **pre-release** (`0.1.0-SNAPSHOT`). Until 1.0:
-
-- Scene format, Gradle DSL keys, task names, and template layout may change without a major-version bump.
-- Prefer updating `docs/scene-format-v2.md` and migration notes in the same PR as breaking changes.
-- After pulling engine changes, republish to Maven local and run `hermesSyncPlatforms` in game projects.
-- Report incompatibilities via issues/PRs; avoid relying on undocumented behavior across engine upgrades.
+Hermes is **pre-release** (`0.1.0-SNAPSHOT`). The scene format remains **v1** until 1.0; Gradle DSL keys, task names, and templates may change without a v2 doc. Update [`docs/scene-format-v1.md`](scene-format-v1.md) in the same PR when scene JSON rules change. After pulling engine changes, republish to Maven local and run `hermesSyncPlatforms` in game projects.
 
 ## Scene manager
 
@@ -139,6 +134,6 @@ Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, ca
 ## Related docs
 
 - [Scene management](scene-management.md)
-- [Scene format v2](scene-format-v2.md)
+- [Scene format v1](scene-format-v1.md)
 - [Contributing](CONTRIBUTING.md)
 - [Docs index](README.md)

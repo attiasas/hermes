@@ -1,6 +1,8 @@
 # {{PROJECT_NAME}}
 
-Hermes game project generated from the **minimal** template (single-scene **3D**: perspective camera + `models/cube.obj`).
+Hermes game project generated from the **2d** template.
+
+2D games use the same 3D engine with an **orthographic** camera and `Sprite` entities (no meshes). The default scene pins the camera to the viewport center and draws `hermes-logo.png` with a pulse animation.
 
 ## Prerequisites
 

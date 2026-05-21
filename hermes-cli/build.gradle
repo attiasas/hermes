@@ -37,7 +37,18 @@ tasks.named('compileJava') {
 }
 
 tasks.register('copyTemplates', Sync) {
-  from('../hermes-templates')
+  from('../hermes-templates/minimal') {
+    into 'minimal'
+  }
+  from('../hermes-templates/2d') {
+    into '2d'
+  }
+  from('../hermes-templates/multi-scene') {
+    into 'multi-scene'
+  }
+  from('../hermes-templates/platforms') {
+    into 'platforms'
+  }
   into layout.buildDirectory.dir('generated/hermes-cli-templates/hermes-templates')
 }
 
