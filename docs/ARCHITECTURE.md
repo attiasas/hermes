@@ -66,7 +66,7 @@ Standalone game repos contain only the `game` module. Platform launchers live un
 1. If `HERMES_HOME` points at a valid checkout (`hermes-api` + `hermes-core` dirs), copy launcher trees from there.
 2. Else extract launcher trees bundled inside the published `hermes-gradle-plugin` JAR.
 
-After copy, the plugin patches `build.gradle` files for Maven coordinates, Java 11, standalone game layout, and Android repo rules.
+After copy, the plugin **renders** `build.gradle` from templates under `hermes-templates/platforms/<launcher>/build.gradle.tpl` (bundled in the Gradle plugin JAR). Tokens include `{{hermesCoreDependency}}` (Maven `dev.hermes:hermes-core` at `hermes.engineVersion`), `{{gameDependency}}` (`implementation` vs `compileOnly` for HTML TeaVM), and `{{agpVersion}}` for Android. Desktop uses JDK 17 toolchain with `release = 11` for Construo; HTML/Android use Java 11. Android templates omit project-level `repositories` blocks so root `dependencyResolutionManagement` applies.
 
 **Refresh:** `./gradlew hermesSyncPlatforms` (or root `hermesSyncPlatforms`). Re-run after upgrading `hermes.engineVersion` or when doctor reports stale launchers.
 
@@ -99,14 +99,13 @@ Logical subpackages to grow into (names illustrative; flat packages today):
 | Platforms | — | `platform` — specs, sync, launcher include | `template` — `TemplateSupport`, `NewCommand` |
 | Export | — | `export` — Construo/TeaVM/APK ZIP tasks | — |
 
-## Platform template model (brief)
+## Platform template model
 
-- **Templates** live under `hermes-templates/` (e.g. `empty/`). `hermes new` copies a template and substitutes package/name placeholders.
+- **Project templates** live under `hermes-templates/empty/`. `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
+- **Platform build templates** live under `hermes-templates/platforms/<launcher-module>/build.gradle.tpl`. `HermesPlatformSync` copies launcher **sources** (Java, resources, manifests) from the plugin JAR or `HERMES_HOME`, then renders `build.gradle` with `PlatformTemplateRenderer` and `PlatformSyncContext` (no regex patching).
 - **Launchers** are not copied into the user repo as first-class modules; they are synced into `.hermes/platforms/` and included by path via `settings.project(...).setProjectDir(synced)`.
 - **Engine JARs** come from Maven local at `hermes.engineVersion`; templates intentionally avoid `includeBuild('hermes-gradle-plugin')` so IDEs show only `game`.
 - **Platform toggles** in `settings.gradle` (`hermes { platforms { desktop/html/android { enabled } } }`) control which launchers are included; run/export options live in `game/build.gradle` under `hermes { platforms { … } }`.
-
-Phase 4 documentation will expand export layout, icon pipelines, and template variants.
 
 ## Gradle plugin in the monorepo
 
