@@ -2,7 +2,7 @@
 
 Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). User-facing code targets a small public API (`hermes-api`); libGDX stays inside `hermes-core` and launcher modules.
 
-**Vision and requirements:** [plan/PROJECT.md](plan/PROJECT.md) · **Roadmap:** [plan/hermes_engine_plan_80cb86d9.detailed.plan.md](plan/hermes_engine_plan_80cb86d9.detailed.plan.md)
+**Architecture and layout:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · **Contributing:** [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 
 ---
 
@@ -194,7 +194,8 @@ Distribution builds use `hermes.debug=false` even when `debug = true` in `game/b
 - `game` → `hermes-api` (compile); `hermes-core` (runtime).
 - `hermes-core` → `hermes-api` + libGDX (internal).
 - `hermes-launcher-*` → `hermes-core` (+ platform backends).
-- `hermes-gradle-plugin` — composite-included via `includeBuild`; not a published subproject.
+- `hermes-gradle-plugin` — composite-included via `pluginManagement { includeBuild('hermes-gradle-plugin') }` for monorepo dogfooding; also publishable with `./gradlew :hermes-gradle-plugin:publishToMavenLocal` for standalone game projects (templates resolve the plugin from Maven local, not `includeBuild`).
+- `hermes-tooling` — shared doctor/config parsing kernel; consumed by `hermes-cli` as a Maven artifact and compiled into the Gradle plugin (see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)).
 
 Verify no direct libGDX in game sources:
 
