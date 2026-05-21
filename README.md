@@ -225,7 +225,8 @@ Enable Android in [`settings.gradle`](settings.gradle), then install platform/bu
 
 ## Troubleshooting
 
-- **macOS desktop frozen / exit 133 / instant exit:** `hermesRunDesktop` uses JDK 17, `-XstartOnFirstThread`, and `hermes.desktop.gradleRun=true` so `StartupHelper` does not spawn a child JVM. Dock icon is for exported bundles only. After upgrading Hermes, republish to Maven local and delete `.hermes/platforms/hermes-launcher-desktop` to refresh the synced launcher.
+- **macOS desktop frozen / exit 133 / instant exit:** `hermesRunDesktop` uses JDK 17, `-XstartOnFirstThread`, and `hermes.desktop.gradleRun=true` so `StartupHelper` does not spawn a child JVM. Dock icon is for exported bundles only.
+- **Stale `.hermes/platforms` after upgrading Hermes** (e.g. compile errors for removed launcher files): run `./gradlew hermesSyncPlatforms`, or delete `.hermes/platforms/` and re-sync. Platform sources refresh automatically when `.hermes/version` does not match the engine version.
 - **Linux + NVIDIA:** `__GL_THREADED_OPTIMIZATIONS=0` is set for Gradle-spawned runs.
 - **Android:** See [Android SDK](#android-sdk); connect a device/emulator for `hermesRunAndroid`.
 - **HTML:** Enable `platforms.html` in settings; `hermesRunHtml` serves at http://localhost:8080/ after TeaVM build.

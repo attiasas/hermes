@@ -54,12 +54,8 @@ public final class HermesPlatformSync {
   }
 
   public static void syncIfNeeded(File rootDir, String moduleName, String engineVersion, File hermesHome) {
-    if (!isSynced(rootDir, moduleName)) {
-      if (HermesHomeGradle.isHermesCheckout(hermesHome)) {
-        copyLauncherSourcesFromHome(rootDir, hermesHome, moduleName, engineVersion);
-      } else {
-        extractLauncherSourcesFromPlugin(rootDir, moduleName, engineVersion);
-      }
+    if (!isSynced(rootDir, moduleName) || engineVersionOutdated(rootDir, engineVersion)) {
+      populateLauncherSources(rootDir, moduleName, hermesHome);
     }
     renderBuildGradle(rootDir, moduleName, engineVersion);
     writeVersionStamp(rootDir, engineVersion);
@@ -79,6 +75,24 @@ public final class HermesPlatformSync {
     }
     if (platforms.getAndroid().isEnabled()) {
       syncIfNeeded(rootDir, "hermes-launcher-android", engineVersion, hermesHome);
+    }
+    writeVersionStamp(rootDir, engineVersion);
+  }
+
+  /** Re-extracts all enabled launcher sources (for {@code hermesSyncPlatforms}). */
+  public static void syncAllEnabledForce(
+      File rootDir, SettingsPlatformsExtension platforms, String engineVersion, File hermesHome) {
+    if (platforms.getDesktop().isEnabled()) {
+      populateLauncherSources(rootDir, "hermes-launcher-desktop", hermesHome);
+      renderBuildGradle(rootDir, "hermes-launcher-desktop", engineVersion);
+    }
+    if (platforms.getHtml().isEnabled()) {
+      populateLauncherSources(rootDir, "hermes-launcher-html", hermesHome);
+      renderBuildGradle(rootDir, "hermes-launcher-html", engineVersion);
+    }
+    if (platforms.getAndroid().isEnabled()) {
+      populateLauncherSources(rootDir, "hermes-launcher-android", hermesHome);
+      renderBuildGradle(rootDir, "hermes-launcher-android", engineVersion);
     }
     writeVersionStamp(rootDir, engineVersion);
   }
@@ -104,48 +118,53 @@ public final class HermesPlatformSync {
     }
   }
 
-  private static void copyLauncherSourcesFromHome(
-      File rootDir, File hermesHome, String moduleName, String engineVersion) {
-    File source = new File(hermesHome, moduleName);
-    if (!source.isDirectory()) {
-      throw new GradleException(
-          "HERMES_HOME is set to "
-              + hermesHome.getAbsolutePath()
-              + " but "
-              + moduleName
-              + " was not found.");
+  static boolean engineVersionOutdated(File rootDir, String engineVersion) {
+    File versionFile = new File(rootDir, VERSION_FILE);
+    if (!versionFile.isFile()) {
+      return true;
     }
-    File target = launcherDir(rootDir, moduleName);
     try {
-      copyLauncherSources(source.toPath(), target.toPath());
-      Logging.getLogger(HermesPlatformSync.class)
-          .lifecycle("Hermes: synced {} from HERMES_HOME to {}", moduleName, target.getAbsolutePath());
+      String stamped = Files.readString(versionFile.toPath()).trim();
+      return !stamped.equals(engineVersion.trim());
     } catch (IOException e) {
-      throw new GradleException("Failed to sync " + moduleName + " from HERMES_HOME", e);
+      return true;
     }
   }
 
-  private static void extractLauncherSourcesFromPlugin(
-      File rootDir, String moduleName, String engineVersion) {
-    URL resource = HermesPlatformSync.class.getResource("/hermes-platforms/" + moduleName);
-    if (resource == null) {
-      throw new GradleException(
-          "Launcher "
-              + moduleName
-              + " is not in this build and could not be loaded from the Hermes plugin."
-              + " Set HERMES_HOME to a Hermes checkout or run from the engine monorepo.");
-    }
+  private static void populateLauncherSources(File rootDir, String moduleName, File hermesHome) {
     File target = launcherDir(rootDir, moduleName);
     try {
       if (target.exists()) {
         deleteRecursive(target.toPath());
       }
       Files.createDirectories(target.toPath());
-      extractResourceTree(moduleName, target.toPath());
-      Logging.getLogger(HermesPlatformSync.class)
-          .lifecycle("Hermes: extracted {} into {}", moduleName, target.getAbsolutePath());
+      if (HermesHomeGradle.isHermesCheckout(hermesHome)) {
+        File source = new File(hermesHome, moduleName);
+        if (!source.isDirectory()) {
+          throw new GradleException(
+              "HERMES_HOME is set to "
+                  + hermesHome.getAbsolutePath()
+                  + " but "
+                  + moduleName
+                  + " was not found.");
+        }
+        copyLauncherSources(source.toPath(), target.toPath());
+        Logging.getLogger(HermesPlatformSync.class)
+            .lifecycle("Hermes: synced {} from HERMES_HOME to {}", moduleName, target.getAbsolutePath());
+      } else {
+        if (HermesPlatformSync.class.getResource("/hermes-platforms/" + moduleName) == null) {
+          throw new GradleException(
+              "Launcher "
+                  + moduleName
+                  + " is not in this build and could not be loaded from the Hermes plugin."
+                  + " Set HERMES_HOME to a Hermes checkout or run from the engine monorepo.");
+        }
+        extractResourceTree(moduleName, target.toPath());
+        Logging.getLogger(HermesPlatformSync.class)
+            .lifecycle("Hermes: extracted {} into {}", moduleName, target.getAbsolutePath());
+      }
     } catch (IOException e) {
-      throw new GradleException("Failed to extract " + moduleName + " platform stub", e);
+      throw new GradleException("Failed to sync launcher sources for " + moduleName, e);
     }
   }
 

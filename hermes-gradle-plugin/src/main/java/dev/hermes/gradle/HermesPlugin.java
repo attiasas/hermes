@@ -82,7 +82,7 @@ public final class HermesPlugin implements Plugin<Project> {
                         gameProject.getExtensions().getByType(HermesExtension.class);
                     String engineVersion = HermesConfig.resolveEngineVersion(gameProject);
                     File hermesHome = HermesHomeGradle.resolve(gameProject);
-                    HermesPlatformSync.syncAllEnabled(
+                    HermesPlatformSync.syncAllEnabledForce(
                         root.getRootDir(),
                         HermesConfig.resolveSettingsPlatforms(gameProject),
                         engineVersion,
