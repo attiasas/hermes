@@ -23,7 +23,8 @@ Scene files describe entities and their components. They live under the game mod
 | Field | Required | Description |
 |-------|----------|-------------|
 | `entities` | No | Array of entity objects. Omitted or empty means an empty scene. |
-| `entities[].id` | No | Logical name for lookup and error messages. |
+| `entities[]` | — | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`. |
+| `entities[].id` | No | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime. |
 | `entities[].components` | No | Map of component type name → property object. |
 
 ## Built-in component types

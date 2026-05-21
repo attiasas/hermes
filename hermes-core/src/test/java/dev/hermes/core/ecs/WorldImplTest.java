@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
@@ -45,6 +46,14 @@ final class WorldImplTest {
     world.removeEntity(entity.id());
     assertEquals(0, world.entityCount());
     assertNull(world.findByName("temp"));
+  }
+
+  @Test
+  void createEntity_duplicateNameThrows() {
+    world.createEntity("player");
+    IllegalArgumentException error =
+        assertThrows(IllegalArgumentException.class, () -> world.createEntity("player"));
+    assertTrue(error.getMessage().contains("Duplicate entity name"));
   }
 
   @Test

@@ -25,6 +25,9 @@ final class WorldImpl implements World {
     entities.put(id, entity);
     components.put(id, new HashMap<>());
     if (name != null && !name.isBlank()) {
+      if (names.containsKey(name)) {
+        throw new IllegalArgumentException("Duplicate entity name: " + name);
+      }
       names.put(name, id);
     }
     return entity;

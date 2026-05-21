@@ -20,9 +20,11 @@ final class SceneDocument {
       JsonValue entitiesArray = root.get("entities");
       List<EntitySpec> entities = new ArrayList<>();
       if (entitiesArray != null && entitiesArray.isArray()) {
-        for (JsonValue entityValue : entitiesArray) {
+        for (int i = 0; i < entitiesArray.size; i++) {
+          JsonValue entityValue = entitiesArray.get(i);
           if (!entityValue.isObject()) {
-            continue;
+            throw new SceneParseException(
+                "Scene '" + scenePath + "': entities[" + i + "] must be an object.");
           }
           String id = entityValue.has("id") ? entityValue.getString("id", "") : "";
           JsonValue componentsValue = entityValue.get("components");
