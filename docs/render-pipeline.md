@@ -68,6 +68,12 @@ Pipeline JSON references the handler by id:
 
 Unregistered handlers fail at graph build time. Custom passes receive the active scene `World` each frame (no libGDX types in the API).
 
+Custom passes that only update uniforms (for example `WaterPass` ticking `u_time`) must run **before** the `world3d` pass that draws meshes using those uniforms.
+
+### Shaders: g3d vs SpriteBatch
+
+`default/unlit` assets under `shaders/default.vert` / `shaders/default.frag` are **g3d** shaders for `Mesh` / `world3d` (`u_projViewTrans`). `SpritesPass` keeps SpriteBatch's built-in shader unless a registered vertex shader declares `u_projTrans`. Custom 2D sprite shaders must include that uniform.
+
 Example:
 
 ```json

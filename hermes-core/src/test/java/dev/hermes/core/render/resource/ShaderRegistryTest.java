@@ -21,6 +21,17 @@ final class ShaderRegistryTest {
   }
 
   @Test
+  void defaultUnlitFromClasspath_isG3dOnly_notSpriteCapable() {
+    PipelineDocument.ShaderDef def =
+        new PipelineDocument.ShaderDef("shaders/default.vert", "shaders/default.frag");
+    ShaderRegistry registry = new ShaderRegistry(Map.of(ShaderRegistry.DEFAULT_UNLIT, def));
+
+    assertFalse(registry.supportsSpriteBatch(ShaderRegistry.DEFAULT_UNLIT));
+    assertTrue(registry.isRegistered(ShaderRegistry.DEFAULT_UNLIT));
+    registry.dispose();
+  }
+
+  @Test
   void loadsAndCompilesShaderFromClasspathAssets() {
     PipelineDocument.ShaderDef def =
         new PipelineDocument.ShaderDef("shaders/default.vert", "shaders/default.frag");

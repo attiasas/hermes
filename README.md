@@ -20,7 +20,7 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Gam
 ./gradlew :game:hermesRunDesktop
 ```
 
-You should see a 640×480 window with a textured 3D cube (config-only scene JSON). Game logic lives in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes `-Dhermes.applicationClass` at launch. Register `advanced-render` in `onCreate` and `goTo` that scene to try custom shaders and `WaterPass`.
+You should see a 640×480 window with a textured 3D cube (config-only scene JSON). Game logic lives in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes `-Dhermes.applicationClass` at launch. Every 12 seconds the sample auto-switches to the `advanced-render` demo (animated water plane + cube); you can also `goTo("advanced-render")` manually.
 
 Full build:
 

@@ -135,7 +135,15 @@ public final class SpritesPass {
     if (shaderRegistry.usesBuiltin(shaderId)) {
       return null;
     }
+    if (!shaderRegistry.supportsSpriteBatch(shaderId)) {
+      return null;
+    }
     return shaderRegistry.requireProgram(shaderId);
+  }
+
+  /** Package-visible for tests. */
+  ShaderProgram resolveSpriteShaderForTest(Material material) {
+    return resolveSpriteShader(material);
   }
 
   private static List<Entity> collectDrawableEntities(World world, Set<RenderLayer.Layer> layers) {

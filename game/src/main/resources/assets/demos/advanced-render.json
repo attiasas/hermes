@@ -4,7 +4,7 @@
     {
       "id": "camera",
       "components": {
-        "Transform": { "x": 0, "y": 3, "z": 8 },
+        "Transform": { "x": 0, "y": 0, "z": 8 },
         "Camera": { "projection": "perspective", "active": true, "fieldOfView": 60 }
       }
     },

@@ -41,6 +41,7 @@ public final class SampleHermesGame implements HermesApplication {
     engine.scenes().registry().register("advanced-render", "demos/advanced-render.json");
     engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
     engine.addSystem(new SceneNavigationSystem(engine.scenes(), 4f));
+    engine.addSystem(new AdvancedRenderDemoSystem(engine.scenes(), 12f), SystemScope.GLOBAL);
   }
 
   @Override

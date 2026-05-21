@@ -40,6 +40,15 @@ public final class ShaderRegistry implements Disposable {
     return builtinIds.contains(shaderId);
   }
 
+  /** True when the shader can be bound on libGDX {@link com.badlogic.gdx.graphics.g2d.SpriteBatch}. */
+  public boolean supportsSpriteBatch(String shaderId) {
+    if (usesBuiltin(shaderId)) {
+      return true;
+    }
+    RegisteredShader shader = shaders.get(shaderId);
+    return shader != null && shader.supportsSpriteBatch();
+  }
+
   public ShaderProgram requireProgram(String shaderId) {
     RegisteredShader shader = shaders.get(shaderId);
     if (shader == null) {
@@ -62,13 +71,13 @@ public final class ShaderRegistry implements Disposable {
     }
     Renderable scoped = renderable;
     scoped.environment = environment;
+    DefaultShader.Config config = new DefaultShader.Config();
+    config.numDirectionalLights = 1;
+    config.numPointLights = 0;
+    config.numSpotLights = 0;
     DefaultShader shader =
         new DefaultShader(
-            scoped,
-            new DefaultShader.Config(),
-            "",
-            sources.vertexSource(),
-            sources.fragmentSource());
+            scoped, config, "", sources.vertexSource(), sources.fragmentSource());
     shader.init();
     return shader;
   }
@@ -109,7 +118,8 @@ public final class ShaderRegistry implements Disposable {
               + program.getLog());
     }
     program.dispose();
-    shaders.put(id, new RegisteredShader(vertexSource, fragmentSource));
+    shaders.put(
+        id, new RegisteredShader(vertexSource, fragmentSource, vertexSource.contains("u_projTrans")));
   }
 
   @Override
@@ -124,11 +134,17 @@ public final class ShaderRegistry implements Disposable {
   private static final class RegisteredShader {
     private final String vertexSource;
     private final String fragmentSource;
+    private final boolean supportsSpriteBatch;
     private ShaderProgram spriteProgram;
 
-    private RegisteredShader(String vertexSource, String fragmentSource) {
+    private RegisteredShader(String vertexSource, String fragmentSource, boolean supportsSpriteBatch) {
       this.vertexSource = vertexSource;
       this.fragmentSource = fragmentSource;
+      this.supportsSpriteBatch = supportsSpriteBatch;
+    }
+
+    private boolean supportsSpriteBatch() {
+      return supportsSpriteBatch;
     }
 
     private String vertexSource() {
