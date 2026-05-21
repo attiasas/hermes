@@ -11,6 +11,7 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.Mesh;
+import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.ecs.ActiveCamera;
@@ -18,12 +19,15 @@ import dev.hermes.core.ecs.CameraResolver;
 import dev.hermes.core.ecs.SceneCamera;
 import dev.hermes.core.render.resource.ModelCache;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /** Renders mesh entities in world space with the active scene camera. */
 public final class World3dPass {
 
   private final ModelCache modelCache;
+  private final boolean disposeModelCache;
   private final ModelBatch modelBatch;
   private final SceneCamera sceneCamera = new SceneCamera();
   private final Environment environment = new Environment();
@@ -32,7 +36,12 @@ public final class World3dPass {
   private float windowHeight = 480f;
 
   public World3dPass(ModelCache modelCache) {
+    this(modelCache, true);
+  }
+
+  public World3dPass(ModelCache modelCache, boolean disposeModelCache) {
     this.modelCache = modelCache;
+    this.disposeModelCache = disposeModelCache;
     this.modelBatch = new ModelBatch();
     environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
     environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
@@ -46,10 +55,14 @@ public final class World3dPass {
   }
 
   public void render(World world) {
+    render(world, EnumSet.of(RenderLayer.Layer.WORLD));
+  }
+
+  public void render(World world, Set<RenderLayer.Layer> layers) {
     ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
     sceneCamera.apply(active);
 
-    List<Entity> drawables = collectDrawables(world);
+    List<Entity> drawables = collectDrawables(world, layers);
     if (drawables.isEmpty()) {
       return;
     }
@@ -95,6 +108,12 @@ public final class World3dPass {
 
   /** Returns mesh entities that have transform and material (excludes camera entities). */
   public static List<Entity> collectDrawables(World world) {
+    return collectDrawables(world, EnumSet.of(RenderLayer.Layer.WORLD));
+  }
+
+  public static List<Entity> collectDrawables(World world, Set<RenderLayer.Layer> layers) {
+    Set<RenderLayer.Layer> allowed =
+        layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.WORLD) : layers;
     List<Entity> result = new ArrayList<>();
     for (Entity entity : world.entitiesWith(Mesh.class)) {
       if (world.hasComponent(entity.id(), Camera.class)) {
@@ -106,6 +125,12 @@ public final class World3dPass {
       if (!world.hasComponent(entity.id(), Material.class)) {
         continue;
       }
+      RenderLayer renderLayer = world.getComponent(entity.id(), RenderLayer.class);
+      RenderLayer.Layer layer =
+          renderLayer == null ? RenderLayer.Layer.WORLD : renderLayer.layer();
+      if (!allowed.contains(layer)) {
+        continue;
+      }
       result.add(entity);
     }
     return result;
@@ -113,6 +138,8 @@ public final class World3dPass {
 
   public void dispose() {
     modelBatch.dispose();
-    modelCache.dispose();
+    if (disposeModelCache) {
+      modelCache.dispose();
+    }
   }
 }

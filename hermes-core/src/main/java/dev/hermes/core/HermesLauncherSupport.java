@@ -56,4 +56,8 @@ public final class HermesLauncherSupport {
   public static String gameScenePath() {
     return HermesRuntimeConfig.get("hermes.game.scene", "scenes/main.json");
   }
+
+  public static String gameRenderPipelinePath() {
+    return HermesRuntimeConfig.get("hermes.game.renderPipeline", "render/pipeline.json");
+  }
 }

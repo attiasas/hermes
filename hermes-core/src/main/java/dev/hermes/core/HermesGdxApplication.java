@@ -2,7 +2,6 @@ package dev.hermes.core;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
 import dev.hermes.api.ecs.SystemScope;
@@ -31,7 +30,7 @@ public final class HermesGdxApplication implements ApplicationListener {
     engine = new HermesEngineImpl();
     engine.bindApplication(application);
     batch = new SpriteBatch();
-    renderPipeline = new RenderPipelineExecutor(batch);
+    renderPipeline = new RenderPipelineExecutor(batch, HermesLauncherSupport.gameRenderPipelinePath());
 
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {
@@ -60,9 +59,6 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void render() {
-    Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1f);
-    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
-
     engine.scenes().processPending();
 
     float delta = Gdx.graphics.getDeltaTime();

@@ -2,10 +2,10 @@ package dev.hermes.core.render.pass;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.math.Vector3;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.RenderLayer;
@@ -13,59 +13,54 @@ import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.HermesAssetPaths;
-import dev.hermes.core.ecs.ActiveCamera;
-import dev.hermes.core.ecs.CameraResolver;
-import dev.hermes.core.ecs.SceneCamera;
-import dev.hermes.core.ecs.SpriteDrawOrder;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Renders sprites in world space using the active scene camera projection. */
-public final class SpritesPass {
+/** Renders UI-layer sprites in screen space (bottom-left origin). */
+public final class UiPass {
 
   private final SpriteBatch batch;
   private final Map<String, TextureRegion> regions = new HashMap<>();
-  private final SceneCamera sceneCamera = new SceneCamera();
-  private final Vector3 projected = new Vector3();
+  private final OrthographicCamera uiCamera = new OrthographicCamera();
   private float windowWidth = 640f;
   private float windowHeight = 480f;
 
-  public SpritesPass(SpriteBatch batch) {
+  public UiPass(SpriteBatch batch) {
     this.batch = batch;
-    sceneCamera.resize(windowWidth, windowHeight);
+    uiCamera.setToOrtho(false);
+    resize((int) windowWidth, (int) windowHeight);
   }
 
   public void resize(int width, int height) {
     windowWidth = Math.max(1, width);
     windowHeight = Math.max(1, height);
-    sceneCamera.resize(windowWidth, windowHeight);
-  }
-
-  public void render(World world) {
-    render(world, EnumSet.of(RenderLayer.Layer.WORLD));
+    uiCamera.setToOrtho(false, windowWidth, windowHeight);
+    uiCamera.update();
   }
 
   public void render(World world, Set<RenderLayer.Layer> layers) {
     syncWindowSize();
-    ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
-    sceneCamera.apply(active);
-
     List<Entity> drawables = collectDrawableEntities(world, layers);
-    SpriteDrawOrder.sort(drawables, world, active);
+    if (drawables.isEmpty()) {
+      return;
+    }
+    drawables.sort(
+        Comparator.comparingDouble(e -> world.getComponent(e.id(), Transform.class).z()));
 
-    batch.setProjectionMatrix(sceneCamera.combined());
+    batch.setProjectionMatrix(uiCamera.combined);
     batch.begin();
     for (Entity entity : drawables) {
-      drawSprite(world, entity, active, sceneCamera);
+      drawSprite(world, entity);
     }
     batch.end();
   }
 
-  private void drawSprite(World world, Entity entity, ActiveCamera active, SceneCamera sceneCamera) {
+  private void drawSprite(World world, Entity entity) {
     Transform transform = world.getComponent(entity.id(), Transform.class);
     Sprite sprite = world.getComponent(entity.id(), Sprite.class);
     if (transform == null || sprite == null) {
@@ -86,17 +81,17 @@ public final class SpritesPass {
     float height = region.getRegionHeight() * transform.scaleY();
     float originX = width * 0.5f;
     float originY = height * 0.5f;
-    float x = transform.x();
-    float y = transform.y();
-    float rotation = transform.rotationZ();
-
-    if (active.projection() == Camera.Projection.PERSPECTIVE) {
-      projected.set(x, y, transform.z());
-      sceneCamera.gdxCamera().project(projected);
-      batch.draw(region, projected.x, projected.y, originX, originY, width, height, 1f, 1f, rotation);
-    } else {
-      batch.draw(region, x, y, originX, originY, width, height, 1f, 1f, rotation);
-    }
+    batch.draw(
+        region,
+        transform.x(),
+        transform.y(),
+        originX,
+        originY,
+        width,
+        height,
+        1f,
+        1f,
+        transform.rotationZ());
   }
 
   private void syncWindowSize() {
@@ -109,7 +104,7 @@ public final class SpritesPass {
 
   private static List<Entity> collectDrawableEntities(World world, Set<RenderLayer.Layer> layers) {
     Set<RenderLayer.Layer> allowed =
-        layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.WORLD) : layers;
+        layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.UI) : layers;
     List<Entity> result = new ArrayList<>();
     for (Entity entity : world.entitiesWith(Sprite.class)) {
       if (world.hasComponent(entity.id(), Camera.class)) {

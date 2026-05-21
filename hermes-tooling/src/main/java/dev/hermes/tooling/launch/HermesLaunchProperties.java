@@ -62,6 +62,10 @@ public final class HermesLaunchProperties {
       return put("hermes.game.scene", value);
     }
 
+    public Builder renderPipeline(String value) {
+      return put("hermes.game.renderPipeline", value);
+    }
+
     public Builder desktopVsync(boolean value) {
       return put("hermes.desktop.vsync", Boolean.toString(value));
     }

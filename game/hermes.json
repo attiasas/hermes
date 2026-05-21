@@ -1,4 +1,5 @@
 {
   "title": "HermesSample",
-  "scene": "scenes/main.json"
+  "scene": "scenes/main.json",
+  "renderPipeline": "render/pipeline.json"
 }
