@@ -3,24 +3,24 @@
     {
       "id": "main-camera",
       "components": {
-        "Transform": { "x": 320, "y": 240, "z": 0 },
-        "Camera": { "projection": "orthographic", "active": true, "zoom": 1 }
+        "Transform": { "x": 0, "y": 2, "z": 5 },
+        "Camera": { "projection": "perspective", "active": true, "fieldOfView": 60 }
       }
     },
     {
-      "id": "logo",
+      "id": "cube",
       "components": {
-        "Transform": { "x": 420, "y": 240 },
-        "Sprite": { "texture": "hermes-logo.png" },
+        "Transform": { "x": 0, "y": 0, "z": 0 },
+        "Mesh": { "model": "models/cube.obj", "texture": "hermes-logo.png" },
         "Material": { "shader": "default/unlit" },
         "SpinMarker": {
           "speed": 1.2,
-          "centerX": 320,
-          "centerY": 240,
-          "radius": 100
+          "centerX": 0,
+          "centerY": 0,
+          "radius": 1.5
         },
         "BounceMarker": {
-          "amplitude": 18,
+          "amplitude": 0.2,
           "speed": 3
         }
       }

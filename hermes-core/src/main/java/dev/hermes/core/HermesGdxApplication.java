@@ -9,6 +9,8 @@ import dev.hermes.api.ecs.World;
 import dev.hermes.api.render.HermesRenderConfigurator;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneChangeRequest;
+import dev.hermes.api.scene.SceneHandle;
+import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.render.RenderPipelineExecutor;
 
@@ -68,15 +70,16 @@ public final class HermesGdxApplication implements ApplicationListener {
     engine.scenes().processPending();
 
     float delta = Gdx.graphics.getDeltaTime();
-    World activeWorld = engine.scenes().activeWorld();
     boolean hasActiveScene = engine.scenes().stackDepth() > 0;
+    SceneStackPolicy stackPolicy = engine.scenes().stackPolicy();
 
     for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
       if (entry.scope() == SystemScope.GLOBAL) {
-        entry.system().update(activeWorld, delta);
+        updateGlobalSystem(entry, engine.scenes().updateScenes(), delta, hasActiveScene, stackPolicy);
       }
     }
     if (hasActiveScene) {
+      World activeWorld = engine.scenes().activeWorld();
       for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
         if (entry.scope() == SystemScope.ACTIVE_SCENE) {
           entry.system().update(activeWorld, delta);
@@ -97,6 +100,29 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void resume() {
     application.resume();
+  }
+
+  private static void updateGlobalSystem(
+      HermesEngineImpl.SystemEntry entry,
+      java.util.List<? extends SceneHandle> scenes,
+      float delta,
+      boolean hasActiveScene,
+      SceneStackPolicy stackPolicy) {
+    if (!hasActiveScene) {
+      return;
+    }
+    if (stackPolicy.updateStackedScenes()) {
+      for (SceneHandle scene : scenes) {
+        if (scene.world() != null) {
+          entry.system().update(scene.world(), delta);
+        }
+      }
+      return;
+    }
+    SceneHandle active = scenes.get(scenes.size() - 1);
+    if (active.world() != null) {
+      entry.system().update(active.world(), delta);
+    }
   }
 
   @Override

@@ -149,6 +149,18 @@ Re-run the relevant `hermesExport*` task after changing icons.
 
 Root task: `./gradlew hermesSyncPlatforms` (same sync, run from project root).
 
+## 3D scene and render pipeline
+
+The bootstrap scene is **config-only 3D**: perspective camera, `models/cube.obj`, and `Material` with the default `default/unlit` shader. No custom Java rendering code is required.
+
+| Asset | Purpose |
+|-------|---------|
+| [`game/src/main/resources/assets/scenes/main.json`](game/src/main/resources/assets/scenes/main.json) | Entities: camera + mesh cube + `PulseMarker` |
+| [`game/src/main/resources/assets/render/pipeline.json`](game/src/main/resources/assets/render/pipeline.json) | Forward pipeline (`world3d`, `sprites`, `ui`) |
+| [`game/src/main/resources/assets/models/cube.obj`](game/src/main/resources/assets/models/cube.obj) | Unit cube mesh |
+
+`hermes.json` references `renderPipeline: "render/pipeline.json"`.
+
 ## Custom components
 
 This template registers `PulseMarker` via `META-INF/services/dev.hermes.api.ecs.ComponentRegistration`.

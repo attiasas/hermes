@@ -2,7 +2,9 @@
 
 Hermes game project generated from the **multi-scene** template.
 
-Demonstrates scene registration, `SceneChangeRequest.push` / `pop`, and a timer-driven pause overlay. See the Hermes engine docs: `docs/scene-management.md`.
+Demonstrates scene registration, `SceneChangeRequest.push` / `pop`, stacked rendering, and a timer-driven pause overlay. See the Hermes engine docs: `docs/scene-management.md`.
+
+The **main** scene is config-only 3D (perspective camera + `models/cube.obj`). The **pause** overlay uses `render/ui-overlay.json` via scene JSON `renderPipeline` override. [`Game.java`](game/src/main/java/{{packageDir}}/Game.java) opts into `SceneStackPolicy(true, true)` so the 3D world keeps updating and drawing under the UI overlay.
 
 ## Prerequisites
 

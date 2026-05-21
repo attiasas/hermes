@@ -80,6 +80,12 @@ class HermesPluginIntegrationTest {
     assertTrue(
         projectDir.resolve(".hermes/platforms/hermes-launcher-desktop/build.gradle").toFile().exists(),
         "desktop launcher must be synced under .hermes/platforms");
+    assertTrue(
+        projectDir.resolve("game/src/main/resources/assets/models/cube.obj").toFile().exists(),
+        "minimal template must ship models/cube.obj for 3D demo");
+    assertTrue(
+        projectDir.resolve("game/src/main/resources/assets/render/pipeline.json").toFile().exists(),
+        "minimal template must ship render/pipeline.json");
   }
 
   @Test

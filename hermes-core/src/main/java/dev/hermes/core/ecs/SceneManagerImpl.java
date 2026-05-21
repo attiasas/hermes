@@ -7,6 +7,7 @@ import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneManager;
 import dev.hermes.api.scene.SceneRegistry;
+import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.scene.SceneInstance;
 import dev.hermes.core.scene.SceneStack;
 import java.util.ArrayDeque;
@@ -22,6 +23,7 @@ public final class SceneManagerImpl implements SceneManager {
   private final SceneRegistryImpl sceneRegistry;
   private final SceneStack stack;
   private final Deque<SceneChangeRequest> pending = new ArrayDeque<>();
+  private SceneStackPolicy stackPolicy = SceneStackPolicy.defaults();
   private HermesEngine engine;
   private HermesSession session = HermesSession.EMPTY;
 
@@ -75,11 +77,34 @@ public final class SceneManagerImpl implements SceneManager {
 
   @Override
   public List<SceneHandle> visibleScenes() {
+    return scenesFor(stackPolicy.renderStackedScenes());
+  }
+
+  @Override
+  public List<SceneHandle> updateScenes() {
+    return scenesFor(stackPolicy.updateStackedScenes());
+  }
+
+  private List<SceneHandle> scenesFor(boolean includeStacked) {
+    if (!includeStacked) {
+      SceneInstance active = stack.active();
+      return active == null ? List.of() : List.of(active);
+    }
     List<SceneHandle> scenes = new ArrayList<>();
     for (SceneInstance instance : stack.visibleScenesBottomToTop()) {
       scenes.add(instance);
     }
     return List.copyOf(scenes);
+  }
+
+  @Override
+  public void setStackPolicy(SceneStackPolicy policy) {
+    this.stackPolicy = Objects.requireNonNull(policy, "policy");
+  }
+
+  @Override
+  public SceneStackPolicy stackPolicy() {
+    return stackPolicy;
   }
 
   @Override
