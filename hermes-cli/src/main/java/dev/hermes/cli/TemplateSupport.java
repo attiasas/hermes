@@ -11,7 +11,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
-import dev.hermes.tooling.AndroidSdkValidator;
+import dev.hermes.tooling.android.AndroidSdkLocator;
+import dev.hermes.tooling.android.AndroidSdkValidator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -91,7 +92,7 @@ final class TemplateSupport {
   }
 
   private static void configureAndroidSdk(Path targetDir, Path androidSdk) throws IOException {
-    String sdkPath = resolveAndroidSdkPath(androidSdk);
+    String sdkPath = resolveAndroidSdkPath(targetDir, androidSdk);
     if (sdkPath == null) {
       System.out.println(
           "Android platform enabled but no SDK found. Set --android-sdk, sdk.dir in local.properties, "
@@ -106,7 +107,7 @@ final class TemplateSupport {
     }
   }
 
-  private static String resolveAndroidSdkPath(Path androidSdk) {
+  private static String resolveAndroidSdkPath(Path projectDir, Path androidSdk) {
     if (androidSdk != null) {
       java.io.File sdk = androidSdk.toFile();
       if (!AndroidSdkValidator.isValidSdk(sdk)) {
@@ -114,14 +115,8 @@ final class TemplateSupport {
       }
       return sdk.getAbsolutePath();
     }
-    String fromEnv = System.getenv("ANDROID_SDK_ROOT");
-    if (fromEnv == null || fromEnv.isBlank()) {
-      fromEnv = System.getenv("ANDROID_HOME");
-    }
-    if (fromEnv != null && !fromEnv.isBlank() && AndroidSdkValidator.isValidSdk(new java.io.File(fromEnv))) {
-      return new java.io.File(fromEnv).getAbsolutePath();
-    }
-    return null;
+    java.io.File located = AndroidSdkLocator.locate(projectDir);
+    return located == null ? null : located.getAbsolutePath();
   }
 
   private static void makeGradleWrapperExecutable(Path projectDir) throws IOException {

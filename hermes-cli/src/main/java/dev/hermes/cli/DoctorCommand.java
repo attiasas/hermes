@@ -1,6 +1,6 @@
 package dev.hermes.cli;
 
-import dev.hermes.tooling.HermesDoctorSupport;
+import dev.hermes.tooling.doctor.HermesDoctorSupport;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;

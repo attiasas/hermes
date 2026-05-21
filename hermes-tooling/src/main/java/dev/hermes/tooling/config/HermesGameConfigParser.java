@@ -1,4 +1,4 @@
-package dev.hermes.tooling;
+package dev.hermes.tooling.config;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

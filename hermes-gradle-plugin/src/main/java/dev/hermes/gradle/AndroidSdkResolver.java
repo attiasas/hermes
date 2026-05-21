@@ -1,31 +1,24 @@
 package dev.hermes.gradle;
 
+import dev.hermes.tooling.android.AndroidSdkLocator;
+import dev.hermes.tooling.android.AndroidSdkValidator;
+import dev.hermes.tooling.gradle.GradlePropertySupport;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
-import dev.hermes.tooling.AndroidSdkValidator;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.logging.Logging;
 
 /**
- * Resolves the Android SDK for AGP from, in order:
- *
- * <ol>
- *   <li>{@code local.properties} {@code sdk.dir}
- *   <li>Gradle property {@code hermes.android.sdk}
- *   <li>{@code ANDROID_SDK_ROOT}
- *   <li>{@code ANDROID_HOME}
- * </ol>
- *
- * When a path is found via Gradle property or environment and {@code local.properties} does not
- * define {@code sdk.dir}, writes {@code local.properties} so AGP can locate the SDK.
+ * Resolves the Android SDK for AGP from {@link AndroidSdkLocator} and writes {@code local.properties}
+ * when a path is found via Gradle property or environment but {@code sdk.dir} is unset.
  */
 public final class AndroidSdkResolver {
 
-  public static final String GRADLE_PROPERTY = "hermes.android.sdk";
-  public static final String LOCAL_PROPERTY_KEY = "sdk.dir";
+  public static final String GRADLE_PROPERTY = AndroidSdkLocator.GRADLE_PROPERTY;
+  public static final String LOCAL_PROPERTY_KEY = AndroidSdkLocator.LOCAL_PROPERTY_KEY;
 
   private AndroidSdkResolver() {}
 
@@ -39,8 +32,10 @@ public final class AndroidSdkResolver {
     }
 
     String fromGradle = readGradleProperty(settings, GRADLE_PROPERTY);
-    String fromEnv = firstNonBlank(System.getenv("ANDROID_SDK_ROOT"), System.getenv("ANDROID_HOME"));
-    String sdkPath = firstNonBlank(fromGradle, fromEnv);
+    String fromEnv =
+        GradlePropertySupport.firstNonBlank(
+            System.getenv("ANDROID_SDK_ROOT"), System.getenv("ANDROID_HOME"));
+    String sdkPath = GradlePropertySupport.firstNonBlank(fromGradle, fromEnv);
     if (sdkPath == null || sdkPath.isBlank()) {
       return null;
     }
@@ -53,10 +48,10 @@ public final class AndroidSdkResolver {
     writeLocalProperties(localPropertiesFile, sdkPath);
     Logging.getLogger(AndroidSdkResolver.class)
         .lifecycle(
-        "Hermes: wrote {} from {} (set {} in gradle.properties or export ANDROID_SDK_ROOT to override)",
-        localPropertiesFile.getName(),
-        sourceLabel(fromGradle, fromEnv),
-        GRADLE_PROPERTY);
+            "Hermes: wrote {} from {} (set {} in gradle.properties or export ANDROID_SDK_ROOT to override)",
+            localPropertiesFile.getName(),
+            sourceLabel(fromGradle, fromEnv),
+            GRADLE_PROPERTY);
     return new File(sdkPath);
   }
 
@@ -106,15 +101,5 @@ public final class AndroidSdkResolver {
       return System.getenv("ANDROID_SDK_ROOT") != null ? "ANDROID_SDK_ROOT" : "ANDROID_HOME";
     }
     return "unknown";
-  }
-
-  private static String firstNonBlank(String first, String second) {
-    if (first != null && !first.isBlank()) {
-      return first;
-    }
-    if (second != null && !second.isBlank()) {
-      return second;
-    }
-    return null;
   }
 }

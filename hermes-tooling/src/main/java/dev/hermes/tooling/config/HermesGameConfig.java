@@ -1,4 +1,4 @@
-package dev.hermes.tooling;
+package dev.hermes.tooling.config;
 
 /** Game/simulation fields from {@code hermes.json} (no build or platform knobs). */
 public final class HermesGameConfig {

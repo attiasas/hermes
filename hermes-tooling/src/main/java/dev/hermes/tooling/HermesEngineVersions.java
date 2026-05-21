@@ -1,5 +1,6 @@
 package dev.hermes.tooling;
 
+import dev.hermes.tooling.gradle.HermesHomeResolver;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

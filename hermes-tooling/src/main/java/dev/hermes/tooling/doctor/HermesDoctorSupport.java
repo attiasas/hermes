@@ -1,5 +1,8 @@
-package dev.hermes.tooling;
+package dev.hermes.tooling.doctor;
 
+import dev.hermes.tooling.config.HermesConfigException;
+import dev.hermes.tooling.config.HermesGameConfigParser;
+import dev.hermes.tooling.gradle.HermesHomeResolver;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -172,18 +175,11 @@ public final class HermesDoctorSupport {
   private static CheckResult checkMavenLocalArtifacts(Path projectDir) {
     String version = "0.1.0-SNAPSHOT";
     if (projectDir != null) {
-      Path gradleProps = projectDir.resolve("gradle.properties");
-      if (Files.isRegularFile(gradleProps)) {
-        try {
-          for (String line : Files.readAllLines(gradleProps, StandardCharsets.UTF_8)) {
-            if (line.startsWith("hermes.engineVersion=")) {
-              version = line.substring("hermes.engineVersion=".length()).trim();
-              break;
-            }
-          }
-        } catch (IOException ignored) {
-          // keep default
-        }
+      String fromProps =
+          dev.hermes.tooling.gradle.GradlePropertySupport.readProperty(
+              projectDir, "hermes.engineVersion");
+      if (fromProps != null && !fromProps.isBlank()) {
+        version = fromProps;
       }
     }
     File apiJar =

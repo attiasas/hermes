@@ -1,4 +1,4 @@
-package dev.hermes.tooling;
+package dev.hermes.tooling.config;
 
 public final class HermesConfigException extends RuntimeException {
 

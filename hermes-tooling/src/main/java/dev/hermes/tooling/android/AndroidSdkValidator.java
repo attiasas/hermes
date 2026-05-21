@@ -1,4 +1,4 @@
-package dev.hermes.tooling;
+package dev.hermes.tooling.android;
 
 import java.io.File;
 
