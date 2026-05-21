@@ -44,9 +44,8 @@ gradlePlugin {
   }
 }
 
-sourceSets.main.java.srcDir('../hermes-tooling/src/main/java')
-
 dependencies {
+  implementation project(':hermes-tooling')
   implementation 'com.google.code.gson:gson:2.13.1'
   implementation gradleApi()
   implementation localGroovy()
