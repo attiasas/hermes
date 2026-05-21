@@ -56,7 +56,7 @@ class HermesPlatformSyncTest {
     Path syncedDesktop =
         root.resolve(".hermes/platforms/hermes-launcher-desktop/src/main/java/dev/hermes/launcher/desktop");
     Files.createDirectories(syncedDesktop);
-    Files.writeString(syncedDesktop.resolve("HeadlessSmokeLauncher.java"), "stale\n", StandardCharsets.UTF_8);
+    Files.writeString(syncedDesktop.resolve("StaleLauncher.java"), "stale\n", StandardCharsets.UTF_8);
     Files.writeString(syncedDesktop.resolve("Lwjgl3Launcher.java"), "stale\n", StandardCharsets.UTF_8);
     Files.createDirectories(root.resolve(".hermes/platforms/hermes-launcher-desktop"));
     Files.writeString(
@@ -69,7 +69,7 @@ class HermesPlatformSyncTest {
     HermesPlatformSync.syncIfNeeded(
         root.toFile(), "hermes-launcher-desktop", "0.2.0-SNAPSHOT", home.toFile());
 
-    assertFalse(Files.exists(syncedDesktop.resolve("HeadlessSmokeLauncher.java")));
+    assertFalse(Files.exists(syncedDesktop.resolve("StaleLauncher.java")));
     assertTrue(
         Files.readString(syncedDesktop.resolve("Lwjgl3Launcher.java"), StandardCharsets.UTF_8)
             .contains("public final class Lwjgl3Launcher"));

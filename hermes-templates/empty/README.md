@@ -33,6 +33,8 @@ Requires `desktop { enabled = true }` in `settings.gradle`.
 
 Opens an LWJGL3 window. Window size and behavior are configured under `hermes { platforms { desktop { … } } }` in `game/build.gradle`.
 
+If the task is missing or fails with a launcher error, run `./gradlew hermesSyncPlatforms` after publishing the engine to Maven local.
+
 ### HTML (TeaVM)
 
 Requires `html { enabled = true }` in `settings.gradle`.

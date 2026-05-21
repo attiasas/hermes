@@ -79,6 +79,10 @@ public final class HermesRunTasks {
     Project root = project.getRootProject();
     Project launcher = root.findProject("hermes-launcher-desktop");
     if (launcher == null) {
+      if (HermesPlatforms.resolve(project).getDesktop().isEnabled()) {
+        registerMissingLauncherTask(
+            project, "hermesRunDesktop", "desktop", "hermes-launcher-desktop", "settings.gradle");
+      }
       return;
     }
     project
@@ -142,31 +146,8 @@ public final class HermesRunTasks {
             .desktopResizable(desktop.isResizable())
             .desktopForegroundFps(desktop.getForegroundFps())
             .desktopGradleRun();
-    int smokeFrames = resolveSmokeFrames(gameProject);
-    if (smokeFrames > 0) {
-      launch.desktopSmokeFrames(smokeFrames);
-    }
     jvmArgs.addAll(launch.build().toJvmArgs());
     task.setJvmArgs(jvmArgs);
-  }
-
-  private static int resolveSmokeFrames(Project gameProject) {
-    if (gameProject.hasProperty("hermes.desktop.smokeFrames")) {
-      try {
-        return Integer.parseInt(gameProject.property("hermes.desktop.smokeFrames").toString().trim());
-      } catch (NumberFormatException ignored) {
-        return 0;
-      }
-    }
-    Project root = gameProject.getRootProject();
-    if (root.hasProperty("hermes.desktop.smokeFrames")) {
-      try {
-        return Integer.parseInt(root.property("hermes.desktop.smokeFrames").toString().trim());
-      } catch (NumberFormatException ignored) {
-        return 0;
-      }
-    }
-    return 0;
   }
 
   private static void wireHtmlRun(Project project, HermesExtension extension, File assetsDir) {

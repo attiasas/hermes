@@ -22,12 +22,6 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Gam
 
 You should see a 640×480 window with the libGDX logo. Game logic lives in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes `-Dhermes.applicationClass` at launch.
 
-Automated smoke (exits after 2 frames, no window interaction):
-
-```bash
-./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2
-```
-
 Full build:
 
 ```bash
@@ -225,6 +219,7 @@ Enable Android in [`settings.gradle`](settings.gradle), then install platform/bu
 
 ## Troubleshooting
 
+- **`hermesRunDesktop` missing or fails with launcher error:** Desktop is enabled in `settings.gradle` but `hermes-launcher-desktop` was not synced. Run `./gradlew hermesSyncPlatforms` and ensure `dev.hermes.settings` resolves the engine version from Maven local.
 - **macOS desktop frozen / exit 133 / instant exit:** `hermesRunDesktop` uses JDK 17, `-XstartOnFirstThread`, and `hermes.desktop.gradleRun=true` so `StartupHelper` does not spawn a child JVM. Dock icon is for exported bundles only.
 - **Stale `.hermes/platforms` after upgrading Hermes** (e.g. compile errors for removed launcher files): run `./gradlew hermesSyncPlatforms`, or delete `.hermes/platforms/` and re-sync. Platform sources refresh automatically when `.hermes/version` does not match the engine version.
 - **Linux + NVIDIA:** `__GL_THREADED_OPTIMIZATIONS=0` is set for Gradle-spawned runs.

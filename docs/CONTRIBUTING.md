@@ -67,13 +67,7 @@ Validate ZIP layout with `.github/scripts/validate-export-zip.sh` when debugging
 
 Expect a 640×480 window with the sample scene. Game class is set via `hermes { applicationClass = '…' }` in `game/build.gradle`.
 
-**Automated smoke** — LWJGL run with a frame cap (local/scripts; needs a display):
-
-```bash
-./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2
-```
-
-CI verifies task wiring with `--dry-run` instead of launching the desktop app.
+If desktop is enabled but the launcher is missing, `hermesRunDesktop` reports a clear error — run `./gradlew hermesSyncPlatforms` and ensure the engine version in `settings.gradle` / `gradle.properties` is published to Maven local.
 
 ## CLI development
 

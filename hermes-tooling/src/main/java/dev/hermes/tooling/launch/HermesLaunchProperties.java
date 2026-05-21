@@ -78,13 +78,6 @@ public final class HermesLaunchProperties {
       return put("hermes.desktop.gradleRun", "true");
     }
 
-    public Builder desktopSmokeFrames(int frames) {
-      if (frames > 0) {
-        put("hermes.desktop.smokeFrames", Integer.toString(frames));
-      }
-      return this;
-    }
-
     public Builder htmlDevServerPort(int port) {
       return put("hermes.html.devServerPort", Integer.toString(port));
     }

@@ -18,23 +18,9 @@ public final class HermesGdxApplication implements ApplicationListener {
   private HermesEngineImpl engine;
   private SpriteBatch batch;
   private RenderSystem renderSystem;
-  private int smokeFramesRemaining;
 
   public HermesGdxApplication(HermesApplication application) {
     this.application = application;
-    smokeFramesRemaining = readSmokeFramesProperty();
-  }
-
-  private static int readSmokeFramesProperty() {
-    String value = System.getProperty("hermes.desktop.smokeFrames");
-    if (value == null || value.isBlank()) {
-      return 0;
-    }
-    try {
-      return Integer.parseInt(value.trim());
-    } catch (NumberFormatException e) {
-      return 0;
-    }
   }
 
   @Override
@@ -78,10 +64,6 @@ public final class HermesGdxApplication implements ApplicationListener {
     }
 
     application.render();
-
-    if (smokeFramesRemaining > 0 && --smokeFramesRemaining == 0) {
-      Gdx.app.exit();
-    }
   }
 
   @Override
