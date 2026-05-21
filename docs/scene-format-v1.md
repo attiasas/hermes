@@ -25,6 +25,7 @@ Scene files describe entities and their components. They live under the game mod
 | `entities` | No | Array of entity objects. Omitted or empty means an empty scene. |
 | `entities[]` | — | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`. |
 | `entities[].id` | No | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime. |
+| `entities[].kind` | No | Optional logical type tag (e.g. `"character"`, `"prop"`). Omitted entities use the unset kind. Used for `World.entitiesWithKind` and future save/load; does not affect component parsing. |
 | `entities[].components` | No | Map of component type name → property object. |
 
 ## Built-in component types
@@ -44,6 +45,18 @@ Scene files describe entities and their components. They live under the game mod
 | `scaleX`, `scaleY`, `scaleZ` | `1` | Scale per axis. `scaleX` / `scaleY` affect sprite size; `scaleZ` is stored for future 3D rendering. |
 
 Sprites are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity) defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
+
+Example with optional kind:
+
+```json
+{
+  "id": "player",
+  "kind": "character",
+  "components": {
+    "Transform": { "x": 100, "y": 200 }
+  }
+}
+```
 
 Example with 3D fields:
 
