@@ -1,0 +1,19 @@
+tasks.register('npmInstall', Exec) {
+  group = 'build'
+  description = 'Install Hermes Studio UI npm dependencies'
+  workingDir layout.projectDirectory.asFile
+  commandLine 'npm', 'install'
+  inputs.file('package.json')
+  outputs.dir('node_modules')
+}
+
+tasks.register('buildUi', Exec) {
+  group = 'build'
+  description = 'Build Hermes Studio web UI (npm run build)'
+  dependsOn tasks.named('npmInstall')
+  workingDir layout.projectDirectory.asFile
+  commandLine 'npm', 'run', 'build'
+  inputs.dir('src')
+  inputs.files('package.json', 'index.html', 'vite.config.ts', 'tsconfig.json')
+  outputs.dir('dist')
+}
