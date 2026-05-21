@@ -11,7 +11,10 @@ import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldImpl;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 /** Stack of loaded scenes with go-to, push, and pop transitions. */
@@ -72,6 +75,16 @@ public final class SceneStack {
 
   public SceneInstance active() {
     return stack.peek();
+  }
+
+  /** Scenes from stack bottom (oldest) to top (newest/active). */
+  public List<SceneInstance> visibleScenesBottomToTop() {
+    List<SceneInstance> scenes = new ArrayList<>();
+    Iterator<SceneInstance> iterator = stack.descendingIterator();
+    while (iterator.hasNext()) {
+      scenes.add(iterator.next());
+    }
+    return List.copyOf(scenes);
   }
 
   private SceneInstance loadScene(SceneDefinition definition) {

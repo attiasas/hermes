@@ -31,14 +31,14 @@ public final class HermesGdxApplication implements ApplicationListener {
     batch = new SpriteBatch();
     renderSystem = new RenderSystem(batch);
 
-    application.onCreate(engine);
-
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {
       engine.scenes().registry().register("main", scenePath);
       engine.scenes().request(SceneChangeRequest.goTo("main"));
       engine.scenes().processPending();
     }
+
+    application.onCreate(engine);
 
     renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     engine.addSystem(renderSystem);

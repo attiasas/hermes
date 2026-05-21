@@ -11,13 +11,13 @@ import dev.hermes.api.ecs.World;
 import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.HermesEngineImpl;
+import dev.hermes.core.ecs.WorldImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 final class AssetSceneSourceTest {
 
-  private HermesEngineImpl engine;
   private World world;
   private ComponentRegistry registry;
 
@@ -28,9 +28,8 @@ final class AssetSceneSourceTest {
 
   @BeforeEach
   void setUp() {
-    engine = new HermesEngineImpl();
-    world = engine.scenes().activeWorld();
-    registry = engine.registry();
+    world = new WorldImpl();
+    registry = new HermesEngineImpl().registry();
   }
 
   @Test

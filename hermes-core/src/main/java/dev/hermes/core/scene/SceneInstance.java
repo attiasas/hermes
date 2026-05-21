@@ -1,10 +1,12 @@
 package dev.hermes.core.scene;
 
+import dev.hermes.api.ecs.World;
 import dev.hermes.api.scene.SceneDefinition;
+import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.ecs.WorldImpl;
 
 /** A loaded scene on the stack: dedicated world, definition, and pause state. */
-public final class SceneInstance {
+public final class SceneInstance implements SceneHandle {
 
   private final String id;
   private final WorldImpl world;
@@ -18,11 +20,13 @@ public final class SceneInstance {
     this.paused = paused;
   }
 
+  @Override
   public String id() {
     return id;
   }
 
-  public WorldImpl world() {
+  @Override
+  public World world() {
     return world;
   }
 
@@ -30,6 +34,7 @@ public final class SceneInstance {
     return definition;
   }
 
+  @Override
   public boolean paused() {
     return paused;
   }

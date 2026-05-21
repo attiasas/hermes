@@ -4,7 +4,6 @@ import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
-import dev.hermes.api.scene.SceneManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,7 +35,7 @@ public final class HermesEngineImpl implements HermesEngine {
   }
 
   @Override
-  public SceneManager scenes() {
+  public SceneManagerImpl scenes() {
     return sceneManager;
   }
 
