@@ -14,7 +14,7 @@ import dev.hermes.gradle.internal.HermesJavaToolchain;
 import dev.hermes.gradle.internal.HermesJvmArgs;
 import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.gradle.internal.HermesRuntimeConfigGenerator;
-import dev.hermes.gradle.sync.HermesPlatformSync;
+import dev.hermes.gradle.platform.HermesPlatformSync;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.launch.HermesLaunchProperties;
 import dev.hermes.tooling.platform.DesktopPlatform;

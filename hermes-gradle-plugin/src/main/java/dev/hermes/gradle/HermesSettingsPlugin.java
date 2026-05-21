@@ -8,7 +8,7 @@ import dev.hermes.gradle.dsl.SettingsPlatformsExtension;
 import dev.hermes.gradle.internal.HermesEnginePropertyPropagator;
 import dev.hermes.gradle.internal.HermesEngineVersion;
 import dev.hermes.gradle.internal.HermesHomeGradle;
-import dev.hermes.gradle.sync.HermesPlatformSync;
+import dev.hermes.gradle.platform.HermesPlatformSync;
 import java.io.File;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;

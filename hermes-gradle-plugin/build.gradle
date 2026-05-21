@@ -9,15 +9,18 @@ version = '0.1.0-SNAPSHOT'
 def bundledPlatformsResources = layout.buildDirectory.dir('generated/hermes-platforms-resources')
 
 tasks.register('bundleHermesPlatforms', Copy) {
-  description = 'Bundle launcher projects for standalone game sync'
+  description = 'Bundle launcher sources and platform build templates for standalone game sync'
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  into layout.buildDirectory.dir('generated/hermes-platforms-resources/hermes-platforms')
+  into bundledPlatformsResources
+  from('../hermes-templates/platforms') {
+    into 'hermes-templates/platforms'
+  }
   ['hermes-launcher-desktop', 'hermes-launcher-html', 'hermes-launcher-android'].each { module ->
     def moduleDir = file("../${module}")
     inputs.dir(moduleDir).withPropertyName("${module}-sources")
     from(moduleDir) {
-      into module
-      exclude 'build/**', '.gradle/**', 'bin/**'
+      into "hermes-platforms/${module}"
+      exclude 'build/**', '.gradle/**', 'bin/**', 'build.gradle'
     }
   }
 }

@@ -3,7 +3,7 @@ package dev.hermes.gradle;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.hermes.gradle.sync.HermesPlatformSync;
+import dev.hermes.gradle.platform.HermesPlatformSync;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.io.TempDir;
 class HermesPlatformSyncTest {
 
   @Test
-  void syncIfNeeded_patchesCrlfAndroidApplyPlugin(@TempDir Path tempDir) throws Exception {
+  void syncIfNeeded_rendersAndroidBuildscriptFromTemplate(@TempDir Path tempDir) throws Exception {
     Path root = tempDir.resolve("project");
     Path launcher = root.resolve(".hermes/platforms/hermes-launcher-android");
     Files.createDirectories(launcher);
@@ -31,8 +31,10 @@ class HermesPlatformSyncTest {
     String buildGradle = Files.readString(launcher.resolve("build.gradle"), StandardCharsets.UTF_8);
     assertTrue(
         buildGradle.startsWith("buildscript {"),
-        "CRLF apply plugin must be converted to buildscript block");
+        "sync must render Android buildscript from template");
     assertTrue(buildGradle.contains("com.android.tools.build:gradle:8.9.3"));
+    assertTrue(buildGradle.contains("implementation 'dev.hermes:hermes-core:0.1.0-SNAPSHOT'"));
     assertFalse(buildGradle.startsWith("apply plugin:"));
+    assertFalse(buildGradle.contains("repositories {\n  google()\n}"));
   }
 }
