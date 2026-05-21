@@ -13,6 +13,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 class HermesHomeResolverTest {
 
+  private static String propertyPath(Path path) {
+    return path.toAbsolutePath().normalize().toString().replace('\\', '/');
+  }
+
   @Test
   void isHermesCheckout_requiresApiAndCore(@TempDir Path home) throws Exception {
     Files.createDirectories(home.resolve("hermes-api"));
@@ -24,19 +28,25 @@ class HermesHomeResolverTest {
 
   @Test
   void resolve_readsHermesHomeFromGradleProperties(@TempDir Path projectDir) throws Exception {
-    Path home = Files.createDirectories(projectDir.resolve("engine/hermes-api").getParent());
+    Path home = projectDir.resolve("engine");
     Files.createDirectories(home.resolve("hermes-api"));
     Files.createDirectories(home.resolve("hermes-core"));
     Files.writeString(
         projectDir.resolve("gradle.properties"),
-        "hermes.home=" + home.toAbsolutePath() + "\n",
+        "hermes.home=" + propertyPath(home) + "\n",
         StandardCharsets.UTF_8);
 
-    assertEquals(home.toFile().getAbsoluteFile(), HermesHomeResolver.resolve(projectDir));
+    assertEquals(
+        home.toAbsolutePath().normalize(),
+        HermesHomeResolver.resolve(projectDir).toPath().normalize());
   }
 
   @Test
   void resolve_returnsNullWhenUnset(@TempDir Path projectDir) {
+    org.junit.jupiter.api.Assumptions.assumeTrue(
+        GradlePropertySupport.firstNonBlank(System.getenv(HermesHomeResolver.ENV_HERMES_HOME))
+            == null,
+        "HERMES_HOME is set in the environment");
     assertNull(HermesHomeResolver.resolve(projectDir));
   }
 }
