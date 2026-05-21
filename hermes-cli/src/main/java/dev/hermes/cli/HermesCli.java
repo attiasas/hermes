@@ -8,7 +8,7 @@ import picocli.CommandLine.Option;
     name = "hermes",
     mixinStandardHelpOptions = true,
     versionProvider = HermesVersionProvider.class,
-    subcommands = {NewCommand.class, DoctorCommand.class})
+    subcommands = {NewCommand.class, DoctorCommand.class, StudioCommand.class})
 public final class HermesCli implements Runnable {
 
   @Option(
