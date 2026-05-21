@@ -19,7 +19,7 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
         .settingsEvaluated(
             gradle -> {
               String engineVersion = HermesEngineVersion.resolve(settings, extension);
-              File hermesHome = HermesHomeResolver.resolve(settings);
+              File hermesHome = HermesHomeGradle.resolve(settings);
               HermesEnginePropertyPropagator.apply(settings, hermesHome);
               SettingsPlatformsExtension platforms = extension.getPlatforms();
               settings

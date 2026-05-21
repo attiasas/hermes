@@ -70,7 +70,7 @@ public final class HermesPlatformSync {
 
   public static void syncIfNeeded(File rootDir, String moduleName, String engineVersion, File hermesHome) {
     if (!isSynced(rootDir, moduleName)) {
-      if (HermesHomeResolver.isHermesCheckout(hermesHome)) {
+      if (HermesHomeGradle.isHermesCheckout(hermesHome)) {
         copyLauncherFromHome(rootDir, hermesHome, moduleName, engineVersion);
       } else {
         extractLauncherFromPlugin(rootDir, moduleName, engineVersion);
@@ -323,7 +323,7 @@ public final class HermesPlatformSync {
   }
 
   public static void syncIfNeeded(Settings settings, String moduleName, String engineVersion) {
-    syncIfNeeded(settings.getRootDir(), moduleName, engineVersion, HermesHomeResolver.resolve(settings));
+    syncIfNeeded(settings.getRootDir(), moduleName, engineVersion, HermesHomeGradle.resolve(settings));
   }
 
   public static void syncAllEnabled(
@@ -345,7 +345,7 @@ public final class HermesPlatformSync {
         settings.getRootDir(),
         extension.getPlatforms(),
         engineVersion,
-        HermesHomeResolver.resolve(settings));
+        HermesHomeGradle.resolve(settings));
   }
 
   private static void copyLauncherFromHome(

@@ -1,7 +1,6 @@
 package dev.hermes.gradle;
 
 import dev.hermes.tooling.HermesEngineVersions;
-import dev.hermes.tooling.HermesHomeResolver;
 import java.io.File;
 import java.util.Properties;
 import org.gradle.api.initialization.Settings;

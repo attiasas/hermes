@@ -1,6 +1,6 @@
 package dev.hermes.cli;
 
-import dev.hermes.tooling.HermesHomeResolver;
+import dev.hermes.tooling.gradle.HermesHomeResolver;
 import java.io.File;
 import java.nio.file.Path;
 
