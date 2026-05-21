@@ -74,6 +74,15 @@ Custom passes that only update uniforms (for example `WaterPass` ticking `u_time
 
 `default/unlit` assets under `shaders/default.vert` / `shaders/default.frag` are **g3d** shaders for `Mesh` / `world3d` (`u_projViewTrans`). `SpritesPass` keeps SpriteBatch's built-in shader unless a registered vertex shader declares `u_projTrans`. Custom 2D sprite shaders must include that uniform.
 
+### GLES uniform precision
+
+On WebGL / GLES, fragment shaders often declare `precision mediump float`. Any `uniform float` used in **both** vertex and fragment stages must use the **same** precision in both files. Add the same `#ifdef GL_ES` / `precision mediump float` block to the vertex shader before shared uniforms (for example `u_time`), or qualify both as `highp`.
+
+Mismatch example (fails at link time on HTML):
+
+- Vertex: `uniform float u_time;` (implicit highp)
+- Fragment: `precision mediump float;` then `uniform float u_time;` (mediump)
+
 Example:
 
 ```json
@@ -133,3 +142,7 @@ TeaVM/HTML supports **builtin** shaders only in v1 (`shaders/default.vert` and `
 ## Builtin default
 
 `assets/render/builtin-forward.json` in `hermes-core` is the canonical forward pipeline (world3d → sprites → ui to screen). Templates copy or reference an equivalent `pipeline.json`.
+
+## Fatal runtime errors
+
+When shader compile, pipeline parse, or render code throws during `create()` or `render()`, `HermesGdxApplication` captures the error once, stops simulation and rendering, and draws a **white fullscreen** panel with wrapped error text (class, message, stack). Check the desktop/HTML console for the full log via `Gdx.app.error`.
