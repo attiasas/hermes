@@ -32,6 +32,11 @@ public final class MutableComponentData implements ComponentData {
     values.put(key, value);
   }
 
+  /** Returns a copy of all serialized property values. */
+  public Map<String, Object> copyProperties() {
+    return Map.copyOf(values);
+  }
+
   @Override
   public boolean has(String key) {
     return values.containsKey(key);

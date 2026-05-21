@@ -7,10 +7,12 @@ import dev.hermes.api.ecs.ComponentInspectorDescriptor;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.ComponentSerializer;
 import dev.hermes.api.ecs.MutableComponentData;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-final class ComponentRegistryImpl implements ComponentRegistry {
+public final class ComponentRegistryImpl implements ComponentRegistry {
 
   private final Map<String, Registration> registrations = new HashMap<>();
   private final Map<Class<? extends Component>, Registration> byType = new HashMap<>();
@@ -46,7 +48,7 @@ final class ComponentRegistryImpl implements ComponentRegistry {
     return registration.deserializer().deserialize(data);
   }
 
-  MutableComponentData serializeComponent(Component component) {
+  public MutableComponentData serializeComponent(Component component) {
     Registration registration = byType.get(component.getClass());
     if (registration == null || registration.serializer() == null) {
       throw new IllegalArgumentException(
@@ -57,7 +59,7 @@ final class ComponentRegistryImpl implements ComponentRegistry {
     return data;
   }
 
-  void applyField(Component component, String fieldName, Object value) {
+  public void applyField(Component component, String fieldName, Object value) {
     Registration registration = byType.get(component.getClass());
     if (registration == null || registration.serializer() == null) {
       throw new IllegalArgumentException(
@@ -66,9 +68,25 @@ final class ComponentRegistryImpl implements ComponentRegistry {
     registration.serializer().applyField(component, fieldName, value);
   }
 
-  ComponentInspectorDescriptor descriptorFor(String typeName) {
+  public ComponentInspectorDescriptor descriptorFor(String typeName) {
     Registration registration = registrations.get(typeName);
     return registration == null ? null : registration.descriptor();
+  }
+
+  public List<Map.Entry<String, Class<? extends Component>>> registeredTypes() {
+    List<Map.Entry<String, Class<? extends Component>>> result = new ArrayList<>();
+    for (Map.Entry<String, Registration> entry : registrations.entrySet()) {
+      result.add(Map.entry(entry.getKey(), entry.getValue().componentType()));
+    }
+    return result;
+  }
+
+  public Class<? extends Component> componentTypeFor(String typeName) {
+    Registration registration = registrations.get(typeName);
+    if (registration == null) {
+      throw new IllegalArgumentException("Unknown component type: " + typeName);
+    }
+    return registration.componentType();
   }
 
   private static String formatUnknownComponent(String scenePath, String entityName, String typeName) {
@@ -109,6 +127,10 @@ final class ComponentRegistryImpl implements ComponentRegistry {
 
     private ComponentInspectorDescriptor descriptor() {
       return descriptor;
+    }
+
+    private Class<? extends Component> componentType() {
+      return type;
     }
   }
 }
