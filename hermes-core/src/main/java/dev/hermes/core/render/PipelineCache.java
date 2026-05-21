@@ -11,6 +11,7 @@ public final class PipelineCache {
   private final SpriteBatch batch;
   private final RenderGraphBuilder builder;
   private final Map<String, RenderGraph> graphs = new HashMap<>();
+  private final Map<String, RuntimeException> failures = new HashMap<>();
 
   public PipelineCache(SpriteBatch batch, RenderPassRegistry passRegistry) {
     this.batch = batch;
@@ -28,14 +29,23 @@ public final class PipelineCache {
   }
 
   public RenderGraph get(String assetPath) {
-    return graphs.computeIfAbsent(
-        assetPath,
-        path -> {
-          PipelineDocument document = PipelineLoader.load(path);
-          return batch == null
-              ? builder.buildWithStubs(document)
-              : builder.build(document, batch);
-        });
+    RuntimeException cached = failures.get(assetPath);
+    if (cached != null) {
+      throw cached;
+    }
+    try {
+      return graphs.computeIfAbsent(
+          assetPath,
+          path -> {
+            PipelineDocument document = PipelineLoader.load(path);
+            return batch == null
+                ? builder.buildWithStubs(document)
+                : builder.build(document, batch);
+          });
+    } catch (RuntimeException error) {
+      failures.put(assetPath, error);
+      throw error;
+    }
   }
 
   public void resize(int width, int height) {
@@ -49,5 +59,6 @@ public final class PipelineCache {
       graph.dispose();
     }
     graphs.clear();
+    failures.clear();
   }
 }
