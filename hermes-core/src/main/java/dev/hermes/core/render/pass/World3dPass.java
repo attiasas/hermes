@@ -3,10 +3,15 @@ package dev.hermes.core.render.pass;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FlushablePool;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Material;
@@ -17,30 +22,48 @@ import dev.hermes.api.ecs.World;
 import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.CameraResolver;
 import dev.hermes.core.ecs.SceneCamera;
+import dev.hermes.core.render.ShaderCompileException;
+import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ModelCache;
+import dev.hermes.core.render.resource.ShaderRegistry;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /** Renders mesh entities in world space with the active scene camera. */
 public final class World3dPass {
 
   private final ModelCache modelCache;
+  private final ShaderRegistry shaderRegistry;
   private final boolean disposeModelCache;
   private final ModelBatch modelBatch;
   private final SceneCamera sceneCamera = new SceneCamera();
   private final Environment environment = new Environment();
   private final Matrix4 instanceTransform = new Matrix4();
+  private final Map<String, Shader> g3dShaderCache = new HashMap<>();
+  private final RenderablePool renderablePool = new RenderablePool();
+  private final Array<Renderable> renderableScratch = new Array<>(1);
   private float windowWidth = 640f;
   private float windowHeight = 480f;
 
   public World3dPass(ModelCache modelCache) {
-    this(modelCache, true);
+    this(modelCache, null, true);
+  }
+
+  public World3dPass(ModelCache modelCache, ShaderRegistry shaderRegistry) {
+    this(modelCache, shaderRegistry, true);
   }
 
   public World3dPass(ModelCache modelCache, boolean disposeModelCache) {
+    this(modelCache, null, disposeModelCache);
+  }
+
+  public World3dPass(ModelCache modelCache, ShaderRegistry shaderRegistry, boolean disposeModelCache) {
     this.modelCache = modelCache;
+    this.shaderRegistry = shaderRegistry;
     this.disposeModelCache = disposeModelCache;
     this.modelBatch = new ModelBatch();
     environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
@@ -86,9 +109,48 @@ public final class World3dPass {
       return;
     }
 
+    String shaderId = material.shader();
+    if (shaderRegistry != null && !shaderRegistry.isRegistered(shaderId)) {
+      throw new ShaderCompileException("shader not registered: " + shaderId);
+    }
+
     ModelInstance instance = new ModelInstance(modelCache.get(modelPath));
     applyTransform(instance.transform, transform);
-    modelBatch.render(instance, environment);
+
+    Shader g3dShader = resolveG3dShader(shaderId, instance);
+    if (g3dShader != null) {
+      applyMaterialUniforms(g3dShader, material);
+      modelBatch.render(instance, environment, g3dShader);
+    } else {
+      modelBatch.render(instance, environment);
+    }
+  }
+
+  private Shader resolveG3dShader(String shaderId, ModelInstance instance) {
+    if (shaderRegistry == null || shaderRegistry.usesBuiltin(shaderId)) {
+      return null;
+    }
+    return g3dShaderCache.computeIfAbsent(
+        shaderId,
+        id -> {
+          Renderable renderable = firstRenderable(instance);
+          return shaderRegistry.resolveG3dShader(id, renderable, environment);
+        });
+  }
+
+  private Renderable firstRenderable(ModelInstance instance) {
+    renderableScratch.clear();
+    instance.getRenderables(renderableScratch, renderablePool);
+    if (renderableScratch.size == 0) {
+      throw new IllegalStateException("model has no renderables");
+    }
+    return renderableScratch.first();
+  }
+
+  private static void applyMaterialUniforms(Shader g3dShader, Material material) {
+    if (g3dShader instanceof DefaultShader) {
+      MaterialUniformBinder.apply(((DefaultShader) g3dShader).program, material);
+    }
   }
 
   private static void applyTransform(Matrix4 matrix, Transform transform) {
@@ -137,9 +199,20 @@ public final class World3dPass {
   }
 
   public void dispose() {
+    for (Shader shader : g3dShaderCache.values()) {
+      shader.dispose();
+    }
+    g3dShaderCache.clear();
     modelBatch.dispose();
     if (disposeModelCache) {
       modelCache.dispose();
+    }
+  }
+
+  private static final class RenderablePool extends FlushablePool<Renderable> {
+    @Override
+    protected Renderable newObject() {
+      return new Renderable();
     }
   }
 }

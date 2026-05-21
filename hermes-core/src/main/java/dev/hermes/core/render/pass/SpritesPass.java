@@ -5,9 +5,11 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
@@ -17,6 +19,9 @@ import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.CameraResolver;
 import dev.hermes.core.ecs.SceneCamera;
 import dev.hermes.core.ecs.SpriteDrawOrder;
+import dev.hermes.core.render.ShaderCompileException;
+import dev.hermes.core.render.resource.MaterialUniformBinder;
+import dev.hermes.core.render.resource.ShaderRegistry;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -28,6 +33,7 @@ import java.util.Set;
 public final class SpritesPass {
 
   private final SpriteBatch batch;
+  private final ShaderRegistry shaderRegistry;
   private final Map<String, TextureRegion> regions = new HashMap<>();
   private final SceneCamera sceneCamera = new SceneCamera();
   private final Vector3 projected = new Vector3();
@@ -35,7 +41,12 @@ public final class SpritesPass {
   private float windowHeight = 480f;
 
   public SpritesPass(SpriteBatch batch) {
+    this(batch, null);
+  }
+
+  public SpritesPass(SpriteBatch batch, ShaderRegistry shaderRegistry) {
     this.batch = batch;
+    this.shaderRegistry = shaderRegistry;
     sceneCamera.resize(windowWidth, windowHeight);
   }
 
@@ -82,6 +93,15 @@ public final class SpritesPass {
               FileHandle file = HermesAssetPaths.internal(path);
               return new TextureRegion(new Texture(file));
             });
+
+    ShaderProgram previousShader = batch.getShader();
+    Material material = world.getComponent(entity.id(), Material.class);
+    ShaderProgram materialShader = resolveSpriteShader(material);
+    if (materialShader != null) {
+      batch.setShader(materialShader);
+      MaterialUniformBinder.apply(materialShader, material);
+    }
+
     float width = region.getRegionWidth() * transform.scaleX();
     float height = region.getRegionHeight() * transform.scaleY();
     float originX = width * 0.5f;
@@ -90,13 +110,34 @@ public final class SpritesPass {
     float y = transform.y();
     float rotation = transform.rotationZ();
 
-    if (active.projection() == Camera.Projection.PERSPECTIVE) {
-      projected.set(x, y, transform.z());
-      sceneCamera.gdxCamera().project(projected);
-      batch.draw(region, projected.x, projected.y, originX, originY, width, height, 1f, 1f, rotation);
-    } else {
-      batch.draw(region, x, y, originX, originY, width, height, 1f, 1f, rotation);
+    try {
+      if (active.projection() == Camera.Projection.PERSPECTIVE) {
+        projected.set(x, y, transform.z());
+        sceneCamera.gdxCamera().project(projected);
+        batch.draw(
+            region, projected.x, projected.y, originX, originY, width, height, 1f, 1f, rotation);
+      } else {
+        batch.draw(region, x, y, originX, originY, width, height, 1f, 1f, rotation);
+      }
+    } finally {
+      if (materialShader != null) {
+        batch.setShader(previousShader);
+      }
     }
+  }
+
+  private ShaderProgram resolveSpriteShader(Material material) {
+    if (shaderRegistry == null || material == null) {
+      return null;
+    }
+    String shaderId = material.shader();
+    if (!shaderRegistry.isRegistered(shaderId)) {
+      throw new ShaderCompileException("shader not registered: " + shaderId);
+    }
+    if (shaderRegistry.usesBuiltin(shaderId)) {
+      return null;
+    }
+    return shaderRegistry.requireProgram(shaderId);
   }
 
   private void syncWindowSize() {
