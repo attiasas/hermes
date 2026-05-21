@@ -10,11 +10,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import org.gradle.api.GradleException;
 
 /** Ensures desktop export bundles are runnable after unzip (executable bits on launchers). */
-final class HermesDesktopExportFixup {
+public final class HermesDesktopExportFixup {
 
   private HermesDesktopExportFixup() {}
 
-  static void fixStagingDirectory(File stagingDir) {
+  public static void fixStagingDirectory(File stagingDir) {
     if (stagingDir == null || !stagingDir.isDirectory()) {
       return;
     }

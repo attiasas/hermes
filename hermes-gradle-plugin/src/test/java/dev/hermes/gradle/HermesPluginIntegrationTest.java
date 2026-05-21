@@ -33,7 +33,10 @@ class HermesPluginIntegrationTest {
   void hermesRunDesktop_usesJdk17Toolchain() throws IOException {
     String source =
         Files.readString(
-            hermesRoot.toPath().resolve("hermes-gradle-plugin/src/main/java/dev/hermes/gradle/HermesPlugin.java"),
+            hermesRoot
+                .toPath()
+                .resolve(
+                    "hermes-gradle-plugin/src/main/java/dev/hermes/gradle/tasks/run/HermesRunTasks.java"),
             StandardCharsets.UTF_8);
     assertTrue(
         source.contains("JavaLanguageVersion.of(17)"),

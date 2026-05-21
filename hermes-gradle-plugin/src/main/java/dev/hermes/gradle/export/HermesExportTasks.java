@@ -1,6 +1,6 @@
 package dev.hermes.gradle.export;
 
-import dev.hermes.gradle.HermesPlugin;
+import dev.hermes.gradle.tasks.run.HermesRunTasks;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.icons.HermesIcons;
 import dev.hermes.gradle.icons.HermesIconsConfigurer;
@@ -75,7 +75,7 @@ public final class HermesExportTasks {
     }
     Project launcher = gameProject.getRootProject().findProject("hermes-launcher-html");
     if (launcher == null) {
-      HermesPlugin.registerMissingLauncherTaskStatic(
+      HermesRunTasks.registerMissingLauncherTask(
           gameProject, "hermesExportHtml", "html", "hermes-launcher-html", "settings.gradle");
       return;
     }
@@ -159,7 +159,7 @@ public final class HermesExportTasks {
     }
     Project launcher = gameProject.getRootProject().findProject("hermes-launcher-android");
     if (launcher == null) {
-      HermesPlugin.registerMissingLauncherTaskStatic(
+      HermesRunTasks.registerMissingLauncherTask(
           gameProject, "hermesExportAndroid", "android", "hermes-launcher-android", "settings.gradle");
       return;
     }
@@ -211,7 +211,7 @@ public final class HermesExportTasks {
     }
     Project launcher = gameProject.getRootProject().findProject("hermes-launcher-desktop");
     if (launcher == null) {
-      HermesPlugin.registerMissingLauncherTaskStatic(
+      HermesRunTasks.registerMissingLauncherTask(
           gameProject, "hermesExportDesktop", "desktop", "hermes-launcher-desktop", "settings.gradle");
       return;
     }

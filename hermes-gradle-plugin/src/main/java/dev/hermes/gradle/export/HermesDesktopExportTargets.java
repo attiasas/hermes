@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Locale;
 
 /** Picks Construo desktop targets that can run on the current host (jlink is not cross-platform). */
-final class HermesDesktopExportTargets {
+public final class HermesDesktopExportTargets {
 
   private HermesDesktopExportTargets() {}
 
-  static List<String> forCurrentHost(List<String> configured) {
+  public static List<String> forCurrentHost(List<String> configured) {
     List<String> targets = configured == null || configured.isEmpty() ? List.of() : configured;
     if (targets.isEmpty()) {
       return defaultForHost();
