@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
 import dev.hermes.tooling.config.HermesConfigException;
 import dev.hermes.tooling.config.HermesGameConfig;
@@ -7,11 +7,11 @@ import java.io.File;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
-final class HermesGameConfigs {
+public final class HermesGameConfigs {
 
   private HermesGameConfigs() {}
 
-  static HermesGameConfig parse(Project gameProject) {
+  public static HermesGameConfig parse(Project gameProject) {
     return parse(gameProject.file("hermes.json"));
   }
 

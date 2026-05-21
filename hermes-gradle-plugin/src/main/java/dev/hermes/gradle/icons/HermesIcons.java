@@ -1,6 +1,7 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.icons;
 
 import dev.hermes.gradle.dsl.HermesExtension;
+import dev.hermes.gradle.internal.HermesAssets;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import javax.imageio.ImageIO;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
-final class HermesIcons {
+public final class HermesIcons {
 
   private static final String RESOURCE_PREFIX = "/hermes-default-icons/";
 
@@ -35,11 +36,11 @@ final class HermesIcons {
     return extractFallback(relativePath);
   }
 
-  static File desktopMac(Project gameProject, HermesExtension extension) {
+  public static File desktopMac(Project gameProject, HermesExtension extension) {
     return resolveIcon(gameProject, extension, extension.getIcons().getDesktop().getMac());
   }
 
-  static File desktopWindows(Project gameProject, HermesExtension extension) {
+  public static File desktopWindows(Project gameProject, HermesExtension extension) {
     return resolveIcon(gameProject, extension, extension.getIcons().getDesktop().getWindows());
   }
 

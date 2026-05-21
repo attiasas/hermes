@@ -1,7 +1,7 @@
 package dev.hermes.gradle.doctor;
 
 import dev.hermes.gradle.dsl.HermesConfig;
-import dev.hermes.gradle.HermesHomeGradle;
+import dev.hermes.gradle.internal.HermesHomeGradle;
 import dev.hermes.tooling.android.AndroidSdkLocator;
 import dev.hermes.tooling.config.HermesConfigException;
 import dev.hermes.tooling.config.HermesGameConfigParser;

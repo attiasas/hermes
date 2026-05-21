@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;

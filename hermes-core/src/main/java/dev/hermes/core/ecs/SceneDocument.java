@@ -40,6 +40,8 @@ final class SceneDocument {
         }
       }
       return new SceneDocument(entities);
+    } catch (SceneParseException e) {
+      throw e;
     } catch (Exception e) {
       throw new SceneLoadException("Scene '" + scenePath + "': invalid JSON: " + e.getMessage(), e);
     }

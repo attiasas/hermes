@@ -1,18 +1,18 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaLauncher;
 
 /** JVM flags that depend on the runtime Java version. */
-final class HermesJvmArgs {
+public final class HermesJvmArgs {
 
-  static final String NATIVE_ACCESS_FLAG = "--enable-native-access=ALL-UNNAMED";
+  public static final String NATIVE_ACCESS_FLAG = "--enable-native-access=ALL-UNNAMED";
 
   private HermesJvmArgs() {}
 
   /** {@code --enable-native-access} exists from Java 17 onward; Hermes targets Java 11 for game code. */
-  static boolean supportsNativeAccess(JavaExec task) {
+  public static boolean supportsNativeAccess(JavaExec task) {
     try {
       JavaLauncher launcher = task.getJavaLauncher().get();
       JavaLanguageVersion version = launcher.getMetadata().getLanguageVersion();
@@ -22,7 +22,7 @@ final class HermesJvmArgs {
     }
   }
 
-  static void stripNativeAccess(java.util.List<String> jvmArgs) {
+  public static void stripNativeAccess(java.util.List<String> jvmArgs) {
     jvmArgs.removeIf(arg -> NATIVE_ACCESS_FLAG.equals(arg));
   }
 }

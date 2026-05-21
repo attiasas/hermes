@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.android;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -12,7 +12,7 @@ import javax.imageio.ImageIO;
 import org.gradle.api.GradleException;
 
 /** Scales a launcher PNG into standard Android {@code mipmap-*} folders. */
-final class HermesAndroidIconGenerator {
+public final class HermesAndroidIconGenerator {
 
   private static final Map<String, Integer> MIPMAP_SIZES =
       Map.of(
@@ -24,7 +24,7 @@ final class HermesAndroidIconGenerator {
 
   private HermesAndroidIconGenerator() {}
 
-  static void generateMipmaps(File sourceIcon, File outputRoot) throws IOException {
+  public static void generateMipmaps(File sourceIcon, File outputRoot) throws IOException {
     BufferedImage source = ImageIO.read(sourceIcon);
     if (source == null) {
       throw new GradleException("Not a readable PNG image: " + sourceIcon.getAbsolutePath());

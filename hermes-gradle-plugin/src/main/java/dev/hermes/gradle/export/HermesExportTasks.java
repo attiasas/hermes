@@ -1,7 +1,12 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.export;
 
+import dev.hermes.gradle.HermesPlugin;
 import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.icons.HermesIcons;
+import dev.hermes.gradle.icons.HermesIconsConfigurer;
+import dev.hermes.gradle.internal.HermesAssets;
 import dev.hermes.gradle.internal.HermesDistributionMode;
+import dev.hermes.gradle.internal.HermesGameConfigs;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.platform.DesktopPlatform;
 import java.io.File;
@@ -17,11 +22,11 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.bundling.Zip;
 
 /** Registers {@code hermesExport*} tasks on {@code :game}. */
-final class HermesExportTasks {
+public final class HermesExportTasks {
 
   private HermesExportTasks() {}
 
-  static void register(Project gameProject) {
+  public static void register(Project gameProject) {
     HermesDistributionMode.registerExportGraphListener(gameProject);
     gameProject
         .getGradle()

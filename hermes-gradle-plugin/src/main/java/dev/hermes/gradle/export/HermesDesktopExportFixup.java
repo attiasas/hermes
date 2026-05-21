@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.export;
 
 import java.io.File;
 import java.io.IOException;

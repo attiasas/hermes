@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
 import dev.hermes.tooling.HermesEngineVersions;
 import java.io.File;
@@ -6,11 +6,11 @@ import java.util.Properties;
 import org.gradle.api.initialization.Settings;
 
 /** Injects libGDX / launcher version properties into all Gradle projects when unset. */
-final class HermesEnginePropertyPropagator {
+public final class HermesEnginePropertyPropagator {
 
   private HermesEnginePropertyPropagator() {}
 
-  static void apply(Settings settings, File hermesHome) {
+  public static void apply(Settings settings, File hermesHome) {
     Properties resolved = HermesEngineVersions.defaults();
     Properties fromHome = HermesEngineVersions.loadFromEngineHome(hermesHome);
     if (fromHome != null) {

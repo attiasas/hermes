@@ -1,20 +1,20 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.android;
 
+import dev.hermes.tooling.HermesEngineVersions;
 import org.gradle.api.initialization.Settings;
 
 /** Registers the Android Gradle Plugin for synced {@code hermes-launcher-android} projects. */
-final class HermesAndroidGradlePlugin {
+public final class HermesAndroidGradlePlugin {
 
   static final String PLUGIN_ID = "com.android.application";
-  static final String VERSION_PROPERTY = "hermes.androidGradlePluginVersion";
-  static final String DEFAULT_VERSION = "8.9.3";
+  static final String VERSION_PROPERTY = HermesEngineVersions.ANDROID_GRADLE_PLUGIN_VERSION_KEY;
 
   private HermesAndroidGradlePlugin() {}
 
-  static void register(Settings settings) {
+  public static void register(Settings settings) {
     String version = readGradleProperty(settings, VERSION_PROPERTY);
     if (version == null || version.isBlank()) {
-      version = DEFAULT_VERSION;
+      version = HermesEngineVersions.defaultAndroidGradlePluginVersion();
     }
     settings.getPluginManagement().getPlugins().id(PLUGIN_ID).version(version);
   }

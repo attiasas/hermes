@@ -1,16 +1,17 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.icons;
 
+import dev.hermes.gradle.android.HermesAndroidIconGenerator;
 import dev.hermes.gradle.dsl.HermesExtension;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
-final class HermesIconsConfigurer {
+public final class HermesIconsConfigurer {
 
   private HermesIconsConfigurer() {}
 
-  static void registerAndroidIconCopy(Project gameProject, Project androidLauncher) {
+  public static void registerAndroidIconCopy(Project gameProject, Project androidLauncher) {
     if (androidLauncher == null) {
       return;
     }

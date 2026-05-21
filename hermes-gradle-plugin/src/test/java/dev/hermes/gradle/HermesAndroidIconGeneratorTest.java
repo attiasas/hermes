@@ -3,6 +3,7 @@ package dev.hermes.gradle;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.hermes.gradle.android.HermesAndroidIconGenerator;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.nio.file.Files;

@@ -3,6 +3,7 @@ package dev.hermes.gradle;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.hermes.gradle.export.HermesDesktopExportFixup;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

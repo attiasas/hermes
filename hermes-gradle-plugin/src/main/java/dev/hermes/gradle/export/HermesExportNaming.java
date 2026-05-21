@@ -1,5 +1,6 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.export;
 
+import dev.hermes.gradle.internal.HermesGameConfigs;
 import dev.hermes.tooling.config.HermesGameConfig;
 import java.util.Locale;
 

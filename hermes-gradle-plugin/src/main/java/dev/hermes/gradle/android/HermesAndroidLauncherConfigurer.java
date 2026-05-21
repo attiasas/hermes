@@ -1,17 +1,19 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.android;
 
 import dev.hermes.gradle.dsl.HermesExtension;
+import dev.hermes.gradle.internal.HermesGameConfigs;
+import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.platform.AndroidPlatform;
 import java.lang.reflect.Method;
 import org.gradle.api.Project;
 
 /** Applies settings-scoped Android platform DSL to the synced launcher module (no AGP compile dependency). */
-final class HermesAndroidLauncherConfigurer {
+public final class HermesAndroidLauncherConfigurer {
 
   private HermesAndroidLauncherConfigurer() {}
 
-  static void wire(Project gameProject, Project launcher, HermesExtension gameExtension) {
+  public static void wire(Project gameProject, Project launcher, HermesExtension gameExtension) {
     launcher.afterEvaluate(
         evaluated -> {
           if (!launcher.getPlugins().hasPlugin(HermesAndroidGradlePlugin.PLUGIN_ID)) {

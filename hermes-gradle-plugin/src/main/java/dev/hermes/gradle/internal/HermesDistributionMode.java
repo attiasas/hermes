@@ -1,7 +1,7 @@
 package dev.hermes.gradle.internal;
 
-import dev.hermes.gradle.HermesGameConfigs;
-import dev.hermes.gradle.HermesPlatforms;
+import dev.hermes.gradle.internal.HermesGameConfigs;
+import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
@@ -19,7 +19,7 @@ public final class HermesDistributionMode {
 
   private HermesDistributionMode() {}
 
-  static void registerExportGraphListener(org.gradle.api.Project gameProject) {
+  public static void registerExportGraphListener(org.gradle.api.Project gameProject) {
     gameProject
         .getGradle()
         .getTaskGraph()
@@ -49,7 +49,7 @@ public final class HermesDistributionMode {
 
   static void applyDesktop(JavaExec task, ProjectHermesContext context) {
     List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
-    dev.hermes.gradle.HermesJvmArgs.stripNativeAccess(jvmArgs);
+    dev.hermes.gradle.internal.HermesJvmArgs.stripNativeAccess(jvmArgs);
     DesktopPlatform desktop = context.config().getPlatforms().getDesktop();
     HermesGameConfig gameConfig = context.gameConfig();
     jvmArgs.addAll(
@@ -67,7 +67,7 @@ public final class HermesDistributionMode {
     task.setJvmArgs(jvmArgs);
   }
 
-  static void applyHtml(JavaExec task, ProjectHermesContext context, java.io.File assetsDir) {
+  public static void applyHtml(JavaExec task, ProjectHermesContext context, java.io.File assetsDir) {
     HtmlPlatform html = context.config().getPlatforms().getHtml();
     HermesGameConfig gameConfig = context.gameConfig();
     HermesLaunchProperties props =
@@ -87,13 +87,13 @@ public final class HermesDistributionMode {
     }
   }
 
-  record ProjectHermesContext(
+  public record ProjectHermesContext(
       org.gradle.api.Project gameProject,
       HermesConfig config,
       String applicationClass,
       HermesGameConfig gameConfig) {
 
-    static ProjectHermesContext of(org.gradle.api.Project gameProject) {
+    public static ProjectHermesContext of(org.gradle.api.Project gameProject) {
       HermesConfig config = HermesConfig.resolve(gameProject);
       return new ProjectHermesContext(
           gameProject,

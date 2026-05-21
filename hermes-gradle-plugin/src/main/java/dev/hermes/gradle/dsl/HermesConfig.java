@@ -1,6 +1,6 @@
 package dev.hermes.gradle.dsl;
 
-import dev.hermes.gradle.HermesEngineVersion;
+import dev.hermes.gradle.internal.HermesEngineVersion;
 import dev.hermes.tooling.platform.Platforms;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;

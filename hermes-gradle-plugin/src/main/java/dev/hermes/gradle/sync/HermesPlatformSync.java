@@ -1,7 +1,8 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.sync;
 
 import dev.hermes.gradle.dsl.HermesSettingsExtension;
 import dev.hermes.gradle.dsl.SettingsPlatformsExtension;
+import dev.hermes.gradle.internal.HermesHomeGradle;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -169,15 +170,12 @@ public final class HermesPlatformSync {
         try (java.io.InputStream in = Files.newInputStream(propsFile.toPath())) {
           props.load(in);
         }
-        String version = props.getProperty(HermesAndroidGradlePlugin.VERSION_PROPERTY);
-        if (version != null && !version.isBlank()) {
-          return version.trim();
-        }
+        return dev.hermes.tooling.HermesEngineVersions.resolveAndroidGradlePluginVersion(props);
       } catch (IOException ignored) {
         // fall through
       }
     }
-    return HermesAndroidGradlePlugin.DEFAULT_VERSION;
+    return dev.hermes.tooling.HermesEngineVersions.defaultAndroidGradlePluginVersion();
   }
 
   private static void stripNativeAccessFromLauncherBuild(File launcherDir) {

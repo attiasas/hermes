@@ -1,9 +1,20 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.android.HermesAndroidLauncherConfigurer;
 import dev.hermes.gradle.doctor.HermesDoctor;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;
+import dev.hermes.gradle.export.HermesExportTasks;
+import dev.hermes.gradle.html.TeaLauncherGenerator;
+import dev.hermes.gradle.internal.HermesAssets;
+import dev.hermes.gradle.internal.HermesDependencyResolver;
+import dev.hermes.gradle.internal.HermesGameConfigs;
+import dev.hermes.gradle.internal.HermesHomeGradle;
+import dev.hermes.gradle.internal.HermesJavaToolchain;
+import dev.hermes.gradle.internal.HermesJvmArgs;
+import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.gradle.internal.HermesRuntimeConfigGenerator;
+import dev.hermes.gradle.sync.HermesPlatformSync;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.launch.HermesLaunchProperties;
 import dev.hermes.tooling.platform.DesktopPlatform;
@@ -449,7 +460,7 @@ public final class HermesPlugin implements Plugin<Project> {
     }
   }
 
-  static void registerMissingLauncherTaskStatic(
+  public static void registerMissingLauncherTaskStatic(
       Project project,
       String taskName,
       String platformName,

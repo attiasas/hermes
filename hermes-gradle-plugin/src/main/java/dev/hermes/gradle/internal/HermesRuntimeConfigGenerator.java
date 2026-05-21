@@ -1,7 +1,7 @@
 package dev.hermes.gradle.internal;
 
-import dev.hermes.gradle.HermesGameConfigs;
-import dev.hermes.gradle.HermesPlatforms;
+import dev.hermes.gradle.internal.HermesGameConfigs;
+import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.launch.HermesLaunchProperties;

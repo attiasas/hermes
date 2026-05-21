@@ -30,10 +30,25 @@ public final class HermesEngineVersions {
   private static final String DEFAULT_LWJGL3_VERSION = "3.4.1";
   private static final String DEFAULT_GDX_TEAVM_VERSION = "1.5.5";
   private static final String DEFAULT_ANDROID_USE_ANDROIDX = "true";
+  public static final String ANDROID_GRADLE_PLUGIN_VERSION_KEY = "hermes.androidGradlePluginVersion";
   private static final String DEFAULT_ANDROID_GRADLE_PLUGIN_VERSION = "8.9.3";
   private static final String DEFAULT_CONSTRUO_VERSION = "2.1.0";
 
   private HermesEngineVersions() {}
+
+  public static String defaultAndroidGradlePluginVersion() {
+    return DEFAULT_ANDROID_GRADLE_PLUGIN_VERSION;
+  }
+
+  public static String resolveAndroidGradlePluginVersion(Properties gradleProperties) {
+    if (gradleProperties != null) {
+      String version = gradleProperties.getProperty(ANDROID_GRADLE_PLUGIN_VERSION_KEY);
+      if (version != null && !version.isBlank()) {
+        return version.trim();
+      }
+    }
+    return defaultAndroidGradlePluginVersion();
+  }
 
   public static Properties defaults() {
     Properties props = new Properties();

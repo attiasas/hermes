@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.internal;
 
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesSettingsExtension;
@@ -26,17 +26,6 @@ public final class HermesEngineVersion {
       return fromProperty;
     }
     return "0.1.0-SNAPSHOT";
-  }
-
-  private static String readProperty(Project project, String name) {
-    if (project.hasProperty(name)) {
-      return project.property(name).toString();
-    }
-    Project root = project.getRootProject();
-    if (root != project && root.hasProperty(name)) {
-      return root.property(name).toString();
-    }
-    return null;
   }
 
   private static String readGradleProperty(Settings settings, String name) {

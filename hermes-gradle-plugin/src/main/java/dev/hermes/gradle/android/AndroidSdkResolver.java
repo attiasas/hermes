@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.android;
 
 import dev.hermes.tooling.android.AndroidSdkLocator;
 import dev.hermes.tooling.android.AndroidSdkValidator;

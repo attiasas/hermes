@@ -1,4 +1,4 @@
-package dev.hermes.gradle;
+package dev.hermes.gradle.html;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
