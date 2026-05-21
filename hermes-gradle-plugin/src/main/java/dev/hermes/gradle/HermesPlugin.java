@@ -303,6 +303,7 @@ public final class HermesPlugin implements Plugin<Project> {
     jvmArgs.add("-Dhermes.desktop.foregroundFps=" + desktop.getForegroundFps());
     jvmArgs.add("-Dhermes.game.title=" + config.getTitle());
     jvmArgs.add("-Dhermes.game.scene=" + config.getScene());
+    jvmArgs.add("-Dhermes.debug.port=18765");
     jvmArgs.add("-Dhermes.desktop.gradleRun=true");
     task.setJvmArgs(jvmArgs);
   }
