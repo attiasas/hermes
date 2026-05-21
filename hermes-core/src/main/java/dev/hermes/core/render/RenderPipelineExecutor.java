@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.scene.SceneInstance;
 import java.util.Objects;
@@ -15,13 +16,14 @@ public final class RenderPipelineExecutor {
   private final String projectDefaultPipelinePath;
   private final PipelineCache cache;
 
-  public RenderPipelineExecutor(SpriteBatch batch, String projectDefaultPipelinePath) {
+  public RenderPipelineExecutor(
+      SpriteBatch batch, String projectDefaultPipelinePath, RenderPassRegistry passRegistry) {
     this.projectDefaultPipelinePath =
         Objects.requireNonNull(projectDefaultPipelinePath, "projectDefaultPipelinePath");
     if (this.projectDefaultPipelinePath.isBlank()) {
       throw new IllegalArgumentException("project default render pipeline path is required");
     }
-    this.cache = new PipelineCache(batch);
+    this.cache = new PipelineCache(batch, passRegistry);
   }
 
   public void resize(int width, int height) {

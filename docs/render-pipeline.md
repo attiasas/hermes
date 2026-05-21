@@ -47,6 +47,26 @@ Passes that target an unknown framebuffer id fail at graph build time.
 | `world3d` | Meshes with materials; perspective/ortho from active `Camera`. |
 | `sprites` | `Sprite` entities by `RenderLayer`. |
 | `ui` | UI layer sprites; `depthTest` usually `false`. |
+| `custom` | Code-registered pass; requires `handler` matching `HermesApplication.configureRendering`. |
+
+### Custom passes
+
+Register handlers in `configureRendering` before the pipeline is built:
+
+```java
+@Override
+public void configureRendering(HermesRenderConfigurator configurator) {
+  configurator.registerPass("water", new WaterPass());
+}
+```
+
+Pipeline JSON references the handler by id:
+
+```json
+{ "id": "water", "type": "custom", "handler": "water", "target": "screen" }
+```
+
+Unregistered handlers fail at graph build time. Custom passes receive the active scene `World` each frame (no libGDX types in the API).
 
 Example:
 

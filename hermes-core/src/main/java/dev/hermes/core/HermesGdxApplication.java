@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.render.HermesRenderConfigurator;
+import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.render.RenderPipelineExecutor;
@@ -30,7 +32,11 @@ public final class HermesGdxApplication implements ApplicationListener {
     engine = new HermesEngineImpl();
     engine.bindApplication(application);
     batch = new SpriteBatch();
-    renderPipeline = new RenderPipelineExecutor(batch, HermesLauncherSupport.gameRenderPipelinePath());
+    RenderPassRegistry passRegistry = new RenderPassRegistry();
+    application.configureRendering(new HermesRenderConfigurator(passRegistry));
+    renderPipeline =
+        new RenderPipelineExecutor(
+            batch, HermesLauncherSupport.gameRenderPipelinePath(), passRegistry);
 
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {

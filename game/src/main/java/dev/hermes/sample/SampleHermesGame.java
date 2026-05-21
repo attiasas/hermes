@@ -4,6 +4,7 @@ import dev.hermes.api.HermesApplication;
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.SystemScope;
+import dev.hermes.api.render.HermesRenderConfigurator;
 
 /**
  * Internal sample; compiles only against {@code hermes-api} (no libGDX imports).
@@ -16,6 +17,11 @@ public final class SampleHermesGame implements HermesApplication {
   @Override
   public HermesSession createSession() {
     return new SampleHermesSession();
+  }
+
+  @Override
+  public void configureRendering(HermesRenderConfigurator configurator) {
+    configurator.registerPass("water", new WaterPass());
   }
 
   @Override
@@ -32,6 +38,7 @@ public final class SampleHermesGame implements HermesApplication {
               return bounce;
             });
     engine.scenes().registry().register("pause", "scenes/pause.json");
+    engine.scenes().registry().register("advanced-render", "scenes/advanced-render.json");
     engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
     engine.addSystem(new SceneNavigationSystem(engine.scenes(), 4f));
   }

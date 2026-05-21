@@ -2,6 +2,7 @@ package dev.hermes.core.render;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.ecs.RenderLayer;
+import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.core.render.pass.SpritesPass;
 import dev.hermes.core.render.pass.UiPass;
 import dev.hermes.core.render.pass.World3dPass;
@@ -17,11 +18,21 @@ import java.util.Set;
 public final class RenderGraphBuilder {
 
   private final ModelCache sharedModelCache = new ModelCache();
+  private final RenderPassRegistry passRegistry;
+
+  public RenderGraphBuilder() {
+    this(new RenderPassRegistry());
+  }
+
+  public RenderGraphBuilder(RenderPassRegistry passRegistry) {
+    this.passRegistry = passRegistry == null ? new RenderPassRegistry() : passRegistry;
+  }
 
   public RenderGraph build(PipelineDocument document, SpriteBatch batch) {
     ShaderRegistry shaderRegistry = new ShaderRegistry(document.shaders());
     FramebufferPool pool = new FramebufferPool(document.framebuffers());
     validatePassTargets(document);
+    validateCustomHandlers(document);
     List<RenderGraphPass> passes = createPasses(document, batch, shaderRegistry, pool);
     return new RenderGraph(
         document.clearColor(), passes, sharedModelCache, shaderRegistry, pool);
@@ -31,6 +42,7 @@ public final class RenderGraphBuilder {
   RenderGraph buildWithStubs(PipelineDocument document) {
     FramebufferPool pool = new FramebufferPool(document.framebuffers(), false);
     validatePassTargets(document);
+    validateCustomHandlers(document);
     List<RenderGraphPass> passes = createStubPasses(document, pool);
     return new RenderGraph(document.clearColor(), passes, null, null, pool);
   }
@@ -54,7 +66,10 @@ public final class RenderGraphBuilder {
     List<RenderGraphPass> passes = new ArrayList<>();
     for (PipelineDocument.PassDef passDef : document.passes()) {
       parseLayers(passDef.layers());
-      RenderGraphPass pass = new StubRenderGraphPass(passDef.id());
+      RenderGraphPass pass =
+          passDef.type() == PipelineDocument.PassType.CUSTOM
+              ? new CustomGraphPass(passDef.id(), passRegistry.require(passDef.handler()))
+              : new StubRenderGraphPass(passDef.id());
       passes.add(new TargetBindingGraphPass(passDef.target(), pass, pool));
     }
     return passes;
@@ -95,8 +110,24 @@ public final class RenderGraphBuilder {
             passDef.id(), new SpritesPass(batch, shaderRegistry), layers, passDef.depthTest());
       case UI:
         return new UiGraphPass(passDef.id(), new UiPass(batch), layers, passDef.depthTest());
+      case CUSTOM:
+        return new CustomGraphPass(
+            passDef.id(), passRegistry.require(passDef.handler()));
       default:
         throw new PipelineParseException("unsupported pass type: " + passDef.type());
+    }
+  }
+
+  private void validateCustomHandlers(PipelineDocument document) {
+    for (PipelineDocument.PassDef pass : document.passes()) {
+      if (pass.type() == PipelineDocument.PassType.CUSTOM
+          && passRegistry.find(pass.handler()).isEmpty()) {
+        throw new PipelineParseException(
+            "custom pass \""
+                + pass.id()
+                + "\" references unregistered handler: "
+                + pass.handler());
+      }
     }
   }
 

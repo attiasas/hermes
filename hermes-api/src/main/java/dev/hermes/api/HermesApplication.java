@@ -1,6 +1,7 @@
 package dev.hermes.api;
 
 import dev.hermes.api.ecs.HermesEngine;
+import dev.hermes.api.render.HermesRenderConfigurator;
 
 /**
  * Application lifecycle for Hermes games. Mirrors the engine tick order without exposing libGDX types.
@@ -16,6 +17,9 @@ public interface HermesApplication {
    * entities in code here.
    */
   void onCreate(HermesEngine engine);
+
+  /** Registers custom render passes referenced by pipeline JSON {@code custom} handlers. */
+  default void configureRendering(HermesRenderConfigurator configurator) {}
 
   /** Creates the session shared across scenes; override when save/audio state is needed. */
   default HermesSession createSession() {

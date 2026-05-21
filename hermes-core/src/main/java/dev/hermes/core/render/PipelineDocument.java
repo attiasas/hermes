@@ -16,7 +16,8 @@ public final class PipelineDocument {
   public enum PassType {
     WORLD3D("world3d"),
     SPRITES("sprites"),
-    UI("ui");
+    UI("ui"),
+    CUSTOM("custom");
 
     private final String jsonName;
 
@@ -88,14 +89,21 @@ public final class PipelineDocument {
   public static final class PassDef {
     private final String id;
     private final PassType type;
+    private final String handler;
     private final String target;
     private final List<String> layers;
     private final boolean depthTest;
 
     public PassDef(
-        String id, PassType type, String target, List<String> layers, boolean depthTest) {
+        String id,
+        PassType type,
+        String handler,
+        String target,
+        List<String> layers,
+        boolean depthTest) {
       this.id = id;
       this.type = type;
+      this.handler = handler;
       this.target = target;
       this.layers = layers;
       this.depthTest = depthTest;
@@ -107,6 +115,11 @@ public final class PipelineDocument {
 
     public PassType type() {
       return type;
+    }
+
+    /** Handler id for {@link PassType#CUSTOM}; {@code null} for built-in pass types. */
+    public String handler() {
+      return handler;
     }
 
     public String target() {
@@ -247,12 +260,20 @@ public final class PipelineDocument {
       }
       String id = requireString(entry, "id", "pass");
       PassType type = PassType.fromJson(entry.getString("type", ""));
+      String handler = parseHandler(entry, type);
       String target = entry.getString("target", "screen");
       List<String> layers = parseLayers(entry.get("layers"));
       boolean depthTest = entry.getBoolean("depthTest", true);
-      result.add(new PassDef(id, type, target, layers, depthTest));
+      result.add(new PassDef(id, type, handler, target, layers, depthTest));
     }
     return result;
+  }
+
+  private static String parseHandler(JsonValue entry, PassType type) {
+    if (type != PassType.CUSTOM) {
+      return null;
+    }
+    return requireString(entry, "handler", "custom pass");
   }
 
   private static List<String> parseLayers(JsonValue value) {
