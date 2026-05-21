@@ -5,6 +5,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
+import dev.hermes.api.ecs.SystemScope;
+import dev.hermes.api.ecs.World;
+import dev.hermes.api.scene.SceneChangeRequest;
+import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.RenderSystem;
 
@@ -26,18 +30,24 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void create() {
     engine = new HermesEngineImpl();
+    engine.bindApplication(application);
     batch = new SpriteBatch();
     renderSystem = new RenderSystem(batch);
 
-    application.onCreate(engine);
-
     String scenePath = HermesLauncherSupport.gameScenePath();
     if (scenePath != null && !scenePath.isBlank()) {
-      engine.loadScene(scenePath);
+      engine.scenes().registry().register("main", scenePath);
+    }
+
+    application.onCreate(engine);
+
+    if (scenePath != null && !scenePath.isBlank()) {
+      engine.scenes().request(SceneChangeRequest.goTo("main"));
+      engine.scenes().processPending();
     }
 
     renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    engine.addSystem(renderSystem);
+    engine.addSystem(renderSystem, SystemScope.GLOBAL);
 
     application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
   }
@@ -55,12 +65,30 @@ public final class HermesGdxApplication implements ApplicationListener {
     Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1f);
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
+    engine.scenes().processPending();
+
     float delta = Gdx.graphics.getDeltaTime();
-    for (dev.hermes.api.ecs.System system : engine.systems()) {
-      system.update(engine.world(), delta);
+    World activeWorld = engine.scenes().activeWorld();
+    boolean hasActiveScene = engine.scenes().stackDepth() > 0;
+
+    for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+      if (entry.scope() == SystemScope.GLOBAL) {
+        entry.system().update(activeWorld, delta);
+      }
     }
-    for (dev.hermes.api.ecs.System system : engine.systems()) {
-      system.render(engine.world());
+    if (hasActiveScene) {
+      for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+        if (entry.scope() == SystemScope.ACTIVE_SCENE) {
+          entry.system().update(activeWorld, delta);
+        }
+      }
+    }
+
+    for (SceneHandle scene : engine.scenes().visibleScenes()) {
+      World world = scene.world();
+      for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
+        entry.system().render(world);
+      }
     }
 
     application.render();

@@ -6,11 +6,11 @@ import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.ComponentData;
 import java.util.HashMap;
 import java.util.Map;
-final class ComponentRegistryImpl implements ComponentRegistry {
+public final class ComponentRegistryImpl implements ComponentRegistry {
 
   private final Map<String, Registration> registrations = new HashMap<>();
 
-  ComponentRegistryImpl() {}
+  public ComponentRegistryImpl() {}
 
   @Override
   public void register(String typeName, Class<? extends Component> type, ComponentDeserializer deserializer) {

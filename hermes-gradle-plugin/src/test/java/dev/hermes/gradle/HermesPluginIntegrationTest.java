@@ -169,7 +169,7 @@ class HermesPluginIntegrationTest {
   }
 
   private static Path materializeTemplate(Path targetDir) throws IOException {
-    Path templateRoot = hermesRoot.toPath().resolve("hermes-templates/empty");
+    Path templateRoot = hermesRoot.toPath().resolve("hermes-templates/minimal");
     Files.createDirectories(targetDir);
     copySubstitute(templateRoot, targetDir, "Demo", "dev.hermes.demo", "0.1.0-SNAPSHOT");
     String props =

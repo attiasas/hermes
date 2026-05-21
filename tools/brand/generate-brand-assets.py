@@ -22,7 +22,8 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT_DIRS = [
-    ROOT / "hermes-templates/empty/game/src/main/resources/assets",
+    ROOT / "hermes-templates/minimal/game/src/main/resources/assets",
+    ROOT / "hermes-templates/multi-scene/game/src/main/resources/assets",
     ROOT / "hermes-gradle-plugin/src/main/resources/hermes-default-icons",
 ]
 

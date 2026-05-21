@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
+import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,5 +66,41 @@ final class WorldImplTest {
 
     assertEquals(1, world.entitiesWith(Sprite.class).size());
     assertEquals(1, world.entitiesWith(Transform.class).size());
+  }
+
+  @Test
+  void clearRemovesAllEntitiesAndComponents() {
+    Entity a = world.createEntity("a", EntityKind.of("character"));
+    world.addComponent(a.id(), new Transform());
+    Entity b = world.createEntity("b");
+    world.addComponent(b.id(), new Sprite("x.png"));
+
+    world.clear();
+
+    assertEquals(0, world.entityCount());
+    assertNull(world.findByName("a"));
+    assertNull(world.findByName("b"));
+    assertFalse(world.hasComponent(a.id(), Transform.class));
+
+    Entity c = world.createEntity("c");
+    assertEquals(1, world.entityCount());
+  }
+
+  @Test
+  void createEntityWithoutKindUsesUnset() {
+    Entity entity = world.createEntity("generic");
+    assertEquals(EntityKind.UNSET, entity.kind());
+  }
+
+  @Test
+  void entitiesWithKindFiltersByKind() {
+    world.createEntity("player", EntityKind.of("character"));
+    world.createEntity("npc", EntityKind.of("character"));
+    world.createEntity("wall", EntityKind.of("static"));
+    world.createEntity("generic");
+
+    assertEquals(2, world.entitiesWithKind(EntityKind.of("character")).size());
+    assertEquals(1, world.entitiesWithKind(EntityKind.of("static")).size());
+    assertEquals(1, world.entitiesWithKind(EntityKind.UNSET).size());
   }
 }

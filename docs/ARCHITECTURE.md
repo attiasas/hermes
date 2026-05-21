@@ -14,8 +14,8 @@ game ──api──► hermes-api ◄── hermes-core (+ libGDX, internal)
 
 | Module | Role |
 |--------|------|
-| `hermes-api` | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene-facing components (`Transform`, `Sprite`, `Camera`). No libGDX. |
-| `hermes-core` | Engine implementation: scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath). |
+| `hermes-api` | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene stack (`SceneManager`, `SceneChangeRequest`), scene-facing components (`Transform`, `Sprite`, `Camera`). No libGDX. |
+| `hermes-core` | Engine implementation: `SceneManagerImpl`, scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath). |
 | `hermes-launcher-*` | Platform entrypoints (LWJGL3, TeaVM, Android). Depend on `hermes-core`. Included by the settings plugin when enabled. |
 | `game` | Sample / dogfood game. `api` → `hermes-api`, `runtimeOnly` → `hermes-core`. |
 | `hermes-tooling` | Shared non-Gradle logic: `hermes.json` parsing, doctor checks, `HERMES_HOME` resolution, engine version metadata. |
@@ -101,7 +101,7 @@ Logical subpackages to grow into (names illustrative; flat packages today):
 
 ## Platform template model
 
-- **Project templates** live under `hermes-templates/empty/`. `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
+- **Project templates** live under `hermes-templates/minimal/` and `hermes-templates/multi-scene/`. `hermes new` copies a template and substitutes package/name placeholders via `TemplateEngine`.
 - **Platform build templates** live under `hermes-templates/platforms/<launcher-module>/build.gradle.tpl`. `HermesPlatformSync` copies launcher **sources** (Java, resources, manifests) from the plugin JAR or `HERMES_HOME`, then renders `build.gradle` with `PlatformTemplateRenderer` and `PlatformSyncContext` (no regex patching).
 - **Launchers** are not copied into the user repo as first-class modules; they are synced into `.hermes/platforms/` and included by path via `settings.project(...).setProjectDir(synced)`.
 - **Engine JARs** come from Maven local at `hermes.engineVersion`; templates intentionally avoid `includeBuild('hermes-gradle-plugin')` so IDEs show only `game`.
@@ -126,8 +126,19 @@ Hermes is **pre-release** (`0.1.0-SNAPSHOT`). Until 1.0:
 - After pulling engine changes, republish to Maven local and run `hermesSyncPlatforms` in game projects.
 - Report incompatibilities via issues/PRs; avoid relying on undocumented behavior across engine upgrades.
 
+## Scene manager
+
+Games interact with scenes through `HermesEngine.scenes()` (`SceneManager`):
+
+- **Registration** — `scenes().registry().register(id, assetPath)` or a full `SceneDefinition`.
+- **Transitions** — queue `SceneChangeRequest.goTo`, `push`, or `pop`; the launcher calls `processPending()` each frame.
+- **Active world** — `scenes().activeWorld()` for the top scene; `visibleScenes()` for bottom-to-top rendering.
+
+Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, calls `onCreate` (component/system registration), then requests `goTo("main")`. See [Scene management](scene-management.md).
+
 ## Related docs
 
+- [Scene management](scene-management.md)
 - [Scene format v1](scene-format-v1.md)
 - [Contributing](CONTRIBUTING.md)
 - [Docs index](README.md)

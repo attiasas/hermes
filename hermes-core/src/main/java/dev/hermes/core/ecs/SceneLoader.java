@@ -1,7 +1,9 @@
 package dev.hermes.core.ecs;
 
 import com.badlogic.gdx.files.FileHandle;
+import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.HermesAssetPaths;
 import java.nio.charset.StandardCharsets;
 
@@ -26,5 +28,16 @@ public final class SceneLoader {
     }
     String json = handle.readString(StandardCharsets.UTF_8.name());
     SceneParser.loadIntoWorld(scenePath, json, world, registry);
+  }
+
+  /** Loads scene JSON using world and registry from {@link SceneLoadContext}. */
+  public static void load(String scenePath, SceneLoadContext ctx) {
+    ComponentRegistry registry = ctx.registry();
+    if (!(registry instanceof ComponentRegistryImpl)) {
+      throw new IllegalStateException(
+          "SceneLoader requires a ComponentRegistryImpl, got "
+              + (registry == null ? "null" : registry.getClass().getName()));
+    }
+    load(scenePath, ctx.world(), (ComponentRegistryImpl) registry);
   }
 }

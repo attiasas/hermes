@@ -3,6 +3,7 @@ package dev.hermes.core.ecs;
 import dev.hermes.api.Component;
 import dev.hermes.api.Entity;
 import dev.hermes.api.EntityId;
+import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.World;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,7 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-final class WorldImpl implements World {
+public final class WorldImpl implements World {
 
   private long nextId = 1;
   private final Map<EntityId, EntityImpl> entities = new LinkedHashMap<>();
@@ -20,8 +21,13 @@ final class WorldImpl implements World {
 
   @Override
   public Entity createEntity(String name) {
+    return createEntity(name, EntityKind.UNSET);
+  }
+
+  @Override
+  public Entity createEntity(String name, EntityKind kind) {
     EntityId id = new EntityId(nextId++);
-    EntityImpl entity = new EntityImpl(id, name);
+    EntityImpl entity = new EntityImpl(id, name, kind);
     entities.put(id, entity);
     components.put(id, new HashMap<>());
     if (name != null && !name.isBlank()) {
@@ -31,6 +37,13 @@ final class WorldImpl implements World {
       names.put(name, id);
     }
     return entity;
+  }
+
+  @Override
+  public void clear() {
+    entities.clear();
+    components.clear();
+    names.clear();
   }
 
   @Override
@@ -100,6 +113,18 @@ final class WorldImpl implements World {
         if (entity != null) {
           result.add(entity);
         }
+      }
+    }
+    return result;
+  }
+
+  @Override
+  public Collection<Entity> entitiesWithKind(EntityKind kind) {
+    EntityKind query = kind == null ? EntityKind.UNSET : kind;
+    List<Entity> result = new ArrayList<>();
+    for (Entity entity : entities.values()) {
+      if (entity.kind().equals(query)) {
+        result.add(entity);
       }
     }
     return result;

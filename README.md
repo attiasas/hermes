@@ -41,13 +41,14 @@ Full build:
 | `hermes-gradle-plugin` | `dev.hermes` / `dev.hermes.settings` plugins (composite `includeBuild`) |
 | `hermes-launcher-*` | Desktop (LWJGL3), HTML (TeaVM), Android launchers |
 | `hermes-cli` | `hermes new`, `hermes doctor`, `hermes --version` |
-| `hermes-templates/empty` | Scaffold for `hermes new` |
+| `hermes-templates/minimal` | Default scaffold for `hermes new` |
+| `hermes-templates/multi-scene` | Sample with pause overlay and scene stack |
 
 ---
 
 ## Scenes and ECS
 
-Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`). See [docs/scene-format-v1.md](docs/scene-format-v1.md).
+Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`). A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v1.md](docs/scene-format-v1.md) and [docs/scene-management.md](docs/scene-management.md).
 
 ### Custom components
 
@@ -159,17 +160,17 @@ hermes doctor
 
 | Command | Description |
 |---------|-------------|
-| `hermes new <dir>` | Copy the empty template (`--template empty`, `--platforms`, `--android-sdk`) |
+| `hermes new <dir>` | Copy a project template (`--template minimal` or `multi-scene`, `--platforms`, `--android-sdk`) |
 | `hermes doctor [dir]` | Run `./gradlew :game:hermesDoctor` or standalone checks |
 | `hermes --version` | CLI / engine version |
 
-Template source: [`hermes-templates/empty`](hermes-templates/empty).
+Template sources: [`hermes-templates/minimal`](hermes-templates/minimal), [`hermes-templates/multi-scene`](hermes-templates/multi-scene).
 
 ---
 
 ## Export
 
-Distribution builds use `hermes.debug=false` even when `debug = true` in `game/build.gradle`. Replace icons under `src/main/resources/assets/icons/` (shipped in the empty template).
+Distribution builds use `hermes.debug=false` even when `debug = true` in `game/build.gradle`. Replace icons under `src/main/resources/assets/icons/` (shipped in the minimal template).
 
 | Task | Output |
 |------|--------|

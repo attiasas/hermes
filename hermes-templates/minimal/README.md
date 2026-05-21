@@ -1,6 +1,6 @@
 # {{PROJECT_NAME}}
 
-Hermes game project generated from the empty template.
+Hermes game project generated from the minimal template.
 
 ## Prerequisites
 

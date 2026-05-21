@@ -1,19 +1,22 @@
 package dev.hermes.sample;
 
-import dev.hermes.api.Entity;
 import dev.hermes.api.HermesApplication;
+import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.HermesEngine;
-import dev.hermes.api.ecs.Sprite;
-import dev.hermes.api.ecs.Transform;
+import dev.hermes.api.ecs.SystemScope;
 
 /**
  * Internal sample; compiles only against {@code hermes-api} (no libGDX imports).
  *
- * <p>Scene entities come from {@code src/main/resources/assets/scenes/main.json}. {@link #spawnCodeEntity(HermesEngine)}
- * adds one
- * entity from Java before the scene file is loaded.
+ * <p>Scene entities come from {@code src/main/resources/assets/scenes/}. {@code main} is bootstrapped by the
+ * launcher; {@code pause} is registered here and pushed by {@link SceneNavigationSystem}.
  */
 public final class SampleHermesGame implements HermesApplication {
+
+  @Override
+  public HermesSession createSession() {
+    return new SampleHermesSession();
+  }
 
   @Override
   public void onCreate(HermesEngine engine) {
@@ -28,24 +31,9 @@ public final class SampleHermesGame implements HermesApplication {
               bounce.setSpeed(data.getFloat("speed", 2f));
               return bounce;
             });
-    engine.addSystem(new BounceMarkerSystem());
-    spawnCodeEntity(engine);
-  }
-
-  private static void spawnCodeEntity(HermesEngine engine) {
-    Entity marker = engine.world().createEntity("code-marker");
-    Transform transform = new Transform(80f, 80f, 2f);
-    transform.setRotationZ(15f);
-    transform.setScaleX(0.75f);
-    transform.setScaleY(0.75f);
-    Sprite sprite = new Sprite("hermes-logo.png");
-    BounceMarker bounce = new BounceMarker();
-    bounce.setAmplitude(14f);
-    bounce.setSpeed(2.8f);
-
-    engine.world().addComponent(marker.id(), transform);
-    engine.world().addComponent(marker.id(), sprite);
-    engine.world().addComponent(marker.id(), bounce);
+    engine.scenes().registry().register("pause", "scenes/pause.json");
+    engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
+    engine.addSystem(new SceneNavigationSystem(engine.scenes(), 4f));
   }
 
   @Override
@@ -62,4 +50,7 @@ public final class SampleHermesGame implements HermesApplication {
 
   @Override
   public void dispose() {}
+
+  /** Stub session for cross-scene state; replace when save/audio services land. */
+  private static final class SampleHermesSession implements HermesSession {}
 }

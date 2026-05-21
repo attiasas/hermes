@@ -27,6 +27,7 @@ final class SceneDocument {
                 "Scene '" + scenePath + "': entities[" + i + "] must be an object.");
           }
           String id = entityValue.has("id") ? entityValue.getString("id", "") : "";
+          String kind = entityValue.has("kind") ? entityValue.getString("kind", "") : "";
           JsonValue componentsValue = entityValue.get("components");
           List<ComponentSpec> components = new ArrayList<>();
           if (componentsValue != null && componentsValue.isObject()) {
@@ -36,7 +37,7 @@ final class SceneDocument {
               components.add(new ComponentSpec(typeName, properties));
             }
           }
-          entities.add(new EntitySpec(id, components));
+          entities.add(new EntitySpec(id, kind, components));
         }
       }
       return new SceneDocument(entities);
@@ -53,15 +54,21 @@ final class SceneDocument {
 
   static final class EntitySpec {
     private final String id;
+    private final String kind;
     private final List<ComponentSpec> components;
 
-    EntitySpec(String id, List<ComponentSpec> components) {
+    EntitySpec(String id, String kind, List<ComponentSpec> components) {
       this.id = id;
+      this.kind = kind;
       this.components = components;
     }
 
     String id() {
       return id;
+    }
+
+    String kind() {
+      return kind;
     }
 
     List<ComponentSpec> components() {

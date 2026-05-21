@@ -36,6 +36,28 @@ class NewCommandTest {
   }
 
   @Test
+  void new_emptyTemplateRejected(@TempDir Path parent) {
+    Path target = parent.resolve("legacy-empty");
+
+    int exit = new CommandLine(new HermesCli()).execute("new", target.toString(), "--template", "empty");
+
+    assertEquals(2, exit);
+  }
+
+  @Test
+  void new_multiSceneTemplate(@TempDir Path parent) throws Exception {
+    Path target = parent.resolve("multi-scene-game");
+
+    int exit =
+        new CommandLine(new HermesCli())
+            .execute("new", target.toString(), "--template", "multi-scene", "--package", "dev.hermes.multiscene");
+
+    assertEquals(0, exit);
+    assertTrue(Files.isRegularFile(target.resolve("game/src/main/java/dev/hermes/multiscene/SceneNavigationSystem.java")));
+    assertTrue(Files.isRegularFile(target.resolve("game/src/main/resources/assets/scenes/pause.json")));
+  }
+
+  @Test
   void new_unknownTemplateFails(@TempDir Path parent) {
     Path target = parent.resolve("bad-template");
 
