@@ -67,30 +67,12 @@ public final class HermesDoctor {
   }
 
   private static CheckResult checkEngineResolution(Project gameProject) {
-    if (gameProject.findProject(":hermes-api") != null) {
-      return new CheckResult("engine", Status.OK, "Using sibling projects hermes-api / hermes-core.", null);
-    }
+    boolean siblingHermesApi = gameProject.findProject(":hermes-api") != null;
     File home = HermesHomeGradle.resolve(gameProject);
-    if (HermesHomeGradle.isHermesCheckout(home)) {
-      return new CheckResult("engine", Status.OK, "HERMES_HOME engine checkout: " + home.getAbsolutePath(), null);
-    }
+    boolean hermesHomeCheckout = HermesHomeGradle.isHermesCheckout(home);
     String version = HermesConfig.resolveEngineVersion(gameProject);
-    File artifact =
-        new File(
-            System.getProperty("user.home")
-                + "/.m2/repository/dev/hermes/hermes-api/"
-                + version
-                + "/hermes-api-"
-                + version
-                + ".jar");
-    if (artifact.isFile()) {
-      return new CheckResult("engine", Status.OK, "Maven local hermes-api " + version + " found.", null);
-    }
-    return new CheckResult(
-        "engine",
-        Status.FAIL,
-        "No hermes-api in build and not in Maven local (" + artifact.getAbsolutePath() + ").",
-        "Run ./gradlew publishToMavenLocal from Hermes, set HERMES_HOME, or include engine modules.");
+    return HermesDoctorSupport.checkEngineResolution(
+        siblingHermesApi, hermesHomeCheckout, home, version);
   }
 
   private static java.util.List<CheckResult> checkForbiddenImports(Project gameProject) {

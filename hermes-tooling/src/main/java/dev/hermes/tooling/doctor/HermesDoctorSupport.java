@@ -172,6 +172,42 @@ public final class HermesDoctorSupport {
         "Point HERMES_HOME at the engine repo root.");
   }
 
+  /** Engine resolution for Gradle {@code hermesDoctor} (sibling modules, Maven local, or HERMES_HOME). */
+  public static CheckResult checkEngineResolution(
+      boolean siblingHermesApi, boolean hermesHomeCheckout, File hermesHome, String engineVersion) {
+    if (siblingHermesApi) {
+      return new CheckResult("engine", Status.OK, "Using sibling projects hermes-api / hermes-core.", null);
+    }
+    File mavenLocalJar = mavenLocalHermesApiJar(engineVersion);
+    if (mavenLocalJar.isFile()) {
+      return new CheckResult("engine", Status.OK, "Maven local hermes-api " + engineVersion + " found.", null);
+    }
+    if (hermesHomeCheckout) {
+      String homePath = hermesHome != null ? hermesHome.getAbsolutePath() : "?";
+      return new CheckResult(
+          "engine",
+          Status.WARN,
+          "HERMES_HOME engine checkout: "
+              + homePath
+              + ". Launchers can sync but engine JARs need Maven local or sibling modules.",
+          "Run ./gradlew publishToMavenLocal from Hermes, or include :hermes-api in settings.");
+    }
+    return new CheckResult(
+        "engine",
+        Status.FAIL,
+        "No hermes-api in build and not in Maven local (" + mavenLocalJar.getAbsolutePath() + ").",
+        "Run ./gradlew publishToMavenLocal from Hermes, set HERMES_HOME, or include engine modules.");
+  }
+
+  private static File mavenLocalHermesApiJar(String version) {
+    return Path.of(
+            System.getProperty("user.home"),
+            ".m2/repository/dev/hermes/hermes-api",
+            version,
+            "hermes-api-" + version + ".jar")
+        .toFile();
+  }
+
   private static CheckResult checkMavenLocalArtifacts(Path projectDir) {
     String version = "0.1.0-SNAPSHOT";
     if (projectDir != null) {
