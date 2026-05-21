@@ -25,7 +25,7 @@ class HermesDoctorTest {
   void checkEngineResolution_hermesHomeOnly_isWarn() {
     CheckResult result =
         HermesDoctorSupport.checkEngineResolution(
-            false, true, new File("/tmp/hermes-checkout"), "0.1.0-SNAPSHOT");
+            false, true, new File("/tmp/hermes-checkout"), "nonexistent-engine-version-for-doctor-test");
     assertEquals(Status.WARN, result.status());
     assertTrue(result.message().contains("HERMES_HOME"));
     assertTrue(result.message().contains("Launchers can sync"));
