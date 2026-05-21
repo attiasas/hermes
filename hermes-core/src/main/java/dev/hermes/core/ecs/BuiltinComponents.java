@@ -2,14 +2,23 @@ package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.ComponentRegistry;
+import dev.hermes.api.ecs.Material;
+import dev.hermes.api.ecs.MaterialUniform;
+import dev.hermes.api.ecs.Mesh;
+import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
+import java.util.HashMap;
+import java.util.Map;
 
 final class BuiltinComponents {
 
   static final String TRANSFORM = "Transform";
   static final String SPRITE = "Sprite";
   static final String CAMERA = "Camera";
+  static final String MESH = "Mesh";
+  static final String MATERIAL = "Material";
+  static final String RENDER_LAYER = "RenderLayer";
 
   private BuiltinComponents() {}
 
@@ -53,6 +62,52 @@ final class BuiltinComponents {
           camera.setViewportHeight(data.getFloat("viewportHeight", 0f));
           return camera;
         });
+    registry.register(
+        MESH,
+        Mesh.class,
+        data -> {
+          Mesh mesh = new Mesh();
+          mesh.setModel(data.getString("model", ""));
+          if (data.has("texture")) {
+            mesh.setTexture(data.getString("texture", ""));
+          }
+          return mesh;
+        });
+    registry.register(
+        MATERIAL,
+        Material.class,
+        data -> {
+          Material material = new Material();
+          material.setShader(data.getString("shader", "default/unlit"));
+          if (data instanceof JsonComponentData) {
+            JsonComponentData json = (JsonComponentData) data;
+            Map<String, MaterialUniform> uniforms = new HashMap<>();
+            for (Map.Entry<String, float[]> entry : json.getFloatArrayMap("uniforms").entrySet()) {
+              uniforms.put(entry.getKey(), new MaterialUniform(entry.getValue()));
+            }
+            material.setUniforms(uniforms);
+          }
+          return material;
+        });
+    registry.register(
+        RENDER_LAYER,
+        RenderLayer.class,
+        data -> {
+          RenderLayer renderLayer = new RenderLayer();
+          renderLayer.setLayer(parseRenderLayer(data.getString("layer", "WORLD")));
+          return renderLayer;
+        });
+  }
+
+  private static RenderLayer.Layer parseRenderLayer(String value) {
+    if (value == null) {
+      return RenderLayer.Layer.WORLD;
+    }
+    String normalized = value.trim().toUpperCase();
+    if ("UI".equals(normalized)) {
+      return RenderLayer.Layer.UI;
+    }
+    return RenderLayer.Layer.WORLD;
   }
 
   private static Camera.Projection parseProjection(String value) {

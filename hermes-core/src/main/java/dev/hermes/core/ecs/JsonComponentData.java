@@ -2,6 +2,9 @@ package dev.hermes.core.ecs;
 
 import com.badlogic.gdx.utils.JsonValue;
 import dev.hermes.api.ecs.ComponentData;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 final class JsonComponentData implements ComponentData {
 
@@ -52,5 +55,34 @@ final class JsonComponentData implements ComponentData {
       return value.asInt() != 0;
     }
     return Boolean.parseBoolean(value.asString());
+  }
+
+  Map<String, float[]> getFloatArrayMap(String key) {
+    JsonValue map = object.get(key);
+    if (map == null || !map.isObject()) {
+      return Collections.emptyMap();
+    }
+    Map<String, float[]> result = new HashMap<>();
+    for (JsonValue entry : map) {
+      result.put(entry.name, toFloatArray(entry));
+    }
+    return result;
+  }
+
+  private static float[] toFloatArray(JsonValue value) {
+    if (value == null || value.isNull()) {
+      return new float[0];
+    }
+    if (value.isArray()) {
+      float[] arr = new float[value.size];
+      for (int i = 0; i < value.size; i++) {
+        arr[i] = value.getFloat(i);
+      }
+      return arr;
+    }
+    if (value.isNumber()) {
+      return new float[] {value.asFloat()};
+    }
+    return new float[0];
   }
 }
