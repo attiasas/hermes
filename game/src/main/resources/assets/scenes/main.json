@@ -12,6 +12,7 @@
       "components": {
         "Transform": { "x": 420, "y": 240 },
         "Sprite": { "texture": "hermes-logo.png" },
+        "Material": { "shader": "default/unlit" },
         "SpinMarker": {
           "speed": 1.2,
           "centerX": 320,

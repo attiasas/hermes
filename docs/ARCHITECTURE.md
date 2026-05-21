@@ -122,7 +122,7 @@ Dogfood builds use the composite plugin. CI and releases also run `:hermes-gradl
 Hermes is **pre-release** (`0.1.0-SNAPSHOT`). Until 1.0:
 
 - Scene format, Gradle DSL keys, task names, and template layout may change without a major-version bump.
-- Prefer updating `docs/scene-format-v1.md` and migration notes in the same PR as breaking changes.
+- Prefer updating `docs/scene-format-v2.md` and migration notes in the same PR as breaking changes.
 - After pulling engine changes, republish to Maven local and run `hermesSyncPlatforms` in game projects.
 - Report incompatibilities via issues/PRs; avoid relying on undocumented behavior across engine upgrades.
 
@@ -139,6 +139,6 @@ Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, ca
 ## Related docs
 
 - [Scene management](scene-management.md)
-- [Scene format v1](scene-format-v1.md)
+- [Scene format v2](scene-format-v2.md)
 - [Contributing](CONTRIBUTING.md)
 - [Docs index](README.md)

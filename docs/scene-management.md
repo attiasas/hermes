@@ -76,11 +76,11 @@ Global systems still receive `render(world)` for each visible scene from the lau
 
 ## Entity kinds and saves (future)
 
-Scene JSON may set an optional [`kind`](scene-format-v1.md) on entities (e.g. `"character"`, `"prop"`). Kinds are metadata for queries (`World.entitiesWithKind`) and future persistence — they do not change loading behavior today.
+Scene JSON may set an optional [`kind`](scene-format-v2.md) on entities (e.g. `"character"`, `"prop"`). Kinds are metadata for queries (`World.entitiesWithKind`) and future persistence — they do not change loading behavior today.
 
-**Future scene types:** scripted/procedural sources (implement `SceneSource` without JSON), additive loading, and entity save snapshots keyed by scene id + entity name/kind. Document breaking changes in this file and [scene-format-v1.md](scene-format-v1.md) while Hermes is pre-release.
+**Future scene types:** scripted/procedural sources (implement `SceneSource` without JSON), additive loading, and entity save snapshots keyed by scene id + entity name/kind. Document breaking changes in this file and [scene-format-v2.md](scene-format-v2.md) while Hermes is pre-release.
 
 ## Related docs
 
-- [Scene format v1](scene-format-v1.md) — JSON entity/component schema
+- [Scene format v2](scene-format-v2.md) — JSON entity/component schema (`Material`, `Mesh`, `RenderLayer`)
 - [Architecture](ARCHITECTURE.md) — module boundaries and launcher bootstrap order

@@ -153,7 +153,7 @@ Root task: `./gradlew hermesSyncPlatforms` (same sync, run from project root).
 
 This template registers `PulseMarker` via `META-INF/services/dev.hermes.api.ecs.ComponentRegistration`.
 
-Scene format: in the Hermes engine repository, see `docs/scene-format-v1.md` (same path as in this monorepo checkout).
+Scene format: in the Hermes engine repository, see `docs/scene-format-v2.md` (same path as in this monorepo checkout).
 
 Example scene: [`game/src/main/resources/assets/scenes/main.json`](game/src/main/resources/assets/scenes/main.json).
 

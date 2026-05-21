@@ -2,7 +2,7 @@
 
 Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Game code targets a small public API (`hermes-api`); libGDX stays inside `hermes-core` and launcher modules.
 
-**Docs:** [Architecture](docs/ARCHITECTURE.md) · [Contributing](docs/CONTRIBUTING.md) · [Scene format](docs/scene-format-v1.md)
+**Docs:** [Architecture](docs/ARCHITECTURE.md) · [Contributing](docs/CONTRIBUTING.md) · [Scene format](docs/scene-format-v2.md)
 
 ---
 
@@ -48,7 +48,7 @@ Full build:
 
 ## Scenes and ECS
 
-Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`). A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v1.md](docs/scene-format-v1.md) and [docs/scene-management.md](docs/scene-management.md).
+Scenes under the game assets directory drive entities at startup. The sample [`main.json`](game/src/main/resources/assets/scenes/main.json) places the libGDX logo via `Transform` + `Sprite` and a `main-camera` entity (`Transform` + `Camera`). A [`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer. See [docs/scene-format-v2.md](docs/scene-format-v2.md) and [docs/scene-management.md](docs/scene-management.md).
 
 ### Custom components
 
