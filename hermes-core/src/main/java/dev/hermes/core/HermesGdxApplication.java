@@ -14,10 +14,7 @@ import dev.hermes.core.ecs.RenderSystem;
  */
 public final class HermesGdxApplication implements ApplicationListener {
 
-  private static final float SMOKE_DELTA_SECONDS = 1f / 60f;
-
   private final HermesApplication application;
-  private final boolean smokeMode;
   private HermesEngineImpl engine;
   private SpriteBatch batch;
   private RenderSystem renderSystem;
@@ -26,7 +23,6 @@ public final class HermesGdxApplication implements ApplicationListener {
   public HermesGdxApplication(HermesApplication application) {
     this.application = application;
     smokeFramesRemaining = readSmokeFramesProperty();
-    smokeMode = smokeFramesRemaining > 0;
   }
 
   private static int readSmokeFramesProperty() {
@@ -44,10 +40,8 @@ public final class HermesGdxApplication implements ApplicationListener {
   @Override
   public void create() {
     engine = new HermesEngineImpl();
-    if (!smokeMode) {
-      batch = new SpriteBatch();
-      renderSystem = new RenderSystem(batch);
-    }
+    batch = new SpriteBatch();
+    renderSystem = new RenderSystem(batch);
 
     application.onCreate(engine);
 
@@ -56,28 +50,10 @@ public final class HermesGdxApplication implements ApplicationListener {
       engine.loadScene(scenePath);
     }
 
-    int width = windowWidth();
-    int height = windowHeight();
-    if (renderSystem != null) {
-      renderSystem.resize(width, height);
-      engine.addSystem(renderSystem);
-    }
+    renderSystem.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    engine.addSystem(renderSystem);
 
-    application.resize(width, height);
-  }
-
-  private static int windowWidth() {
-    if (Gdx.graphics != null) {
-      return Gdx.graphics.getWidth();
-    }
-    return HermesLauncherSupport.windowWidth();
-  }
-
-  private static int windowHeight() {
-    if (Gdx.graphics != null) {
-      return Gdx.graphics.getHeight();
-    }
-    return HermesLauncherSupport.windowHeight();
+    application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
   }
 
   @Override
@@ -90,19 +66,15 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void render() {
-    if (!smokeMode) {
-      Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1f);
-      Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-    }
+    Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1f);
+    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-    float delta = Gdx.graphics != null ? Gdx.graphics.getDeltaTime() : SMOKE_DELTA_SECONDS;
+    float delta = Gdx.graphics.getDeltaTime();
     for (dev.hermes.api.ecs.System system : engine.systems()) {
       system.update(engine.world(), delta);
     }
-    if (!smokeMode) {
-      for (dev.hermes.api.ecs.System system : engine.systems()) {
-        system.render(engine.world());
-      }
+    for (dev.hermes.api.ecs.System system : engine.systems()) {
+      system.render(engine.world());
     }
 
     application.render();

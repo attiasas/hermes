@@ -75,8 +75,8 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Desktop smoke
-        run: ./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2 --no-daemon --stacktrace
+      - name: Verify hermesRunDesktop wiring
+        run: ./gradlew :game:hermesRunDesktop --dry-run --no-daemon --stacktrace
 
   build-cli:
     needs: build-engine

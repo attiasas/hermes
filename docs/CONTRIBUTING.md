@@ -67,13 +67,13 @@ Validate ZIP layout with `.github/scripts/validate-export-zip.sh` when debugging
 
 Expect a 640×480 window with the sample scene. Game class is set via `hermes { applicationClass = '…' }` in `game/build.gradle`.
 
-**Automated smoke** — headless libGDX backend with a frame cap (CI-friendly, no display required):
+**Automated smoke** — LWJGL run with a frame cap (local/scripts; needs a display):
 
 ```bash
 ./gradlew :game:hermesRunDesktop -Phermes.desktop.smokeFrames=2
 ```
 
-Use this in scripts and CI to verify startup and a few render ticks without closing a window manually.
+CI verifies task wiring with `--dry-run` instead of launching the desktop app.
 
 ## CLI development
 
