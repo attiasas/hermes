@@ -41,7 +41,7 @@ Asset paths are relative to the game assets root (`hermes.assetsDirectory`, defa
 
 For advanced setups, register a full `SceneDefinition` (custom `SceneSource`, `SceneLifecycle`, scene-local systems). The convenience `register(String id, String assetPath)` loads JSON via the built-in scene loader.
 
-The **bootstrap scene** path in `hermes.json` (`scene` field) is registered as `"main"` by the launcher before `onCreate` runs. Additional scenes are registered in `onCreate`.
+The **bootstrap scene** path in `hermes.json` (`scene` field) is registered as `"main"` by the launcher, then `onCreate` runs so custom components and extra scenes can be registered, then the launcher loads `"main"`. Register components in `onCreate` (or via ServiceLoader before startup) before any scene JSON that references them is loaded.
 
 ## HermesSession
 

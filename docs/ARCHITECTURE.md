@@ -134,7 +134,7 @@ Games interact with scenes through `HermesEngine.scenes()` (`SceneManager`):
 - **Transitions** — queue `SceneChangeRequest.goTo`, `push`, or `pop`; the launcher calls `processPending()` each frame.
 - **Active world** — `scenes().activeWorld()` for the top scene; `visibleScenes()` for bottom-to-top rendering.
 
-Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, requests `goTo("main")`, then calls `onCreate`. See [Scene management](scene-management.md).
+Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, calls `onCreate` (component/system registration), then requests `goTo("main")`. See [Scene management](scene-management.md).
 
 ## Related docs
 
