@@ -11,9 +11,11 @@ repositories {
   mavenLocal()
 }
 
+def hermesToolingVersion = findProperty('hermesEngineVersion') ?: version
+
 dependencies {
   implementation 'info.picocli:picocli:4.7.7'
-  implementation project(':hermes-tooling')
+  implementation "dev.hermes:hermes-tooling:${hermesToolingVersion}"
 
   testImplementation platform('org.junit:junit-bom:5.11.4')
   testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -25,8 +27,13 @@ tasks.named('test') {
   useJUnitPlatform()
 }
 
+def publishHermesTooling = gradle.includedBuilds.find { it.name == 'hermes-gradle-plugin' }
+    ?.task(':hermes-tooling:publishToMavenLocal')
+
 tasks.named('compileJava') {
-  dependsOn ':hermes-tooling:classes'
+  if (publishHermesTooling != null) {
+    dependsOn publishHermesTooling
+  }
 }
 
 tasks.register('copyTemplates', Copy) {

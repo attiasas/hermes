@@ -1,5 +1,14 @@
 package dev.hermes.gradle;
 
+import dev.hermes.gradle.android.AndroidSdkResolver;
+import dev.hermes.gradle.android.HermesAndroidGradlePlugin;
+import dev.hermes.gradle.dsl.HermesConfig;
+import dev.hermes.gradle.dsl.HermesSettingsExtension;
+import dev.hermes.gradle.dsl.SettingsPlatformsExtension;
+import dev.hermes.gradle.internal.HermesEnginePropertyPropagator;
+import dev.hermes.gradle.internal.HermesEngineVersion;
+import dev.hermes.gradle.internal.HermesHomeGradle;
+import dev.hermes.gradle.platform.HermesPlatformSync;
 import java.io.File;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
@@ -19,7 +28,7 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
         .settingsEvaluated(
             gradle -> {
               String engineVersion = HermesEngineVersion.resolve(settings, extension);
-              File hermesHome = HermesHomeResolver.resolve(settings);
+              File hermesHome = HermesHomeGradle.resolve(settings);
               HermesEnginePropertyPropagator.apply(settings, hermesHome);
               SettingsPlatformsExtension platforms = extension.getPlatforms();
               settings

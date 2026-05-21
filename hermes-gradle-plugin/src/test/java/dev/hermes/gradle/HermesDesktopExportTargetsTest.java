@@ -2,6 +2,7 @@ package dev.hermes.gradle;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.hermes.gradle.export.HermesDesktopExportTargets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

@@ -30,14 +30,19 @@ class HermesPluginIntegrationTest {
   }
 
   @Test
-  void hermesRunDesktop_usesJdk17Toolchain() throws IOException {
-    String source =
-        Files.readString(
-            hermesRoot.toPath().resolve("hermes-gradle-plugin/src/main/java/dev/hermes/gradle/HermesPlugin.java"),
-            StandardCharsets.UTF_8);
+  void templateProject_hermesRunDesktopTaskRegistered(@TempDir Path tempDir) throws IOException {
+    Path projectDir = materializeTemplate(tempDir.resolve("desktop-run"));
+
+    BuildResult tasks =
+        GradleRunner.create()
+            .withProjectDir(projectDir.toFile())
+            .withPluginClasspath()
+            .withArguments(":game:tasks", "--group", "hermes", "-q")
+            .build();
+
     assertTrue(
-        source.contains("JavaLanguageVersion.of(17)"),
-        "hermesRunDesktop must use JDK 17 to match Construo export runtime");
+        tasks.getOutput().contains("hermesRunDesktop"),
+        "materialized template must expose :game:hermesRunDesktop when desktop is enabled");
   }
 
   @Test

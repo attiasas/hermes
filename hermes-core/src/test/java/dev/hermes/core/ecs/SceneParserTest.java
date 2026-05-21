@@ -87,6 +87,19 @@ final class SceneParserTest {
   }
 
   @Test
+  void nonObjectEntityElementThrowsSceneParseException() {
+    String json = "{\n  \"entities\": [ \"not-an-object\" ]\n}\n";
+
+    SceneParseException error =
+        assertThrows(
+            SceneParseException.class,
+            () -> SceneLoader.loadFromString("scenes/bad.json", json, world, registry));
+
+    assertTrue(error.getMessage().contains("entities[0]"));
+    assertTrue(error.getMessage().contains("must be an object"));
+  }
+
+  @Test
   void unknownComponentTypeFailsWithActionableMessage() {
     String json =
         "{\n"

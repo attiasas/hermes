@@ -1,0 +1,7 @@
+# Android SDK location (optional — only needed when `android` is enabled in settings.gradle).
+# Copy to `local.properties` at the project root (gitignored) and uncomment:
+#
+# sdk.dir=/path/to/Android/sdk
+#
+# Alternatives: `hermes.android.sdk` in gradle.properties, or ANDROID_SDK_ROOT / ANDROID_HOME.
+# See README.md § Android SDK and docs/CONTRIBUTING.md.
