@@ -49,6 +49,7 @@ gradlePlugin {
 
 dependencies {
   implementation project(':hermes-tooling')
+  testImplementation project(':hermes-tooling')
   implementation 'com.google.code.gson:gson:2.13.1'
   implementation gradleApi()
   implementation localGroovy()

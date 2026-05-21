@@ -26,7 +26,7 @@ Cold-cache smoke:
 |--------|---------|
 | API (if tests added) | `./gradlew :hermes-api:test` |
 | Core / ECS / scenes | `./gradlew :hermes-core:test` |
-| Tooling | `./gradlew :hermes-tooling:test` |
+| Tooling | `./gradlew :hermes-gradle-plugin:hermes-tooling:test` (alias: `./gradlew hermes-tooling-test`) |
 | Gradle plugin | `./gradlew :hermes-gradle-plugin:test` |
 | CLI | `./gradlew :hermes-cli:test` |
 | Game (no unit tests by default) | `./gradlew :game:hermesDoctor` |
@@ -94,6 +94,18 @@ Before testing `hermes new` or a template checkout:
 ```bash
 ./gradlew publishToMavenLocal :hermes-gradle-plugin:publishToMavenLocal
 ```
+
+### Standalone `hermes-gradle-plugin` development
+
+Opening or building only `hermes-gradle-plugin/` (outside the monorepo root) resolves `dev.hermes:hermes-tooling` from Maven local, not a composite `project(':hermes-tooling')`. Publish tooling first:
+
+```bash
+./gradlew publishToMavenLocal
+# or from the engine repo root:
+./gradlew :hermes-tooling:publishToMavenLocal
+```
+
+In the monorepo, `hermes-tooling` is included only once (under the composite `hermes-gradle-plugin` build). Root modules such as `hermes-cli` resolve the published `dev.hermes:hermes-tooling` artifact from Maven local after `:hermes-gradle-plugin:hermes-tooling:publishToMavenLocal`. Standalone plugin checkouts use the same `include 'hermes-tooling'` in `hermes-gradle-plugin/settings.gradle` and must run `publishToMavenLocal` for tooling first.
 
 ## CI reference
 

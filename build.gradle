@@ -35,3 +35,13 @@ subprojects {
     }
   }
 }
+
+def pluginIncludedBuild = gradle.includedBuilds.find { it.name == 'hermes-gradle-plugin' }
+def toolingTest = pluginIncludedBuild?.task(':hermes-tooling:test')
+if (toolingTest != null) {
+  tasks.register('hermes-tooling-test') {
+    group = 'verification'
+    description = 'Runs :hermes-gradle-plugin:hermes-tooling:test (tooling is composite-included under the plugin build).'
+    dependsOn toolingTest
+  }
+}
