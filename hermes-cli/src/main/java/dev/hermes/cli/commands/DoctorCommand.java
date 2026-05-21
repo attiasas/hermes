@@ -1,4 +1,4 @@
-package dev.hermes.cli;
+package dev.hermes.cli.commands;
 
 import dev.hermes.tooling.doctor.HermesDoctorSupport;
 import java.io.File;
@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;

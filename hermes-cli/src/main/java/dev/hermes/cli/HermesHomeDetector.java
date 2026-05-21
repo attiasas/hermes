@@ -5,13 +5,13 @@ import java.io.File;
 import java.nio.file.Path;
 
 /** Locates a Hermes engine checkout for writing {@code hermes.home} into new projects. */
-final class HermesHomeDetector {
+public final class HermesHomeDetector {
 
   private static final int MAX_PARENT_LEVELS = 8;
 
   private HermesHomeDetector() {}
 
-  static File detect(Path projectDir) {
+  public static File detect(Path projectDir) {
     File fromResolver = HermesHomeResolver.resolve(projectDir);
     if (HermesHomeResolver.isHermesCheckout(fromResolver)) {
       return fromResolver;

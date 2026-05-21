@@ -1,8 +1,11 @@
-package dev.hermes.cli;
+package dev.hermes.cli.template;
 
+import dev.hermes.cli.HermesHomeDetector;
+import dev.hermes.tooling.android.AndroidSdkLocator;
+import dev.hermes.tooling.android.AndroidSdkValidator;
+import dev.hermes.tooling.template.TemplateEngine;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -11,8 +14,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
-import dev.hermes.tooling.android.AndroidSdkLocator;
-import dev.hermes.tooling.android.AndroidSdkValidator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,11 +23,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Stream;
 
-final class TemplateSupport {
+public final class TemplateSupport {
 
   private TemplateSupport() {}
 
-  static void materializeEmptyTemplate(
+  public static void materializeEmptyTemplate(
       Path targetDir,
       String projectName,
       String packageName,
@@ -52,7 +53,7 @@ final class TemplateSupport {
     makeGradleWrapperExecutable(targetDir);
   }
 
-  static Set<String> parsePlatforms(String platforms) throws IOException {
+  public static Set<String> parsePlatforms(String platforms) throws IOException {
     Set<String> result = new HashSet<>();
     for (String part : platforms.split(",")) {
       String id = part.trim().toLowerCase(Locale.ROOT);
@@ -241,7 +242,7 @@ final class TemplateSupport {
             Path relative = source.relativize(dir);
             Path destDir = target.resolve(relative);
             if (relative.toString().contains("{{packageDir}}") && !tokens.isEmpty()) {
-              String replaced = substitute(relative.toString(), tokens);
+              String replaced = TemplateEngine.substitute(relative.toString(), tokens);
               destDir = target.resolve(replaced);
             }
             Files.createDirectories(destDir);
@@ -253,14 +254,14 @@ final class TemplateSupport {
             Path relative = source.relativize(file);
             String relativeString = relative.toString();
             if (!tokens.isEmpty()) {
-              relativeString = substitute(relativeString, tokens);
+              relativeString = TemplateEngine.substitute(relativeString, tokens);
             }
             Path dest = target.resolve(relativeString);
             Files.createDirectories(dest.getParent());
             if (isTextFile(file)) {
               String content = Files.readString(file, StandardCharsets.UTF_8);
               if (!tokens.isEmpty()) {
-                content = substitute(content, tokens);
+                content = TemplateEngine.substitute(content, tokens);
               }
               Files.writeString(dest, content, StandardCharsets.UTF_8);
             } else {
@@ -287,13 +288,5 @@ final class TemplateSupport {
         || name.endsWith(".properties")
         || name.endsWith(".md")
         || name.endsWith(".txt");
-  }
-
-  private static String substitute(String input, Map<String, String> tokens) {
-    String result = input;
-    for (Map.Entry<String, String> entry : tokens.entrySet()) {
-      result = result.replace(entry.getKey(), entry.getValue());
-    }
-    return result;
   }
 }

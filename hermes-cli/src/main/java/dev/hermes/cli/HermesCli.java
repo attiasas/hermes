@@ -1,5 +1,7 @@
 package dev.hermes.cli;
 
+import dev.hermes.cli.commands.DoctorCommand;
+import dev.hermes.cli.commands.NewCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;

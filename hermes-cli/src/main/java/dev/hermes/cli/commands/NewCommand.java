@@ -1,6 +1,6 @@
-package dev.hermes.cli;
+package dev.hermes.cli.commands;
 
-import java.io.IOException;
+import dev.hermes.cli.template.TemplateSupport;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Set;
