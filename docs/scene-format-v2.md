@@ -30,7 +30,7 @@ Scene files describe entities and their components. They live under the game mod
 | `entities[].id` | No | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime. |
 | `entities[].kind` | No | Optional logical type tag (e.g. `"character"`, `"prop"`). Omitted entities use the unset kind. Used for `World.entitiesWithKind` and future save/load; does not affect component parsing. |
 | `entities[].components` | No | Map of component type name → property object. |
-| `renderPipeline` | No | **Coming (Task 4b):** optional scene-level render pipeline id. Not parsed yet; reserved for per-scene pipeline selection. |
+| `renderPipeline` | No | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 
 ## Built-in component types
 

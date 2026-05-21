@@ -8,6 +8,7 @@ import dev.hermes.api.scene.SceneContext;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneLifecycle;
 import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldImpl;
 import java.util.ArrayDeque;
@@ -16,6 +17,7 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Stack of loaded scenes with go-to, push, and pop transitions. */
 public final class SceneStack {
@@ -101,8 +103,14 @@ public final class SceneStack {
             return componentRegistry;
           }
         };
-    definition.source().populate(ctx);
-    return new SceneInstance(definition.id(), world, definition, false);
+    Optional<String> jsonOverride;
+    if (definition.source() instanceof AssetSceneSource) {
+      jsonOverride = SceneLoader.load(((AssetSceneSource) definition.source()).assetPath(), ctx);
+    } else {
+      definition.source().populate(ctx);
+      jsonOverride = Optional.empty();
+    }
+    return new SceneInstance(definition.id(), world, definition, jsonOverride, false);
   }
 
   private void enterScene(SceneInstance instance) {

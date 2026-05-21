@@ -9,6 +9,7 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -132,6 +133,20 @@ final class SceneParserTest {
     Entity logo = world.findByName("logo");
     assertNotNull(logo);
     assertEquals(EntityKind.UNSET, logo.kind());
+  }
+
+  @Test
+  void loadsOptionalRenderPipeline() {
+    String json =
+        "{\n"
+            + "  \"renderPipeline\": \"render/ui-overlay.json\",\n"
+            + "  \"entities\": []\n"
+            + "}\n";
+
+    Optional<String> override =
+        SceneLoader.loadFromString("scenes/overlay.json", json, world, registry);
+
+    assertEquals(Optional.of("render/ui-overlay.json"), override);
   }
 
   @Test

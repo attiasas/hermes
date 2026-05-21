@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "clearColor": [0.1, 0.1, 0.1, 1],
+  "passes": [
+    { "id": "sprites", "type": "sprites", "target": "screen", "layers": ["WORLD"] }
+  ]
+}

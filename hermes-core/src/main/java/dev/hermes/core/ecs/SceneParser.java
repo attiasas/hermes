@@ -6,13 +6,14 @@ import dev.hermes.api.EntityId;
 import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.World;
 import java.util.List;
+import java.util.Optional;
 
 /** Loads a scene document into a world using a component registry. */
 final class SceneParser {
 
   private SceneParser() {}
 
-  static void loadIntoWorld(
+  static Optional<String> loadIntoWorld(
       String scenePath, String json, World world, ComponentRegistryImpl registry) {
     SceneDocument document = SceneDocument.parse(scenePath, json);
     for (SceneDocument.EntitySpec entitySpec : document.entities()) {
@@ -30,6 +31,7 @@ final class SceneParser {
       }
       validateDrawableMaterial(scenePath, entitySpec.id(), components);
     }
+    return document.renderPipeline();
   }
 
   private static void validateDrawableMaterial(
