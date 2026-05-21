@@ -29,8 +29,11 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
 
+      - name: Clean
+        run: ./gradlew clean --no-daemon
+
       - name: Build engine and publish to Maven local
-        run: ./gradlew clean build publishToMavenLocal :hermes-core:test :hermes-tooling:test :hermes-gradle-plugin:test :hermes-cli:test --no-daemon --stacktrace
+        run: ./gradlew build publishToMavenLocal :hermes-core:test hermes-tooling-test :hermes-gradle-plugin:test :hermes-cli:test --no-daemon --stacktrace
 
       - name: Export game distributions
         run: |
