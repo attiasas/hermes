@@ -29,7 +29,9 @@ final class BuiltinComponents {
           transform.setScaleY(data.getFloat("scaleY", 1f));
           transform.setScaleZ(data.getFloat("scaleZ", 1f));
           return transform;
-        });
+        },
+        BuiltinComponentSerializers.transform(),
+        BuiltinComponentSerializers.transformDescriptor());
     registry.register(
         SPRITE,
         Sprite.class,
@@ -37,7 +39,9 @@ final class BuiltinComponents {
           Sprite sprite = new Sprite();
           sprite.setTexture(data.getString("texture", ""));
           return sprite;
-        });
+        },
+        BuiltinComponentSerializers.sprite(),
+        BuiltinComponentSerializers.spriteDescriptor());
     registry.register(
         CAMERA,
         Camera.class,
@@ -52,7 +56,9 @@ final class BuiltinComponents {
           camera.setViewportWidth(data.getFloat("viewportWidth", 0f));
           camera.setViewportHeight(data.getFloat("viewportHeight", 0f));
           return camera;
-        });
+        },
+        BuiltinComponentSerializers.camera(),
+        BuiltinComponentSerializers.cameraDescriptor());
   }
 
   private static Camera.Projection parseProjection(String value) {

@@ -57,7 +57,8 @@ public final class HermesEngineImpl implements HermesEngine {
     return Collections.unmodifiableList(systems);
   }
 
-  ComponentRegistryImpl registryImpl() {
+  /** Debug-only access to the concrete registry (serialization and field edits). */
+  public ComponentRegistryImpl registryImpl() {
     return registry;
   }
 }

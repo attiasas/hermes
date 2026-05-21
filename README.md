@@ -247,6 +247,25 @@ Enable the platform in [`settings.gradle`](settings.gradle) (`platforms.android.
 - **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — `./gradlew clean build` on push (desktop-only platforms by default).
 - **Releases:** [`.github/workflows/release.yml`](.github/workflows/release.yml) on tag `v*`.
 
+---
+
+## Tooling — Hermes Studio
+
+Local inspector, unified project config, and play mode for Hermes projects (`debug = true` in `game/build.gradle`).
+
+| Resource | Description |
+|----------|-------------|
+| [docs/hermes-studio.md](docs/hermes-studio.md) | Studio UI, config panel, play mode, `hermes studio` CLI, export safety |
+| [docs/hermes-debug-protocol-v0.md](docs/hermes-debug-protocol-v0.md) | HDP WebSocket protocol (default port `18765`) |
+| [docs/component-inspector-registration.md](docs/component-inspector-registration.md) | Custom component fields (`SpinMarker` example) |
+| [extensions/hermes-vscode/](extensions/hermes-vscode/) | VS Code / Cursor: Run Desktop, Open Inspector |
+
+```bash
+hermes studio .
+```
+
+---
+
 ### References
 
 - [libGDX wiki](https://libgdx.com/wiki/)

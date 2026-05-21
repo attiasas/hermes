@@ -1,0 +1,42 @@
+plugins {
+  id 'application'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+  options.release = 17
+}
+
+application {
+  mainClass = 'dev.hermes.studio.app.StudioApp'
+  applicationName = 'hermes-studio'
+}
+
+dependencies {
+  implementation project(':hermes-studio-core')
+  implementation 'org.eclipse.jetty:jetty-server:11.0.24'
+  implementation 'org.eclipse.jetty:jetty-servlet:11.0.24'
+  implementation 'com.google.code.gson:gson:2.13.1'
+}
+
+tasks.named('processResources') {
+  dependsOn ':hermes-studio-ui:buildUi'
+  from('../hermes-studio-ui/dist') {
+    into 'studio-ui'
+  }
+}
+
+tasks.named('compileJava') {
+  dependsOn ':hermes-studio-ui:buildUi'
+}
+
+tasks.named('run') {
+  dependsOn ':hermes-studio-ui:buildUi'
+}

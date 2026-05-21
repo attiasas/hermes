@@ -5,6 +5,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
+import dev.hermes.core.debug.DebugOverlay;
+import dev.hermes.core.debug.DebugRuntime;
+import dev.hermes.core.debug.HermesDebugServer;
+import dev.hermes.core.debug.WorldSnapshotBuilder;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.RenderSystem;
 
@@ -18,6 +22,9 @@ public final class HermesGdxApplication implements ApplicationListener {
   private HermesEngineImpl engine;
   private SpriteBatch batch;
   private RenderSystem renderSystem;
+  private DebugOverlay debugOverlay;
+  private DebugRuntime debugRuntime;
+  private HermesDebugServer debugServer;
 
   public HermesGdxApplication(HermesApplication application) {
     this.application = application;
@@ -40,6 +47,18 @@ public final class HermesGdxApplication implements ApplicationListener {
     engine.addSystem(renderSystem);
 
     application.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+    if (HermesLauncherSupport.isDebugEnabled()) {
+      debugOverlay = new DebugOverlay(HermesLauncherSupport::isDebugEnabled);
+      int port = HermesLauncherSupport.debugPort(18765);
+      debugRuntime =
+          new DebugRuntime(
+              engine,
+              new WorldSnapshotBuilder(engine.registryImpl()),
+              HermesLauncherSupport::isDebugEnabled);
+      debugServer = new HermesDebugServer(debugRuntime, port);
+      debugServer.startIfEnabled();
+    }
   }
 
   @Override
@@ -56,11 +75,17 @@ public final class HermesGdxApplication implements ApplicationListener {
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
     float delta = Gdx.graphics.getDeltaTime();
-    for (dev.hermes.api.ecs.System system : engine.systems()) {
-      system.update(engine.world(), delta);
+    if (debugRuntime == null || !debugRuntime.isPaused()) {
+      for (dev.hermes.api.ecs.System system : engine.systems()) {
+        system.update(engine.world(), delta);
+      }
     }
     for (dev.hermes.api.ecs.System system : engine.systems()) {
       system.render(engine.world());
+    }
+
+    if (debugOverlay != null) {
+      debugOverlay.render(engine.world());
     }
 
     application.render();
@@ -78,7 +103,13 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void dispose() {
+    if (debugServer != null) {
+      debugServer.stop();
+    }
     application.dispose();
+    if (debugOverlay != null) {
+      debugOverlay.dispose();
+    }
     if (renderSystem != null) {
       renderSystem.dispose();
     }

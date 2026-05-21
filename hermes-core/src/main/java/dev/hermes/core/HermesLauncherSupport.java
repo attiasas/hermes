@@ -29,6 +29,15 @@ public final class HermesLauncherSupport {
     return Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.debug", "false"));
   }
 
+  public static int debugPort(int defaultPort) {
+    String raw = HermesRuntimeConfig.get("hermes.debug.port", String.valueOf(defaultPort));
+    try {
+      return Integer.parseInt(raw.trim());
+    } catch (NumberFormatException e) {
+      return defaultPort;
+    }
+  }
+
   public static int windowWidth() {
     return Integer.parseInt(HermesRuntimeConfig.get("hermes.window.width", "640"));
   }
