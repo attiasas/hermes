@@ -2,6 +2,7 @@ package dev.hermes.core.ecs;
 
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneRegistry;
+import dev.hermes.core.scene.AssetSceneSource;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -17,15 +18,15 @@ final class SceneRegistryImpl implements SceneRegistry {
 
   @Override
   public void register(SceneDefinition definition) {
+    if (definitions.containsKey(definition.id())) {
+      throw new IllegalArgumentException("Scene '" + definition.id() + "' is already registered");
+    }
     definitions.put(definition.id(), definition);
   }
 
   @Override
   public void register(String id, String assetPath) {
-    register(
-        SceneDefinition.builder(id)
-            .source(ctx -> SceneLoader.load(assetPath, ctx.world(), registry))
-            .build());
+    register(new SceneDefinition(id, new AssetSceneSource(assetPath)));
   }
 
   SceneDefinition get(String id) {

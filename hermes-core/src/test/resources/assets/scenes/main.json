@@ -1,1 +1,11 @@
-{"entities":[]}
+{
+  "entities": [
+    {
+      "id": "logo",
+      "components": {
+        "Transform": { "x": 140, "y": 210 },
+        "Sprite": { "texture": "hermes-logo.png" }
+      }
+    }
+  ]
+}

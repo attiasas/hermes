@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.GdxRuntimeException;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 /** Classpath-only {@link Files} for unit tests (no gdx-backend-headless). */
 final class ClasspathFiles implements Files {
@@ -99,6 +100,15 @@ final class ClasspathFiles implements Files {
       }
       try {
         return url.openStream();
+      } catch (java.io.IOException e) {
+        throw new GdxRuntimeException("Failed to read classpath resource: " + path, e);
+      }
+    }
+
+    @Override
+    public String readString(String charset) {
+      try (InputStream in = read()) {
+        return new String(in.readAllBytes(), Charset.forName(charset));
       } catch (java.io.IOException e) {
         throw new GdxRuntimeException("Failed to read classpath resource: " + path, e);
       }
