@@ -6,12 +6,16 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.render.HermesRenderConfigurator;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
+import dev.hermes.core.log.CachingLoggerProvider;
+import dev.hermes.core.log.GdxLogSink;
 import dev.hermes.core.render.RenderPipelineExecutor;
 
 /**
@@ -34,6 +38,9 @@ public final class HermesGdxApplication implements ApplicationListener {
   public void create() {
     fatalErrorScreen = new HermesFatalErrorScreen();
     try {
+      Logs.install(new CachingLoggerProvider(new GdxLogSink()));
+      Logger log = Logs.get(HermesGdxApplication.class);
+      log.info("HermesGdxApplication created");
       engine = new HermesEngineImpl();
       engine.bindApplication(application);
       batch = new SpriteBatch();
