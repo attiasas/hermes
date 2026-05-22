@@ -30,7 +30,7 @@ public final class SampleHermesGame implements HermesApplication {
 
   @Override
   public void onCreate(HermesEngine engine) {
-    log.info("Custom User application creating...");
+    log.debug("Custom User application creating...");
     engine
         .registry()
         .register(

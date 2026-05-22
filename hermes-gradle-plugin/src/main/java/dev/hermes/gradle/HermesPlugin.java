@@ -120,6 +120,7 @@ public final class HermesPlugin implements Plugin<Project> {
             task -> {
               task.setGroup("hermes");
               task.setDescription("Generate hermes-runtime.properties for all platforms");
+              task.getInputs().files(project.getBuildFile(), project.file("hermes.json"));
               task.getOutputs().dir(generatedDir);
               task.doLast(
                   t -> {

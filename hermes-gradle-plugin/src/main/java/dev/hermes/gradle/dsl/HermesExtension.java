@@ -10,6 +10,7 @@ public class HermesExtension {
   private boolean debug;
   private final PlatformsExtension platforms = new PlatformsExtension();
   private final IconsExtension icons = new IconsExtension();
+  private final LoggingExtension logging = new LoggingExtension();
 
   public String getApplicationClass() {
     return applicationClass;
@@ -37,6 +38,17 @@ public class HermesExtension {
 
   public PlatformsExtension getPlatforms() {
     return platforms;
+  }
+
+  public LoggingExtension getLogging() {
+    return logging;
+  }
+
+  @SuppressWarnings("rawtypes")
+  public void logging(Closure configure) {
+    configure.setDelegate(logging);
+    configure.setResolveStrategy(Closure.DELEGATE_FIRST);
+    configure.call(logging);
   }
 
   @SuppressWarnings("rawtypes")

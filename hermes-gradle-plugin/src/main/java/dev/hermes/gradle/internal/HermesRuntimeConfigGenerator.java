@@ -1,7 +1,5 @@
 package dev.hermes.gradle.internal;
 
-import dev.hermes.gradle.internal.HermesGameConfigs;
-import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.launch.HermesLaunchProperties;
@@ -28,8 +26,10 @@ public final class HermesRuntimeConfigGenerator {
       throw new GradleException("Could not create " + outputDir.getAbsolutePath());
     }
 
-    boolean debug =
-        HermesDistributionMode.isDistributionExport(gameProject) ? false : extension.isDebug();
+    boolean export = HermesDistributionMode.isDistributionExport(gameProject);
+    boolean debug = export ? false : extension.isDebug();
+    String minLevel = extension.getLogging().resolveMinLevel(debug, export);
+
     Properties properties = new Properties();
     HermesLaunchProperties.builder()
         .applicationClass(extension.getApplicationClass())
@@ -41,6 +41,7 @@ public final class HermesRuntimeConfigGenerator {
         .desktopVsync(desktop.isVsync())
         .desktopResizable(desktop.isResizable())
         .desktopForegroundFps(desktop.getForegroundFps())
+        .logMinLevel(minLevel)
         .build()
         .applyTo(properties);
 

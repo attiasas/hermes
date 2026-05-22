@@ -1,6 +1,7 @@
 package dev.hermes.core.log;
 
 import dev.hermes.api.log.LogLevel;
+import dev.hermes.core.HermesRuntimeConfig;
 
 final class LogConfig {
 
@@ -17,12 +18,11 @@ final class LogConfig {
   }
 
   private static int resolveMinSeverity() {
-//     String explicit = HermesRuntimeConfig.get("hermes.log.minLevel", "");
-//     if (!explicit.isBlank()) {
-//       return LogLevel.parse(explicit).severity();
-//     }
-//     boolean debug = Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.debug", "false"));
-//     return (debug ? LogLevel.DEBUG : LogLevel.INFO).severity();
-    return LogLevel.DEBUG.severity();
+    String explicit = HermesRuntimeConfig.get("hermes.log.minLevel", "");
+    if (!explicit.isBlank()) {
+      return LogLevel.parse(explicit).severity();
+    }
+    boolean debug = Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.debug", "false"));
+    return (debug ? LogLevel.DEBUG : LogLevel.INFO).severity();
   }
 }

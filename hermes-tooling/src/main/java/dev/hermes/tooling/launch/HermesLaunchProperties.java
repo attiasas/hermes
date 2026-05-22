@@ -105,6 +105,10 @@ public final class HermesLaunchProperties {
       return this;
     }
 
+    public Builder logMinLevel(String value) {
+      return put("hermes.log.minLevel", value);
+    }
+
     public HermesLaunchProperties build() {
       return new HermesLaunchProperties(properties);
     }
