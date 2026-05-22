@@ -4,6 +4,8 @@ import dev.hermes.api.HermesApplication;
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.SystemScope;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.render.HermesRenderConfigurator;
 
 /**
@@ -13,6 +15,8 @@ import dev.hermes.api.render.HermesRenderConfigurator;
  * launcher; {@code pause} is registered here and pushed by {@link SceneNavigationSystem}.
  */
 public final class SampleHermesGame implements HermesApplication {
+  
+  private static final Logger log = Logs.get(SampleHermesGame.class);
 
   @Override
   public HermesSession createSession() {
@@ -26,6 +30,7 @@ public final class SampleHermesGame implements HermesApplication {
 
   @Override
   public void onCreate(HermesEngine engine) {
+    log.info("Custom User application creating...");
     engine
         .registry()
         .register(
@@ -48,7 +53,9 @@ public final class SampleHermesGame implements HermesApplication {
   public void resize(int width, int height) {}
 
   @Override
-  public void render() {}
+  public void render() {
+    // Logs.get(SampleHermesGame.class).info("Render sample game...");
+  }
 
   @Override
   public void pause() {}

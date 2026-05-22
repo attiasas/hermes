@@ -4,42 +4,40 @@ import com.badlogic.gdx.Gdx;
 import dev.hermes.api.log.LogLevel;
 
 public final class GdxLogSink implements LogSink {
-    
+
+    private static String formatMessage(LogLevel level, String message) {
+        return "[" + level.name() + "] " + message;
+    }
+
     @Override
     public void log(LogLevel level, String category, String message, Throwable throwable) {
         if (Gdx.app == null) {
             fallbackStderr(level, category, message, throwable);
             return;
         }
+        String formattedMessage = formatMessage(level, message);
         switch (level) {
+            // We handle the level, Gdx default level is INFO.
             case DEBUG:
-                if (throwable != null) {
-                    Gdx.app.debug(category, message + ": " + throwable.getMessage());
-                } else {
-                    Gdx.app.debug(category, message);
-                }
-                break;
             case INFO:
-                Gdx.app.log(category, message);
-                break;
             case WARN:
-                Gdx.app.log(category, "[WARN] " + message);
+                if (throwable != null) {
+                    formattedMessage += ": " + throwable.getMessage();
+                }
+                Gdx.app.log(category, formattedMessage);
                 break;
             case ERROR:
                 if (throwable != null) {
-                    Gdx.app.error(category, message, throwable);
+                    Gdx.app.error(category, formattedMessage, throwable);
                 } else {
-                    Gdx.app.error(category, message);
+                    Gdx.app.error(category, formattedMessage);
                 }
-                break;
-            default:
-                Gdx.app.log(category, message);
                 break;
         }
     }
 
     private static void fallbackStderr(LogLevel level, String category, String message, Throwable throwable) {
-        System.err.println(level + "[" + category + "] " + message);
+        System.err.println("[" + category + "] " + formatMessage(level, message));
         if (throwable != null) {
             throwable.printStackTrace(System.err);
         }

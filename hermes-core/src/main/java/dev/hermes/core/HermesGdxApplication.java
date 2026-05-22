@@ -24,6 +24,11 @@ import dev.hermes.core.render.RenderPipelineExecutor;
  */
 public final class HermesGdxApplication implements ApplicationListener {
 
+  static {
+    Logs.install(new CachingLoggerProvider(new GdxLogSink()));
+  }
+  private static final Logger log = Logs.get(HermesGdxApplication.class);
+
   private final HermesApplication application;
   private HermesEngineImpl engine;
   private SpriteBatch batch;
@@ -38,9 +43,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   public void create() {
     fatalErrorScreen = new HermesFatalErrorScreen();
     try {
-      Logs.install(new CachingLoggerProvider(new GdxLogSink()));
-      Logger log = Logs.get(HermesGdxApplication.class);
-      log.info("HermesGdxApplication created");
+      log.info("Creating Hermes engine...");
       engine = new HermesEngineImpl();
       engine.bindApplication(application);
       batch = new SpriteBatch();
@@ -142,6 +145,7 @@ public final class HermesGdxApplication implements ApplicationListener {
   }
 
   private void enterFatalState(Throwable error) {
+    log.error("Fatal error occurred", error);
     if (fatalErrorScreen == null) {
       fatalErrorScreen = new HermesFatalErrorScreen();
     }
@@ -173,6 +177,7 @@ public final class HermesGdxApplication implements ApplicationListener {
 
   @Override
   public void dispose() {
+    log.info("Disposing Hermes engine...");
     application.dispose();
     if (renderPipeline != null) {
       renderPipeline.dispose();
