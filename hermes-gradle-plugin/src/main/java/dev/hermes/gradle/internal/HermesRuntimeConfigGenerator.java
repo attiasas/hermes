@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Properties;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -28,7 +29,10 @@ public final class HermesRuntimeConfigGenerator {
 
     boolean export = HermesDistributionMode.isDistributionExport(gameProject);
     boolean debug = export ? false : extension.isDebug();
+
     String minLevel = extension.getLogging().resolveMinLevel(debug, export);
+    String patternType = extension.getLogging().getPatternType();
+    List<String> patterns = extension.getLogging().getPatterns();
 
     Properties properties = new Properties();
     HermesLaunchProperties.builder()
@@ -42,6 +46,8 @@ public final class HermesRuntimeConfigGenerator {
         .desktopResizable(desktop.isResizable())
         .desktopForegroundFps(desktop.getForegroundFps())
         .logMinLevel(minLevel)
+        .logPatternType(patternType)
+        .logPatterns(patterns)
         .build()
         .applyTo(properties);
 

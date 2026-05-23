@@ -52,6 +52,9 @@ public final class LoggerImpl implements Logger {
         if (!LogConfig.isEnabled(level)) {
             return;
         }
+        if (!LogConfig.isMatched(category)) {
+            return;
+        }
         sink.log(level, category, message, throwable);
     }
 }

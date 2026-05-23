@@ -4,6 +4,8 @@ import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.scene.SceneContext;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneLifecycle;
@@ -21,6 +23,8 @@ import java.util.Optional;
 
 /** Stack of loaded scenes with go-to, push, and pop transitions. */
 public final class SceneStack {
+
+  private static final Logger log = Logs.get(SceneStack.class);
 
   private final SceneRegistryImpl sceneRegistry;
   private final ComponentRegistry componentRegistry;
@@ -90,6 +94,7 @@ public final class SceneStack {
   }
 
   private SceneInstance loadScene(SceneDefinition definition) {
+    log.debug("Loading scene: " + definition.id());
     WorldImpl world = new WorldImpl();
     SceneLoadContext ctx =
         new SceneLoadContext() {
@@ -114,6 +119,7 @@ public final class SceneStack {
   }
 
   private void enterScene(SceneInstance instance) {
+    log.debug("Entering scene: " + instance.id());
     SceneLifecycle lifecycle = instance.definition().lifecycle();
     if (lifecycle != null) {
       lifecycle.onEnter(sceneContext(instance));
@@ -121,6 +127,7 @@ public final class SceneStack {
   }
 
   private void exitScene(SceneInstance instance) {
+    log.debug("Exiting scene: " + instance.id());
     SceneLifecycle lifecycle = instance.definition().lifecycle();
     if (lifecycle != null) {
       lifecycle.onExit(sceneContext(instance));
@@ -129,6 +136,7 @@ public final class SceneStack {
   }
 
   private void pauseScene(SceneInstance instance) {
+    log.debug("Pausing scene: " + instance.id());
     instance.setPaused(true);
     SceneLifecycle lifecycle = instance.definition().lifecycle();
     if (lifecycle != null) {
@@ -137,6 +145,7 @@ public final class SceneStack {
   }
 
   private void resumeScene(SceneInstance instance) {
+    log.debug("Resuming scene: " + instance.id());
     instance.setPaused(false);
     SceneLifecycle lifecycle = instance.definition().lifecycle();
     if (lifecycle != null) {

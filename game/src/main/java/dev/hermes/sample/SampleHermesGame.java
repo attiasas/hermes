@@ -53,9 +53,7 @@ public final class SampleHermesGame implements HermesApplication {
   public void resize(int width, int height) {}
 
   @Override
-  public void render() {
-    // Logs.get(SampleHermesGame.class).info("Render sample game...");
-  }
+  public void render() {}
 
   @Override
   public void pause() {}

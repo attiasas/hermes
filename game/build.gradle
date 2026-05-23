@@ -7,11 +7,13 @@ version = '0.1.0'
 hermes {
   applicationClass = 'dev.hermes.sample.SampleHermesGame'
   assetsDirectory = 'src/main/resources/assets'
-  // debug = true
+  debug = true
 
-  // logging {
-  //   minLevel = ''
-  // }
+  logging {
+    // minLevel = ''
+    // patternType = 'WILDCARD'
+    patterns = ['*SceneStack*']
+  }
 
   platforms {
     desktop {

@@ -41,6 +41,11 @@ public final class TeaVMBuilder {
     String gameScene = System.getProperty("hermes.game.scene", "scenes/main.json");
     int devServerPort = Integer.parseInt(System.getProperty("hermes.html.devServerPort", "8080"));
     boolean webAssembly = Boolean.parseBoolean(System.getProperty("hermes.html.webAssembly", "true"));
+
+    String minLevel = System.getProperty("hermes.log.minLevel", "");
+    String patterns = System.getProperty("hermes.log.patterns", "");
+    String patternType = System.getProperty("hermes.log.patternType", "WILDCARD");
+
     String assetsPath = System.getProperty("hermes.assets.dir");
     if (assetsPath == null || assetsPath.isBlank()) {
       throw new IllegalStateException(
@@ -48,7 +53,7 @@ public final class TeaVMBuilder {
     }
 
     File runtimeConfigDir = new File("build/hermes-runtime");
-    writeRuntimeProperties(runtimeConfigDir, applicationClass, debug, title, width, height, gameScene);
+    writeRuntimeProperties(runtimeConfigDir, applicationClass, debug, minLevel, patternType, patterns, title, width, height, gameScene);
 
     File launcherSources = new File("src/main/java");
     TeaCompiler compiler =
@@ -101,6 +106,9 @@ public final class TeaVMBuilder {
       File dir,
       String applicationClass,
       boolean debug,
+      String minLevel,
+      String patternType,
+      String patterns,
       String title,
       int width,
       int height,
@@ -115,6 +123,13 @@ public final class TeaVMBuilder {
     properties.setProperty("hermes.window.title", title);
     properties.setProperty("hermes.window.width", Integer.toString(width));
     properties.setProperty("hermes.window.height", Integer.toString(height));
+    if (minLevel != null && !minLevel.isBlank()) {
+      properties.setProperty("hermes.log.minLevel", minLevel);
+    }
+    if (patterns != null && !patterns.isBlank()) {
+      properties.setProperty("hermes.log.patterns", patterns);
+      properties.setProperty("hermes.log.patternType", patternType);
+    }
     properties.setProperty("hermes.game.scene", gameScene);
     File file = new File(dir, "hermes-runtime.properties");
     try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {

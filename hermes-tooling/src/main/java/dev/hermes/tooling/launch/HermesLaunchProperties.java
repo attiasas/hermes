@@ -109,6 +109,17 @@ public final class HermesLaunchProperties {
       return put("hermes.log.minLevel", value);
     }
 
+    public Builder logPatternType(String value) {
+      return put("hermes.log.patternType", value);
+    }
+
+    public Builder logPatterns(List<String> values) {
+      if (values != null && !values.isEmpty()) {
+        return put("hermes.log.patterns", String.join(";", values));
+      }
+      return this;
+    }
+
     public HermesLaunchProperties build() {
       return new HermesLaunchProperties(properties);
     }
