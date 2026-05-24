@@ -131,7 +131,12 @@ public final class HermesExportTasks {
                         copy -> {
                             copy.setGroup("hermes");
                             copy.setDescription("Stage HTML export output");
-                            copy.dependsOn(":hermes-launcher-html:buildRelease", "generateTeaLauncher", "classes", "generateAssetList");
+                            copy.dependsOn(
+                                    ":hermes-launcher-html:buildRelease",
+                                    "generateTeaLauncher",
+                                    "generateHermesRuntimeConfig",
+                                    "classes",
+                                    "generateAssetList");
                             copy.doFirst(t -> HermesExportStaging.cleanBeforeCopy(gameProject, staging));
                             copy.from(launcher.file("build/dist"));
                             copy.into(staging);

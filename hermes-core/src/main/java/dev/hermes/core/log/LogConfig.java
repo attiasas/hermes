@@ -1,50 +1,60 @@
 package dev.hermes.core.log;
 
-import java.util.List;
-
 import dev.hermes.api.log.LogLevel;
-import dev.hermes.core.HermesRuntimeConfig;
+import dev.hermes.core.config.RuntimeConfigServices;
 import dev.hermes.core.utils.StringMatcher;
 import dev.hermes.core.utils.StringMatcher.MatchType;
+import java.util.List;
 
 final class LogConfig {
 
-    private static final int MIN_SEVERITY = resolveMinSeverity();
-    private static final StringMatcher MATCHER = resolveMatcher();
+    private static volatile int minSeverity = -1;
+    private static volatile StringMatcher matcher;
+    private static volatile boolean matcherResolved;
 
-    private LogConfig() {
-    }
+    private LogConfig() {}
 
     static boolean isEnabled(LogLevel level) {
-        return level.severity() >= MIN_SEVERITY;
+        ensureInitialized();
+        return level.severity() >= minSeverity;
     }
 
     static boolean isMatched(String category) {
-        if (MATCHER == null) {
+        ensureInitialized();
+        if (matcher == null) {
             return true;
         }
-        return MATCHER.matches(category);
+        return matcher.matches(category);
     }
 
     static int minSeverity() {
-        return MIN_SEVERITY;
+        ensureInitialized();
+        return minSeverity;
     }
 
-    private static StringMatcher resolveMatcher() {
-        String patterns = HermesRuntimeConfig.get("hermes.log.patterns", "");
-        if (!patterns.isBlank()) {
-            MatchType type = MatchType.valueOf(HermesRuntimeConfig.get("hermes.log.patternType", "WILDCARD"));
-            return new StringMatcher(type == null ? MatchType.WILDCARD : type, List.of(patterns.split(";")));
-        }
-        return null;
+    static void reinitialize() {
+        minSeverity = -1;
+        matcher = null;
+        matcherResolved = false;
     }
 
-    private static int resolveMinSeverity() {
-        String explicit = HermesRuntimeConfig.get("hermes.log.minLevel", "");
-        if (!explicit.isBlank()) {
-            return LogLevel.parse(explicit).severity();
+    private static void ensureInitialized() {
+        if (minSeverity >= 0 && matcherResolved) {
+            return;
         }
-        boolean debug = Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.debug", "false"));
-        return (debug ? LogLevel.DEBUG : LogLevel.INFO).severity();
+        synchronized (LogConfig.class) {
+            if (minSeverity >= 0 && matcherResolved) {
+                return;
+            }
+            minSeverity = RuntimeConfigServices.get().logMinSeverity();
+            String patterns = RuntimeConfigServices.get().logPatterns();
+            if (patterns != null && !patterns.isBlank()) {
+                MatchType type = MatchType.valueOf(RuntimeConfigServices.get().logPatternType());
+                matcher = new StringMatcher(type, List.of(patterns.split(";")));
+            } else {
+                matcher = null;
+            }
+            matcherResolved = true;
+        }
     }
 }

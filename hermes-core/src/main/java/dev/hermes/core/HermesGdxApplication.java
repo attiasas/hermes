@@ -16,6 +16,9 @@ import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.log.CachingLoggerProvider;
 import dev.hermes.core.log.GdxLogSink;
+import dev.hermes.core.log.LoggingRuntime;
+import dev.hermes.core.config.RuntimeConfigServiceImpl;
+import dev.hermes.core.config.RuntimeConfigServices;
 import dev.hermes.core.render.RenderPipelineExecutor;
 
 /**
@@ -44,6 +47,12 @@ public final class HermesGdxApplication implements ApplicationListener {
     public void create() {
         fatalErrorScreen = new HermesFatalErrorScreen();
         try {
+            RuntimeConfigServiceImpl runtimeConfig = new RuntimeConfigServiceImpl();
+            application.configureRuntime(runtimeConfig.builder());
+            runtimeConfig.applyOverrides();
+            RuntimeConfigServices.install(runtimeConfig);
+            LoggingRuntime.reinitialize();
+
             log.info("Creating Hermes engine...");
             engine = new HermesEngineImpl();
             engine.bindApplication(application);

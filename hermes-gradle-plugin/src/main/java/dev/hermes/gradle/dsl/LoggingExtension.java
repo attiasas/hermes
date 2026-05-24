@@ -45,6 +45,6 @@ public class LoggingExtension {
         if (debug) {
             return "DEBUG";
         }
-        return null;
+        return "INFO";
     }
 }

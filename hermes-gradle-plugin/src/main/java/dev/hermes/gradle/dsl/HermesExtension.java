@@ -13,6 +13,7 @@ public class HermesExtension {
     private final PlatformsExtension platforms = new PlatformsExtension();
     private final IconsExtension icons = new IconsExtension();
     private final LoggingExtension logging = new LoggingExtension();
+    private final RuntimeExtension runtime = new RuntimeExtension();
 
     public String getApplicationClass() {
         return applicationClass;
@@ -44,6 +45,17 @@ public class HermesExtension {
 
     public LoggingExtension getLogging() {
         return logging;
+    }
+
+    public RuntimeExtension getRuntime() {
+        return runtime;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public void runtime(Closure configure) {
+        configure.setDelegate(runtime);
+        configure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        configure.call(runtime);
     }
 
     @SuppressWarnings("rawtypes")

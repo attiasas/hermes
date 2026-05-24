@@ -4,14 +4,10 @@ import dev.hermes.gradle.internal.HermesGameConfigs;
 import dev.hermes.gradle.internal.HermesPlatforms;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;
-import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.launch.HermesLaunchProperties;
-import dev.hermes.tooling.platform.DesktopPlatform;
-import dev.hermes.tooling.platform.HtmlPlatform;
-
+import dev.hermes.tooling.launch.LaunchMode;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.gradle.api.tasks.JavaExec;
 
 /**
@@ -55,37 +51,20 @@ public final class HermesDistributionMode {
     static void applyDesktop(JavaExec task, ProjectHermesContext context) {
         List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
         dev.hermes.gradle.internal.HermesJvmArgs.stripNativeAccess(jvmArgs);
-        DesktopPlatform desktop = context.config().getPlatforms().getDesktop();
-        HermesGameConfig gameConfig = context.gameConfig();
         jvmArgs.addAll(
-                HermesLaunchProperties.builder()
-                        .applicationClass(context.applicationClass())
-                        .debug(false)
-                        .windowTitle(gameConfig.getTitle())
-                        .windowSize(desktop.getWidth(), desktop.getHeight())
-                        .scene(gameConfig.getScene())
-                        .renderPipeline(gameConfig.getRenderPipeline())
-                        .desktopVsync(desktop.isVsync())
-                        .desktopResizable(desktop.isResizable())
-                        .desktopForegroundFps(desktop.getForegroundFps())
-                        .build()
+                LaunchConfigGradle.resolve(context.gameProject(), LaunchMode.DISTRIBUTION_EXPORT)
                         .toJvmArgs());
         task.setJvmArgs(jvmArgs);
     }
 
     public static void applyHtml(JavaExec task, ProjectHermesContext context, java.io.File assetsDir) {
-        HtmlPlatform html = context.config().getPlatforms().getHtml();
-        HermesGameConfig gameConfig = context.gameConfig();
+        HermesLaunchProperties base =
+                LaunchConfigGradle.resolve(context.gameProject(), LaunchMode.DISTRIBUTION_EXPORT);
+        java.io.File runtimeDir = context.gameProject().file("build/generated/hermes-runtime");
         HermesLaunchProperties props =
                 HermesLaunchProperties.builder()
-                        .applicationClass(context.applicationClass())
-                        .debug(false)
-                        .windowTitle(gameConfig.getTitle())
-                        .windowSize(html.getWidth(), html.getHeight())
-                        .scene(gameConfig.getScene())
-                        .renderPipeline(gameConfig.getRenderPipeline())
-                        .htmlDevServerPort(html.getDevServerPort())
-                        .htmlWebAssembly(html.isWebAssembly())
+                        .putAll(base.asMap())
+                        .runtimeConfigDir(runtimeDir.getAbsolutePath())
                         .assetsDir(assetsDir.getAbsolutePath())
                         .gameSourcesDir(context.gameProject().file("src/main/java").getAbsolutePath())
                         .build();
@@ -98,7 +77,7 @@ public final class HermesDistributionMode {
             org.gradle.api.Project gameProject,
             HermesConfig config,
             String applicationClass,
-            HermesGameConfig gameConfig) {
+            dev.hermes.tooling.config.HermesGameConfig gameConfig) {
 
         public static ProjectHermesContext of(org.gradle.api.Project gameProject) {
             HermesConfig config = HermesConfig.resolve(gameProject);

@@ -6,10 +6,10 @@ import dev.hermes.gradle.html.TeaLauncherGenerator;
 import dev.hermes.gradle.internal.HermesGameConfigs;
 import dev.hermes.gradle.internal.HermesJvmArgs;
 import dev.hermes.gradle.internal.HermesPlatforms;
-import dev.hermes.tooling.config.HermesGameConfig;
+import dev.hermes.gradle.internal.LaunchConfigGradle;
 import dev.hermes.tooling.launch.HermesLaunchProperties;
-import dev.hermes.tooling.platform.DesktopPlatform;
-import dev.hermes.tooling.platform.HtmlPlatform;
+import dev.hermes.tooling.launch.LaunchMode;
+import dev.hermes.tooling.launch.RuntimeConfigKeys;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -101,7 +101,8 @@ public final class HermesRunTasks {
                             task.dependsOn(
                                     launcher.getTasks().named("classes"),
                                     project.getTasks().named("classes"),
-                                    "generateAssetList");
+                                    "generateAssetList",
+                                    "generateHermesRuntimeConfig");
                             task.getMainClass().set("dev.hermes.launcher.desktop.Lwjgl3Launcher");
                             SourceSet launcherMain =
                                     launcher.getExtensions().getByType(SourceSetContainer.class).getByName("main");
@@ -112,7 +113,6 @@ public final class HermesRunTasks {
                             JavaToolchainService toolchains = project.getExtensions().getByType(JavaToolchainService.class);
                             task.getJavaLauncher()
                                     .set(toolchains.launcherFor(spec -> spec.getLanguageVersion().set(JavaLanguageVersion.of(17))));
-                            applyDesktopJvmArgs(task);
                             applyDesktopSystemProperties(task, project, extension);
                             String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
                             if (os.contains("mac")) {
@@ -136,24 +136,56 @@ public final class HermesRunTasks {
 
     private static void applyDesktopSystemProperties(
             JavaExec task, Project gameProject, HermesExtension extension) {
-        DesktopPlatform desktop = HermesPlatforms.resolve(gameProject).getDesktop();
-        HermesGameConfig config = HermesGameConfigs.parse(gameProject);
-        List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
-        HermesJvmArgs.stripNativeAccess(jvmArgs);
-        HermesLaunchProperties.Builder launch =
+        applyLaunchProperties(task, gameProject, extension, LaunchMode.DEV, null, true);
+    }
+
+    private static void applyHtmlSystemProperties(
+            JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
+        applyLaunchProperties(task, gameProject, extension, LaunchMode.DEV, assetsDir, false);
+    }
+
+    private static void applyLaunchProperties(
+            JavaExec task,
+            Project gameProject,
+            HermesExtension extension,
+            LaunchMode mode,
+            File assetsDir,
+            boolean desktop) {
+        HermesLaunchProperties base =
+                LaunchConfigGradle.resolveFromParts(
+                        extension,
+                        HermesGameConfigs.parse(gameProject),
+                        HermesPlatforms.resolve(gameProject),
+                        mode);
+        File runtimeDir = gameProject.file("build/generated/hermes-runtime");
+        HermesLaunchProperties.Builder builder =
                 HermesLaunchProperties.builder()
-                        .applicationClass(extension.getApplicationClass())
-                        .debug(extension.isDebug())
-                        .windowTitle(config.getTitle())
-                        .windowSize(desktop.getWidth(), desktop.getHeight())
-                        .scene(config.getScene())
-                        .renderPipeline(config.getRenderPipeline())
-                        .desktopVsync(desktop.isVsync())
-                        .desktopResizable(desktop.isResizable())
-                        .desktopForegroundFps(desktop.getForegroundFps())
-                        .desktopGradleRun();
-        jvmArgs.addAll(launch.build().toJvmArgs());
-        task.setJvmArgs(jvmArgs);
+                        .putAll(base.asMap())
+                        .runtimeConfigDir(runtimeDir.getAbsolutePath());
+        if (assetsDir != null) {
+            builder.assetsDir(assetsDir.getAbsolutePath());
+            builder.gameSourcesDir(gameProject.file("src/main/java").getAbsolutePath());
+        }
+        HermesLaunchProperties props = builder.build();
+
+        if (desktop) {
+            List<String> jvmArgs = new ArrayList<>(task.getJvmArgs());
+            HermesJvmArgs.stripNativeAccess(jvmArgs);
+            for (String arg : props.toJvmArgs()) {
+                if (arg.startsWith("-Dhermes.log.")
+                        || arg.startsWith("-D" + RuntimeConfigKeys.DEBUG + "=")) {
+                    continue;
+                }
+                jvmArgs.add(arg);
+            }
+            jvmArgs.add("-Dhermes.desktop.gradleRun=true");
+            task.setJvmArgs(jvmArgs);
+            applyDesktopJvmArgs(task);
+        } else {
+            for (var entry : props.asMap().entrySet()) {
+                task.systemProperty(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     private static void wireHtmlRun(Project project, HermesExtension extension, File assetsDir) {
@@ -182,6 +214,7 @@ public final class HermesRunTasks {
                             task.setDescription("Run the game in a local HTML/TeaVM dev server at http://localhost:8080/");
                             task.dependsOn(
                                     "generateTeaLauncher",
+                                    "generateHermesRuntimeConfig",
                                     launcher.getTasks().named("classes"),
                                     project.getTasks().named("classes"),
                                     "generateAssetList");
@@ -209,6 +242,7 @@ public final class HermesRunTasks {
                                 return;
                             }
                             task.dependsOn(gameProject.getTasks().named("generateTeaLauncher"));
+                            task.dependsOn(gameProject.getTasks().named("generateHermesRuntimeConfig"));
                             applyHtmlSystemProperties(task, gameProject, extension, assetsDir);
                         });
     }
@@ -243,28 +277,6 @@ public final class HermesRunTasks {
                                         .getTasks()
                                         .named("compileJava")
                                         .configure(t -> t.dependsOn(gameProject.getTasks().named("generateTeaLauncher"))));
-    }
-
-    private static void applyHtmlSystemProperties(
-            JavaExec task, Project gameProject, HermesExtension extension, File assetsDir) {
-        HtmlPlatform html = HermesPlatforms.resolve(gameProject).getHtml();
-        HermesGameConfig config = HermesGameConfigs.parse(gameProject);
-        HermesLaunchProperties props =
-                HermesLaunchProperties.builder()
-                        .applicationClass(extension.getApplicationClass())
-                        .debug(extension.isDebug())
-                        .windowTitle(config.getTitle())
-                        .windowSize(html.getWidth(), html.getHeight())
-                        .scene(config.getScene())
-                        .renderPipeline(config.getRenderPipeline())
-                        .htmlDevServerPort(html.getDevServerPort())
-                        .htmlWebAssembly(html.isWebAssembly())
-                        .assetsDir(assetsDir.getAbsolutePath())
-                        .gameSourcesDir(gameProject.file("src/main/java").getAbsolutePath())
-                        .build();
-        for (var entry : props.asMap().entrySet()) {
-            task.systemProperty(entry.getKey(), entry.getValue());
-        }
     }
 
     private static void wireAndroidRun(Project project, HermesExtension extension) {

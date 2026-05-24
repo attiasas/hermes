@@ -1,5 +1,6 @@
 package dev.hermes.api;
 
+import dev.hermes.api.config.RuntimeConfigBuilder;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.render.HermesRenderConfigurator;
 
@@ -23,6 +24,11 @@ public interface HermesApplication {
      */
     default void configureRendering(HermesRenderConfigurator configurator) {
     }
+
+    /**
+     * Optional programmatic overrides applied before engine bootstrap and logging initialization.
+     */
+    default void configureRuntime(RuntimeConfigBuilder config) {}
 
     /**
      * Creates the session shared across scenes; override when save/audio state is needed.

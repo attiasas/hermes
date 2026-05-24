@@ -122,6 +122,32 @@ public final class HermesLaunchProperties {
             return this;
         }
 
+        public Builder custom(String key, String value) {
+            if (key == null || key.isBlank()) {
+                return this;
+            }
+            if (key.startsWith("hermes.")) {
+                return put(key, value);
+            }
+            if (key.startsWith("custom.")) {
+                return put("hermes." + key, value);
+            }
+            return put("hermes.custom." + key, value);
+        }
+
+        public Builder runtimeConfigDir(String absolutePath) {
+            return put(RuntimeConfigKeys.RUNTIME_CONFIG_DIR, absolutePath);
+        }
+
+        public Builder putAll(Map<String, String> values) {
+            if (values != null) {
+                for (Map.Entry<String, String> entry : values.entrySet()) {
+                    put(entry.getKey(), entry.getValue());
+                }
+            }
+            return this;
+        }
+
         public HermesLaunchProperties build() {
             return new HermesLaunchProperties(properties);
         }

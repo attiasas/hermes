@@ -58,6 +58,12 @@ Standalone projects created with `hermes new` use (2). Publish once from the eng
 Doctor messaging treats Maven local + published version as the primary path for template users; `HERMES_HOME` is
 optional when artifacts are already in `~/.m2`.
 
+## Runtime configuration
+
+Build-time settings (logging, window, scene paths, custom keys) are merged by `LaunchConfigResolver` in `hermes-tooling`
+and written once to `hermes-runtime.properties`. Desktop, HTML, and Android launchers bundle or classpath that file;
+runtime code reads it through `HermesRuntimeConfig` and `RuntimeConfigService`. See [runtime-config.md](runtime-config.md).
+
 ## `.hermes/platforms/` lifecycle
 
 Standalone game repos contain only the `game` module. Platform launchers live under `.hermes/platforms/`:

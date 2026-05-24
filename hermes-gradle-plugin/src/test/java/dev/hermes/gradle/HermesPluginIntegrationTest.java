@@ -156,6 +156,32 @@ class HermesPluginIntegrationTest {
         assertEquals(SUCCESS, compile.task(":hermes-launcher-html:compileJava").getOutcome());
     }
 
+    @Test
+    void generateHermesRuntimeConfig_writesLoggingKeys(@TempDir Path tempDir) throws IOException {
+        Path projectDir = materializeTemplate(tempDir.resolve("logging-config"));
+        Path buildGradle = projectDir.resolve("game/build.gradle");
+        String existing = Files.readString(buildGradle, StandardCharsets.UTF_8);
+        Files.writeString(
+                buildGradle,
+                existing.replace(
+                        "debug = true",
+                        "debug = true\n\n    logging {\n        minLevel = 'WARN'\n        patterns = ['*Scene*']\n    }"),
+                StandardCharsets.UTF_8);
+
+        GradleRunner.create()
+                .withProjectDir(projectDir.toFile())
+                .withPluginClasspath()
+                .withArguments(":game:generateHermesRuntimeConfig", "-q")
+                .build();
+
+        String props =
+                Files.readString(
+                        projectDir.resolve("game/build/generated/hermes-runtime/hermes-runtime.properties"),
+                        StandardCharsets.UTF_8);
+        assertTrue(props.contains("hermes.log.minLevel=WARN"));
+        assertTrue(props.contains("hermes.log.patterns=*Scene*"));
+    }
+
     private static void enableOnlyPlatform(Path projectDir, String platform) throws IOException {
         Path settingsFile = projectDir.resolve("settings.gradle");
         String settings = Files.readString(settingsFile, StandardCharsets.UTF_8).replace("\r\n", "\n");

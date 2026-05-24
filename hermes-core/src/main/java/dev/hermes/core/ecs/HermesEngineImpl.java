@@ -4,6 +4,8 @@ import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
+import dev.hermes.api.config.RuntimeConfigService;
+import dev.hermes.core.config.RuntimeConfigServices;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,6 +57,11 @@ public final class HermesEngineImpl implements HermesEngine {
     @Override
     public void addSystem(System system, SystemScope scope) {
         systems.add(new SystemEntry(system, scope));
+    }
+
+    @Override
+    public RuntimeConfigService runtimeConfig() {
+        return RuntimeConfigServices.get();
     }
 
     public List<SystemEntry> systems() {

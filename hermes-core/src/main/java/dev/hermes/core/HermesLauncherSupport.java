@@ -1,6 +1,7 @@
 package dev.hermes.core;
 
 import dev.hermes.api.HermesApplication;
+import dev.hermes.core.config.RuntimeConfigServices;
 
 /**
  * Loads the user {@link HermesApplication} from launch configuration (JVM properties or packaged properties).
@@ -29,38 +30,38 @@ public final class HermesLauncherSupport {
     }
 
     public static boolean isDebugEnabled() {
-        return Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.debug", "false"));
+        return RuntimeConfigServices.get().debug();
     }
 
     public static int windowWidth() {
-        return Integer.parseInt(HermesRuntimeConfig.get("hermes.window.width", "640"));
+        return RuntimeConfigServices.get().getInt("hermes.window.width", 640);
     }
 
     public static int windowHeight() {
-        return Integer.parseInt(HermesRuntimeConfig.get("hermes.window.height", "480"));
+        return RuntimeConfigServices.get().getInt("hermes.window.height", 480);
     }
 
     public static String windowTitle() {
-        return HermesRuntimeConfig.get("hermes.window.title", "Hermes");
+        return RuntimeConfigServices.get().get("hermes.window.title", "Hermes");
     }
 
     public static boolean desktopVsync() {
-        return Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.desktop.vsync", "true"));
+        return RuntimeConfigServices.get().getBoolean("hermes.desktop.vsync", true);
     }
 
     public static boolean desktopResizable() {
-        return Boolean.parseBoolean(HermesRuntimeConfig.get("hermes.desktop.resizable", "true"));
+        return RuntimeConfigServices.get().getBoolean("hermes.desktop.resizable", true);
     }
 
     public static int desktopForegroundFps() {
-        return Integer.parseInt(HermesRuntimeConfig.get("hermes.desktop.foregroundFps", "0"));
+        return RuntimeConfigServices.get().getInt("hermes.desktop.foregroundFps", 0);
     }
 
     public static String gameScenePath() {
-        return HermesRuntimeConfig.get("hermes.game.scene", "scenes/main.json");
+        return RuntimeConfigServices.get().gameScene();
     }
 
     public static String gameRenderPipelinePath() {
-        return HermesRuntimeConfig.get("hermes.game.renderPipeline", "render/pipeline.json");
+        return RuntimeConfigServices.get().gameRenderPipeline();
     }
 }

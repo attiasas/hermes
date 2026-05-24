@@ -1,5 +1,6 @@
 package dev.hermes.api.ecs;
 
+import dev.hermes.api.config.RuntimeConfigService;
 import dev.hermes.api.scene.SceneManager;
 
 /**
@@ -14,4 +15,6 @@ public interface HermesEngine {
     void addSystem(System system);
 
     void addSystem(System system, SystemScope scope);
+
+    RuntimeConfigService runtimeConfig();
 }
