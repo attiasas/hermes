@@ -12,27 +12,32 @@ import dev.hermes.api.render.HermesRenderConfigurator;
  */
 public interface HermesApplication {
 
-  /**
-   * Called once before pending scene requests are processed. Register custom components and systems, and create
-   * entities in code here.
-   */
-  void onCreate(HermesEngine engine);
+    /**
+     * Called once before pending scene requests are processed. Register custom components and systems, and create
+     * entities in code here.
+     */
+    void onCreate(HermesEngine engine);
 
-  /** Registers custom render passes referenced by pipeline JSON {@code custom} handlers. */
-  default void configureRendering(HermesRenderConfigurator configurator) {}
+    /**
+     * Registers custom render passes referenced by pipeline JSON {@code custom} handlers.
+     */
+    default void configureRendering(HermesRenderConfigurator configurator) {
+    }
 
-  /** Creates the session shared across scenes; override when save/audio state is needed. */
-  default HermesSession createSession() {
-    return HermesSession.EMPTY;
-  }
+    /**
+     * Creates the session shared across scenes; override when save/audio state is needed.
+     */
+    default HermesSession createSession() {
+        return HermesSession.EMPTY;
+    }
 
-  void resize(int width, int height);
+    void resize(int width, int height);
 
-  void render();
+    void render();
 
-  void pause();
+    void pause();
 
-  void resume();
+    void resume();
 
-  void dispose();
+    void dispose();
 }

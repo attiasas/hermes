@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    tags: [ "v*" ]
   workflow_dispatch:
 
 permissions:
@@ -110,7 +110,7 @@ jobs:
           path: release-cli/*.zip
 
   release:
-    needs: [build-engine, build-cli]
+    needs: [ build-engine, build-cli ]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts

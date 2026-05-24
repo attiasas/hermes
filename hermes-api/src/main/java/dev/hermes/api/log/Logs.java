@@ -1,11 +1,14 @@
 package dev.hermes.api.log;
 
-/** Static access when {@link dev.hermes.api.ecs.HermesEngine} is not available. */
+/**
+ * Static access when {@link dev.hermes.api.ecs.HermesEngine} is not available.
+ */
 public final class Logs {
 
     private static volatile LoggerProvider provider = NoopLoggerProvider.INSTANCE;
 
-    private Logs() {}
+    private Logs() {
+    }
 
     public static void install(LoggerProvider newProvider) {
         provider = newProvider != null ? newProvider : NoopLoggerProvider.INSTANCE;

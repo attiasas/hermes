@@ -3,17 +3,38 @@
     {
       "id": "main-camera",
       "components": {
-        "Transform": { "x": 320, "y": 240, "z": 1 },
-        "Camera": { "projection": "orthographic", "active": true, "zoom": 1 }
+        "Transform": {
+          "x": 320,
+          "y": 240,
+          "z": 1
+        },
+        "Camera": {
+          "projection": "orthographic",
+          "active": true,
+          "zoom": 1
+        }
       }
     },
     {
       "id": "logo",
       "components": {
-        "Transform": { "x": 320, "y": 240, "z": 2, "scaleX": 0.35, "scaleY": 0.35 },
-        "Sprite": { "texture": "hermes-logo.png" },
-        "Material": { "shader": "default/unlit" },
-        "PulseMarker": { "amplitude": 0.15, "speed": 2.5 }
+        "Transform": {
+          "x": 320,
+          "y": 240,
+          "z": 2,
+          "scaleX": 0.35,
+          "scaleY": 0.35
+        },
+        "Sprite": {
+          "texture": "hermes-logo.png"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        },
+        "PulseMarker": {
+          "amplitude": 0.15,
+          "speed": 2.5
+        }
       }
     }
   ]

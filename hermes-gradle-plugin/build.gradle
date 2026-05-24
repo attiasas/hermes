@@ -1,6 +1,6 @@
 plugins {
-  id 'java-gradle-plugin'
-  id 'maven-publish'
+    id 'java-gradle-plugin'
+    id 'maven-publish'
 }
 
 group = 'dev.hermes'
@@ -9,20 +9,20 @@ version = '0.1.0-SNAPSHOT'
 def bundledPlatformsResources = layout.buildDirectory.dir('generated/hermes-platforms-resources')
 
 tasks.register('bundleHermesPlatforms', Copy) {
-  description = 'Bundle launcher sources and platform build templates for standalone game sync'
-  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  into bundledPlatformsResources
-  from('../hermes-templates/platforms') {
-    into 'hermes-templates/platforms'
-  }
-  ['hermes-launcher-desktop', 'hermes-launcher-html', 'hermes-launcher-android'].each { module ->
-    def moduleDir = file("../${module}")
-    inputs.dir(moduleDir).withPropertyName("${module}-sources")
-    from(moduleDir) {
-      into "hermes-platforms/${module}"
-      exclude 'build/**', '.gradle/**', 'bin/**', 'build.gradle'
+    description = 'Bundle launcher sources and platform build templates for standalone game sync'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    into bundledPlatformsResources
+    from('../hermes-templates/platforms') {
+        into 'hermes-templates/platforms'
     }
-  }
+    ['hermes-launcher-desktop', 'hermes-launcher-html', 'hermes-launcher-android'].each { module ->
+        def moduleDir = file("../${module}")
+        inputs.dir(moduleDir).withPropertyName("${module}-sources")
+        from(moduleDir) {
+            into "hermes-platforms/${module}"
+            exclude 'build/**', '.gradle/**', 'bin/**', 'build.gradle'
+        }
+    }
 }
 
 sourceSets.main.resources.srcDir(bundledPlatformsResources)
@@ -30,37 +30,37 @@ tasks.named('processResources') { dependsOn bundleHermesPlatforms }
 tasks.named('jar') { dependsOn bundleHermesPlatforms }
 
 repositories {
-  mavenCentral()
-  google()
+    mavenCentral()
+    google()
 }
 
 gradlePlugin {
-  plugins {
-    hermes {
-      id = 'dev.hermes'
-      implementationClass = 'dev.hermes.gradle.HermesPlugin'
+    plugins {
+        hermes {
+            id = 'dev.hermes'
+            implementationClass = 'dev.hermes.gradle.HermesPlugin'
+        }
+        hermesSettings {
+            id = 'dev.hermes.settings'
+            implementationClass = 'dev.hermes.gradle.HermesSettingsPlugin'
+        }
     }
-    hermesSettings {
-      id = 'dev.hermes.settings'
-      implementationClass = 'dev.hermes.gradle.HermesSettingsPlugin'
-    }
-  }
 }
 
 dependencies {
-  implementation project(':hermes-tooling')
-  testImplementation project(':hermes-tooling')
-  implementation 'com.google.code.gson:gson:2.13.1'
-  implementation gradleApi()
-  implementation localGroovy()
-  implementation 'org.apache.groovy:groovy:4.0.26'
-  testImplementation gradleTestKit()
-  testImplementation platform('org.junit:junit-bom:5.11.4')
-  testImplementation 'org.junit.jupiter:junit-jupiter'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    implementation project(':hermes-tooling')
+    testImplementation project(':hermes-tooling')
+    implementation 'com.google.code.gson:gson:2.13.1'
+    implementation gradleApi()
+    implementation localGroovy()
+    implementation 'org.apache.groovy:groovy:4.0.26'
+    testImplementation gradleTestKit()
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-  useJUnitPlatform()
-  dependsOn bundleHermesPlatforms
+    useJUnitPlatform()
+    dependsOn bundleHermesPlatforms
 }

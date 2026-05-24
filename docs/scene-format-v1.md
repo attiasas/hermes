@@ -1,10 +1,14 @@
 # Scene format v1
 
-Scene files describe entities and their components. They live under the game module assets directory (default `src/main/resources/assets/`, configurable via `hermes.assetsDirectory` in `game/build.gradle`) and are referenced from `hermes.json` via the `scene` field.
+Scene files describe entities and their components. They live under the game module assets directory (default
+`src/main/resources/assets/`, configurable via `hermes.assetsDirectory` in `game/build.gradle`) and are referenced from
+`hermes.json` via the `scene` field.
 
-Hermes is **pre-release**; the scene format stays **v1** until 1.0. JSON rules may change — update this doc in the same PR when they do.
+Hermes is **pre-release**; the scene format stays **v1** until 1.0. JSON rules may change — update this doc in the same
+PR when they do.
 
-Every entity with a `Sprite` or `Mesh` component **must** also include a `Material` component. Scenes without it fail at load time with `SceneParseException`.
+Every entity with a `Sprite` or `Mesh` component **must** also include a `Material` component. Scenes without it fail at
+load time with `SceneParseException`.
 
 ## Top-level shape
 
@@ -25,35 +29,36 @@ Every entity with a `Sprite` or `Mesh` component **must** also include a `Materi
 
 ## Fields
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `entities` | No | Array of entity objects. Omitted or empty means an empty scene. |
-| `entities[]` | — | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`. |
-| `entities[].id` | No | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime. |
-| `entities[].kind` | No | Optional logical type tag (e.g. `"character"`, `"prop"`). Omitted entities use the unset kind. Used for `World.entitiesWithKind` and future save/load; does not affect component parsing. |
-| `entities[].components` | No | Map of component type name → property object. |
-| `renderPipeline` | No | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
+| Field                   | Required | Description                                                                                                                                                                                                                       |
+|-------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `entities`              | No       | Array of entity objects. Omitted or empty means an empty scene.                                                                                                                                                                   |
+| `entities[]`            | —        | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`.                                                                                                                                 |
+| `entities[].id`         | No       | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime.                                                                                                                                    |
+| `entities[].kind`       | No       | Optional logical type tag (e.g. `"character"`, `"prop"`). Omitted entities use the unset kind. Used for `World.entitiesWithKind` and future save/load; does not affect component parsing.                                         |
+| `entities[].components` | No       | Map of component type name → property object.                                                                                                                                                                                     |
+| `renderPipeline`        | No       | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 
 ## Built-in component types
 
-| Type | Properties | Description |
-|------|------------|-------------|
-| `Transform` | See below | Position, rotation (degrees), and scale. All fields optional. |
-| `Sprite` | `texture` (string) | 2D texture path relative to the assets root. **Requires `Material` on the same entity.** |
-| `Mesh` | `model` (string), `texture` (optional string) | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
-| `Material` | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`. |
-| `RenderLayer` | `layer` (string) | `"WORLD"` (default) or `"UI"` — world-space vs overlay draw order. |
-| `Camera` | See below | View/projection settings; pair with `Transform` on the same entity. |
+| Type          | Properties                                      | Description                                                                                                                       |
+|---------------|-------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| `Transform`   | See below                                       | Position, rotation (degrees), and scale. All fields optional.                                                                     |
+| `Sprite`      | `texture` (string)                              | 2D texture path relative to the assets root. **Requires `Material` on the same entity.**                                          |
+| `Mesh`        | `model` (string), `texture` (optional string)   | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
+| `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`.                                               |
+| `RenderLayer` | `layer` (string)                                | `"WORLD"` (default) or `"UI"` — world-space vs overlay draw order.                                                                |
+| `Camera`      | See below                                       | View/projection settings; pair with `Transform` on the same entity.                                                               |
 
 ### Transform properties
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `x`, `y`, `z` | `0` | World position. For 2D scenes, omit `z`. |
-| `rotationX`, `rotationY`, `rotationZ` | `0` | Euler rotation in degrees. `rotationZ` is used for 2D sprite drawing. |
-| `scaleX`, `scaleY`, `scaleZ` | `1` | Scale per axis. `scaleX` / `scaleY` affect sprite size; all axes apply to meshes. |
+| Property                              | Default | Description                                                                       |
+|---------------------------------------|---------|-----------------------------------------------------------------------------------|
+| `x`, `y`, `z`                         | `0`     | World position. For 2D scenes, omit `z`.                                          |
+| `rotationX`, `rotationY`, `rotationZ` | `0`     | Euler rotation in degrees. `rotationZ` is used for 2D sprite drawing.             |
+| `scaleX`, `scaleY`, `scaleZ`          | `1`     | Scale per axis. `scaleX` / `scaleY` affect sprite size; all axes apply to meshes. |
 
-Sprites and meshes are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity) defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
+Sprites and meshes are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity)
+defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
 
 ### Sprite + Material
 
@@ -103,10 +108,10 @@ Use a perspective camera for 3D scenes:
 
 ### Material properties
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `shader` | `default/unlit` | Built-in or registered shader id (path-style name). |
-| `uniforms` | — | Map of uniform name → float array, e.g. `"u_tint": [1, 0, 0, 1]`. |
+| Property   | Default         | Description                                                       |
+|------------|-----------------|-------------------------------------------------------------------|
+| `shader`   | `default/unlit` | Built-in or registered shader id (path-style name).               |
+| `uniforms` | —               | Map of uniform name → float array, e.g. `"u_tint": [1, 0, 0, 1]`. |
 
 Example with tint:
 
@@ -119,28 +124,31 @@ Example with tint:
 
 ### RenderLayer properties
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `layer` | `"WORLD"` | `"WORLD"` for scene geometry/sprites, `"UI"` for screen-space overlays. |
+| Property | Default   | Description                                                             |
+|----------|-----------|-------------------------------------------------------------------------|
+| `layer`  | `"WORLD"` | `"WORLD"` for scene geometry/sprites, `"UI"` for screen-space overlays. |
 
 ### Camera properties
 
-**Required:** a `Transform` on the same entity (camera position and rotation). Camera entities are never drawn, even if they also have a `Sprite` or `Mesh`.
+**Required:** a `Transform` on the same entity (camera position and rotation). Camera entities are never drawn, even if
+they also have a `Sprite` or `Mesh`.
 
-| Property | Default | Description |
-|----------|---------|-------------|
-| `projection` | `"orthographic"` | `"orthographic"` (2D) or `"perspective"` (3D) |
-| `active` | `true` | When multiple cameras exist, the first active one is used |
-| `zoom` | `1` | Orthographic zoom |
-| `fieldOfView` | `67` | Perspective vertical FOV in degrees |
-| `near`, `far` | `0.1`, `3000` | Clip planes |
-| `viewportWidth`, `viewportHeight` | `0` | `0` = match window size |
-| `renderTarget` | *(unset)* | Optional pipeline framebuffer id; stored for future camera routing (see [render-pipeline.md](render-pipeline.md)) |
+| Property                          | Default          | Description                                                                                                       |
+|-----------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------|
+| `projection`                      | `"orthographic"` | `"orthographic"` (2D) or `"perspective"` (3D)                                                                     |
+| `active`                          | `true`           | When multiple cameras exist, the first active one is used                                                         |
+| `zoom`                            | `1`              | Orthographic zoom                                                                                                 |
+| `fieldOfView`                     | `67`             | Perspective vertical FOV in degrees                                                                               |
+| `near`, `far`                     | `0.1`, `3000`    | Clip planes                                                                                                       |
+| `viewportWidth`, `viewportHeight` | `0`              | `0` = match window size                                                                                           |
+| `renderTarget`                    | *(unset)*        | Optional pipeline framebuffer id; stored for future camera routing (see [render-pipeline.md](render-pipeline.md)) |
 
 Orthographic mode sorts drawables by world `z`. Perspective mode sorts by distance from the camera (farther first).
 
 ## Custom components
 
-Register types in `onCreate(HermesEngine engine)` via `engine.registry().register(...)`, and add matching logic with `engine.addSystem(...)`. Alternatively, provide a `META-INF/services/dev.hermes.api.ecs.ComponentRegistration` implementation that registers both the component deserializer and any systems.
+Register types in `onCreate(HermesEngine engine)` via `engine.registry().register(...)`, and add matching logic with
+`engine.addSystem(...)`. Alternatively, provide a `META-INF/services/dev.hermes.api.ecs.ComponentRegistration`
+implementation that registers both the component deserializer and any systems.
 
 Unknown component type names fail at load time with a message naming the scene file, entity, and type.

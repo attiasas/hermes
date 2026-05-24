@@ -1,29 +1,29 @@
 plugins {
-  id 'java-library'
-  id 'maven-publish'
+    id 'java-library'
+    id 'maven-publish'
 }
 
 dependencies {
-  api project(':hermes-api')
-  implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+    api project(':hermes-api')
+    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
 
-  testImplementation platform('org.junit:junit-bom:5.11.4')
-  testImplementation 'org.junit.jupiter:junit-jupiter'
-  testImplementation "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
-  testRuntimeOnly "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "com.badlogicgames.gdx:gdx-backend-headless:$gdxVersion"
+    testRuntimeOnly "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 publishing {
-  publications {
-    maven(MavenPublication) {
-      from components.java
-      groupId = 'dev.hermes'
-      artifactId = 'hermes-core'
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            groupId = 'dev.hermes'
+            artifactId = 'hermes-core'
+        }
     }
-  }
 }
 
 tasks.named('test') {
-  useJUnitPlatform()
+    useJUnitPlatform()
 }

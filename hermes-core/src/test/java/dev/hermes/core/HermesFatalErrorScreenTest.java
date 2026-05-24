@@ -10,29 +10,29 @@ import org.junit.jupiter.api.Test;
 
 final class HermesFatalErrorScreenTest {
 
-  private HermesFatalErrorScreen screen;
+    private HermesFatalErrorScreen screen;
 
-  @BeforeEach
-  void setUp() {
-    TestGdx.initHeadlessGl();
-    screen = new HermesFatalErrorScreen();
-  }
+    @BeforeEach
+    void setUp() {
+        TestGdx.initHeadlessGl();
+        screen = new HermesFatalErrorScreen();
+    }
 
-  @AfterEach
-  void tearDown() {
-    screen.dispose();
-  }
+    @AfterEach
+    void tearDown() {
+        screen.dispose();
+    }
 
-  @Test
-  void inactive_beforeReport() {
-    assertFalse(screen.isActive());
-  }
+    @Test
+    void inactive_beforeReport() {
+        assertFalse(screen.isActive());
+    }
 
-  @Test
-  void report_marksActive() {
-    screen.report(
-        new ShaderCompileException(
-            "failed to compile shader 'water': Precisions of uniform 'u_time' differ"));
-    assertTrue(screen.isActive());
-  }
+    @Test
+    void report_marksActive() {
+        screen.report(
+                new ShaderCompileException(
+                        "failed to compile shader 'water': Precisions of uniform 'u_time' differ"));
+        assertTrue(screen.isActive());
+    }
 }

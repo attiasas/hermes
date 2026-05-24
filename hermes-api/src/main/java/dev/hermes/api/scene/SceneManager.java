@@ -1,30 +1,37 @@
 package dev.hermes.api.scene;
 
 import dev.hermes.api.ecs.World;
+
 import java.util.List;
 
-/** Multi-scene stack: registration, queued transitions, and active scene access. */
+/**
+ * Multi-scene stack: registration, queued transitions, and active scene access.
+ */
 public interface SceneManager {
 
-  void request(SceneChangeRequest request);
+    void request(SceneChangeRequest request);
 
-  void processPending();
+    void processPending();
 
-  World activeWorld();
+    World activeWorld();
 
-  SceneHandle active();
+    SceneHandle active();
 
-  List<SceneHandle> visibleScenes();
+    List<SceneHandle> visibleScenes();
 
-  /** Scenes that receive system updates this frame (stack policy may differ from {@link #visibleScenes()}). */
-  List<SceneHandle> updateScenes();
+    /**
+     * Scenes that receive system updates this frame (stack policy may differ from {@link #visibleScenes()}).
+     */
+    List<SceneHandle> updateScenes();
 
-  SceneRegistry registry();
+    SceneRegistry registry();
 
-  int stackDepth();
+    int stackDepth();
 
-  /** Policy for stacked scene updates and rendering; defaults to active scene only. */
-  void setStackPolicy(SceneStackPolicy policy);
+    /**
+     * Policy for stacked scene updates and rendering; defaults to active scene only.
+     */
+    void setStackPolicy(SceneStackPolicy policy);
 
-  SceneStackPolicy stackPolicy();
+    SceneStackPolicy stackPolicy();
 }

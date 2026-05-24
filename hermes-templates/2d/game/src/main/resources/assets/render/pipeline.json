@@ -1,15 +1,50 @@
 {
   "version": 1,
-  "clearColor": [0.15, 0.15, 0.2, 1],
+  "clearColor": [
+    0.15,
+    0.15,
+    0.2,
+    1
+  ],
   "framebuffers": [
-    { "id": "sceneColor", "width": 0, "height": 0, "depth": true }
+    {
+      "id": "sceneColor",
+      "width": 0,
+      "height": 0,
+      "depth": true
+    }
   ],
   "shaders": {
-    "default/unlit": { "vertex": "shaders/default.vert", "fragment": "shaders/default.frag" }
+    "default/unlit": {
+      "vertex": "shaders/default.vert",
+      "fragment": "shaders/default.frag"
+    }
   },
   "passes": [
-    { "id": "world3d", "type": "world3d", "target": "screen", "layers": ["WORLD"] },
-    { "id": "sprites", "type": "sprites", "target": "screen", "layers": ["WORLD"] },
-    { "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "depthTest": false }
+    {
+      "id": "world3d",
+      "type": "world3d",
+      "target": "screen",
+      "layers": [
+        "WORLD"
+      ]
+    },
+    {
+      "id": "sprites",
+      "type": "sprites",
+      "target": "screen",
+      "layers": [
+        "WORLD"
+      ]
+    },
+    {
+      "id": "ui",
+      "type": "ui",
+      "target": "screen",
+      "layers": [
+        "UI"
+      ],
+      "depthTest": false
+    }
   ]
 }

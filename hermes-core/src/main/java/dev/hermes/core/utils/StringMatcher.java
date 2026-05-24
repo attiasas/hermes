@@ -23,12 +23,13 @@ public class StringMatcher {
                 break;
             default:
                 throw new IllegalArgumentException("Invalid match type: " + type);
-        };
+        }
+        ;
     }
 
     /**
      * Main entry point.
-     *
+     * <p>
      * Rules:
      * - null/empty patterns => allow all
      * - any matching pattern => true

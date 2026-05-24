@@ -1,35 +1,39 @@
-package {{package}};
+package
+
+{{package}};
 
 import dev.hermes.api.Component;
 
-/** Example custom component: scales the entity in and out. */
+/**
+ * Example custom component: scales the entity in and out.
+ */
 public final class PulseMarker implements Component {
 
-  private float amplitude = 0.1f;
-  private float speed = 2f;
-  private float phase;
+    private float amplitude = 0.1f;
+    private float speed = 2f;
+    private float phase;
 
-  public float amplitude() {
-    return amplitude;
-  }
+    public float amplitude() {
+        return amplitude;
+    }
 
-  public void setAmplitude(float amplitude) {
-    this.amplitude = amplitude;
-  }
+    public void setAmplitude(float amplitude) {
+        this.amplitude = amplitude;
+    }
 
-  public float speed() {
-    return speed;
-  }
+    public float speed() {
+        return speed;
+    }
 
-  public void setSpeed(float speed) {
-    this.speed = speed;
-  }
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
 
-  public float phase() {
-    return phase;
-  }
+    public float phase() {
+        return phase;
+    }
 
-  public void setPhase(float phase) {
-    this.phase = phase;
-  }
+    public void setPhase(float phase) {
+        this.phase = phase;
+    }
 }

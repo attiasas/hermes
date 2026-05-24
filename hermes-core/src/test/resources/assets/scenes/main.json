@@ -3,9 +3,16 @@
     {
       "id": "logo",
       "components": {
-        "Transform": { "x": 140, "y": 210 },
-        "Sprite": { "texture": "hermes-logo.png" },
-        "Material": { "shader": "default/unlit" }
+        "Transform": {
+          "x": 140,
+          "y": 210
+        },
+        "Sprite": {
+          "texture": "hermes-logo.png"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        }
       }
     }
   ]

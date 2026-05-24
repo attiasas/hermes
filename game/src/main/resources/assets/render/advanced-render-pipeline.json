@@ -1,6 +1,11 @@
 {
   "version": 1,
-  "clearColor": [0.08, 0.12, 0.18, 1],
+  "clearColor": [
+    0.08,
+    0.12,
+    0.18,
+    1
+  ],
   "shaders": {
     "default/unlit": {
       "vertex": "shaders/default.vert",
@@ -12,9 +17,36 @@
     }
   },
   "passes": [
-    { "id": "water", "type": "custom", "handler": "water", "target": "screen" },
-    { "id": "world3d", "type": "world3d", "target": "screen", "layers": ["WORLD"] },
-    { "id": "sprites", "type": "sprites", "target": "screen", "layers": ["WORLD"] },
-    { "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "depthTest": false }
+    {
+      "id": "water",
+      "type": "custom",
+      "handler": "water",
+      "target": "screen"
+    },
+    {
+      "id": "world3d",
+      "type": "world3d",
+      "target": "screen",
+      "layers": [
+        "WORLD"
+      ]
+    },
+    {
+      "id": "sprites",
+      "type": "sprites",
+      "target": "screen",
+      "layers": [
+        "WORLD"
+      ]
+    },
+    {
+      "id": "ui",
+      "type": "ui",
+      "target": "screen",
+      "layers": [
+        "UI"
+      ],
+      "depthTest": false
+    }
   ]
 }
