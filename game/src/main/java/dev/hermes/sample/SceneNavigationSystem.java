@@ -22,6 +22,9 @@ public final class SceneNavigationSystem implements System {
 
     @Override
     public void update(World world, float deltaSeconds) {
+        if (scenes.active() != null && !"main".equals(scenes.active().id())) {
+            return;
+        }
         elapsed += deltaSeconds;
         if (elapsed < intervalSeconds) {
             return;

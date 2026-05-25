@@ -22,6 +22,9 @@ public final class AdvancedRenderDemoSystem implements System {
 
     @Override
     public void update(World world, float deltaSeconds) {
+        if (scenes.stackDepth() > 1) {
+            return;
+        }
         elapsed += deltaSeconds;
         if (elapsed < intervalSeconds) {
             return;
