@@ -54,6 +54,14 @@ game/build/generated/hermes-runtime/hermes-runtime.properties
 - **HTML:** bundled by `TeaVMBuilder` from `hermes.runtime.config.dir`
 - **Android:** packaged via `:game` resources (launcher `preBuild` depends on generation)
 
+### HTML asset layout
+
+TeaVM bundles the generated directory as libGDX internal assets. Runtime code loads
+`hermes-runtime.properties` via `HermesAssetPaths.internal(...)`, which resolves both:
+
+- `hermes-runtime.properties` (desktop classpath / JAR root)
+- `assets/hermes-runtime.properties` (HTML webapp — actual TeaVM output path)
+
 ## Programmatic overrides (complex games)
 
 ```java
