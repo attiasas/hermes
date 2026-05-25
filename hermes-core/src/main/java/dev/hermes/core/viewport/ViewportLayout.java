@@ -1,5 +1,8 @@
 package dev.hermes.core.viewport;
 
+import dev.hermes.api.ecs.ViewportFitMode;
+import dev.hermes.api.math.Rect4;
+
 /**
  * Computes the drawable viewport rectangle inside a render surface for a given fit policy.
  */

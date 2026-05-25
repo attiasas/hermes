@@ -20,6 +20,9 @@ public final class CameraResolver {
      */
     public static ActiveCamera resolveForPass(
             World world, String passTargetId, float surfaceWidth, float surfaceHeight) {
+        if (world == null) {
+            return defaultCamera(surfaceWidth, surfaceHeight);
+        }
         Entity renderTargetEntity = null;
         Camera renderTargetCamera = null;
         Entity activeEntity = null;
@@ -139,7 +142,13 @@ public final class CameraResolver {
                 camera.near(),
                 camera.far(),
                 viewportWidth,
-                viewportHeight);
+                viewportHeight,
+                camera.fitMode(),
+                camera.designAspect(),
+                camera.lookAtX(),
+                camera.lookAtY(),
+                camera.lookAtZ(),
+                camera.renderTarget());
     }
 
     private static ActiveCamera defaultCamera(float windowWidth, float windowHeight) {
@@ -156,6 +165,12 @@ public final class CameraResolver {
                 0.1f,
                 3000f,
                 windowWidth,
-                windowHeight);
+                windowHeight,
+                dev.hermes.api.ecs.ViewportFitMode.LETTERBOX,
+                0f,
+                Float.NaN,
+                Float.NaN,
+                Float.NaN,
+                null);
     }
 }

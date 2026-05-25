@@ -59,6 +59,7 @@ load time with `SceneParseException`.
 
 Sprites and meshes are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity)
 defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
+See [coordinate-spaces.md](coordinate-spaces.md) for SCREEN / SURFACE / WORLD rules and `engine.viewport()`.
 
 ### Sprite + Material
 
@@ -140,8 +141,11 @@ they also have a `Sprite` or `Mesh`.
 | `zoom`                            | `1`              | Orthographic zoom                                                                                                 |
 | `fieldOfView`                     | `67`             | Perspective vertical FOV in degrees                                                                               |
 | `near`, `far`                     | `0.1`, `3000`    | Clip planes                                                                                                       |
-| `viewportWidth`, `viewportHeight` | `0`              | `0` = match window size                                                                                           |
-| `renderTarget`                    | *(unset)*        | Optional pipeline framebuffer id; stored for future camera routing (see [render-pipeline.md](render-pipeline.md)) |
+| `viewportWidth`, `viewportHeight` | `0`              | `0` = full render surface for the pass (not window size when targeting an FBO)                                    |
+| `renderTarget`                    | *(unset)*        | Pipeline framebuffer id; camera applies when that pass target runs (see [render-pipeline.md](render-pipeline.md)) |
+| `fitMode`                         | `"letterbox"`    | `"stretch"` \| `"letterbox"` \| `"crop"` \| `"fixed"` — aspect policy on the render surface                      |
+| `designAspect`                    | `0`              | Width/height ratio for fit; `0` = use surface aspect                                                              |
+| `lookAt`                          | *(unset)*        | `{ "x", "y", "z" }` world point for perspective aim (optional)                                                  |
 
 Orthographic mode sorts drawables by world `z`. Perspective mode sorts by distance from the camera (farther first).
 

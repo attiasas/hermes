@@ -2,6 +2,8 @@ package dev.hermes.core.viewport;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.hermes.api.ecs.ViewportFitMode;
+import dev.hermes.api.math.Rect4;
 import org.junit.jupiter.api.Test;
 
 final class ViewportLayoutTest {

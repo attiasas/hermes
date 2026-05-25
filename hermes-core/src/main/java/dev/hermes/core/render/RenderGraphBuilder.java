@@ -8,6 +8,7 @@ import dev.hermes.core.render.pass.UiPass;
 import dev.hermes.core.render.pass.World3dPass;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -22,13 +23,19 @@ public final class RenderGraphBuilder {
 
     private final ModelCache sharedModelCache = new ModelCache();
     private final RenderPassRegistry passRegistry;
+    private final ViewportServiceImpl viewport;
 
     public RenderGraphBuilder() {
-        this(new RenderPassRegistry());
+        this(new RenderPassRegistry(), new ViewportServiceImpl());
     }
 
     public RenderGraphBuilder(RenderPassRegistry passRegistry) {
+        this(passRegistry, new ViewportServiceImpl());
+    }
+
+    RenderGraphBuilder(RenderPassRegistry passRegistry, ViewportServiceImpl viewport) {
         this.passRegistry = passRegistry == null ? new RenderPassRegistry() : passRegistry;
+        this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
     }
 
     public RenderGraph build(PipelineDocument document, SpriteBatch batch) {
@@ -38,7 +45,7 @@ public final class RenderGraphBuilder {
         validateCustomHandlers(document);
         List<RenderGraphPass> passes = createPasses(document, batch, shaderRegistry, pool);
         return new RenderGraph(
-                document.clearColor(), passes, sharedModelCache, shaderRegistry, pool);
+                document.clearColor(), passes, sharedModelCache, shaderRegistry, pool, viewport);
     }
 
     /**
@@ -49,7 +56,7 @@ public final class RenderGraphBuilder {
         validatePassTargets(document);
         validateCustomHandlers(document);
         List<RenderGraphPass> passes = createStubPasses(document, pool);
-        return new RenderGraph(document.clearColor(), passes, null, null, pool);
+        return new RenderGraph(document.clearColor(), passes, null, null, pool, viewport);
     }
 
     private List<RenderGraphPass> createPasses(
@@ -61,7 +68,7 @@ public final class RenderGraphBuilder {
         for (PipelineDocument.PassDef passDef : document.passes()) {
             Set<RenderLayer.Layer> layers = parseLayers(passDef.layers());
             RenderGraphPass pass = createPass(passDef, batch, layers, shaderRegistry);
-            passes.add(new TargetBindingGraphPass(passDef.target(), pass, pool));
+            passes.add(wrapTarget(passDef, pass, pool));
         }
         return passes;
     }
@@ -73,7 +80,9 @@ public final class RenderGraphBuilder {
             parseLayers(passDef.layers());
             RenderGraphPass pass;
             if (passDef.type() == PipelineDocument.PassType.CUSTOM) {
-                pass = new CustomGraphPass(passDef.id(), passRegistry.require(passDef.handler()));
+                pass =
+                        new CustomGraphPass(
+                                passDef.id(), passRegistry.require(passDef.handler()), viewport);
             } else if (passDef.type() == PipelineDocument.PassType.POST
                     || passDef.type() == PipelineDocument.PassType.PARTICLES
                     || passDef.type() == PipelineDocument.PassType.COMPUTE) {
@@ -81,9 +90,15 @@ public final class RenderGraphBuilder {
             } else {
                 pass = new StubRenderGraphPass(passDef.id());
             }
-            passes.add(new TargetBindingGraphPass(passDef.target(), pass, pool));
+            passes.add(wrapTarget(passDef, pass, pool));
         }
         return passes;
+    }
+
+    private TargetBindingGraphPass wrapTarget(
+            PipelineDocument.PassDef passDef, RenderGraphPass pass, FramebufferPool pool) {
+        return new TargetBindingGraphPass(
+                passDef.target(), passDef.camera(), pass, pool, viewport);
     }
 
     private static void validatePassTargets(PipelineDocument document) {
@@ -124,7 +139,7 @@ public final class RenderGraphBuilder {
                         passDef.id(), new UiPass(batch, passDef.camera()), layers, passDef.depthTest());
             case CUSTOM:
                 return new CustomGraphPass(
-                        passDef.id(), passRegistry.require(passDef.handler()));
+                        passDef.id(), passRegistry.require(passDef.handler()), viewport);
             case POST:
             case PARTICLES:
             case COMPUTE:

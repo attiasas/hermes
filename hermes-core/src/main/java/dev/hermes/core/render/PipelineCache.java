@@ -2,6 +2,7 @@ package dev.hermes.core.render;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.render.RenderPassRegistry;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,20 +14,25 @@ public final class PipelineCache {
 
     private final SpriteBatch batch;
     private final RenderGraphBuilder builder;
+    private final ViewportServiceImpl viewport;
     private final Map<String, RenderGraph> graphs = new HashMap<>();
     private final Map<String, RuntimeException> failures = new HashMap<>();
 
-    public PipelineCache(SpriteBatch batch, RenderPassRegistry passRegistry) {
+    public PipelineCache(SpriteBatch batch, RenderPassRegistry passRegistry, ViewportServiceImpl viewport) {
         this.batch = batch;
-        this.builder = new RenderGraphBuilder(passRegistry);
+        this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
+        this.builder = new RenderGraphBuilder(passRegistry, this.viewport);
     }
 
     /**
      * Uses stub passes (no libGDX GL); for unit tests only.
      */
     PipelineCache(RenderPassRegistry passRegistry) {
-        this.batch = null;
-        this.builder = new RenderGraphBuilder(passRegistry);
+        this(null, passRegistry, new ViewportServiceImpl());
+    }
+
+    PipelineCache(RenderPassRegistry passRegistry, ViewportServiceImpl viewport) {
+        this(null, passRegistry, viewport);
     }
 
     PipelineCache() {
@@ -54,6 +60,7 @@ public final class PipelineCache {
     }
 
     public void resize(int width, int height) {
+        viewport.onWindowResize(width, height);
         for (RenderGraph graph : graphs.values()) {
             graph.resize(width, height);
         }

@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.GL20;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.render.pass.SpritesPass;
+import dev.hermes.core.viewport.BoundCamera;
+import dev.hermes.core.viewport.RenderSurface;
 
 import java.util.Set;
 
@@ -33,11 +35,11 @@ final class SpritesGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world) {
+    public void render(World world, RenderSurface surface, BoundCamera bound) {
         if (!depthTest) {
             Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
         }
-        delegate.render(world, layers);
+        delegate.render(world, layers, bound);
         if (!depthTest) {
             Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         }

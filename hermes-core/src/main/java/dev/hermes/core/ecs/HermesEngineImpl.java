@@ -6,6 +6,8 @@ import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.config.RuntimeConfigService;
 import dev.hermes.core.config.RuntimeConfigServices;
+import dev.hermes.core.viewport.ViewportServiceImpl;
+import dev.hermes.api.viewport.ViewportService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +21,7 @@ public final class HermesEngineImpl implements HermesEngine {
 
     private final SceneManagerImpl sceneManager;
     private final ComponentRegistryImpl registry;
+    private final ViewportServiceImpl viewport = new ViewportServiceImpl();
     private final List<SystemEntry> systems = new ArrayList<>();
 
     public HermesEngineImpl() {
@@ -47,6 +50,11 @@ public final class HermesEngineImpl implements HermesEngine {
     @Override
     public ComponentRegistry registry() {
         return registry;
+    }
+
+    @Override
+    public ViewportService viewport() {
+        return viewport;
     }
 
     @Override

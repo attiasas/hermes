@@ -9,7 +9,7 @@ public interface RenderPass {
 
     void resize(int width, int height);
 
-    void render(World world);
+    void render(World world, RenderContext context);
 
     void dispose();
 }

@@ -15,7 +15,7 @@ game ──api──► hermes-api ◄── hermes-core (+ libGDX, internal)
 
 | Module                 | Role                                                                                                                                                                                               |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hermes-api`           | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene stack (`SceneManager`, `SceneChangeRequest`), scene-facing components (`Transform`, `Sprite`, `Camera`). No libGDX. |
+| `hermes-api`           | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene stack (`SceneManager`, `SceneChangeRequest`), `ViewportService`, scene-facing components (`Transform`, `Sprite`, `Camera`). No libGDX. |
 | `hermes-core`          | Engine implementation: `SceneManagerImpl`, scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath).                                         |
 | `hermes-launcher-*`    | Platform entrypoints (LWJGL3, TeaVM, Android). Depend on `hermes-core`. Included by the settings plugin when enabled.                                                                              |
 | `game`                 | Sample / dogfood game. `api` → `hermes-api`, `runtimeOnly` → `hermes-core`.                                                                                                                        |
@@ -170,6 +170,8 @@ registration), then requests `goTo("main")`. See [Scene management](scene-manage
 ## Related docs
 
 - [Scene management](scene-management.md)
+- [Coordinate spaces & viewport service](coordinate-spaces.md)
+- [Render pipeline](render-pipeline.md)
 - [Scene format v1](scene-format-v1.md)
 - [Contributing](CONTRIBUTING.md)
 - [Docs index](README.md)

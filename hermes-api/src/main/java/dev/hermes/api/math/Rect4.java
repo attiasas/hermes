@@ -1,14 +1,21 @@
-package dev.hermes.core.viewport;
+package dev.hermes.api.math;
 
-/**
- * Pixel rectangle (x, y, width, height). Internal to core viewport until API types land in Task 3.
- */
 public final class Rect4 {
 
     public float x;
     public float y;
     public float width;
     public float height;
+
+    public Rect4() {
+    }
+
+    public Rect4(float x, float y, float width, float height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    }
 
     public Rect4 set(float x, float y, float width, float height) {
         this.x = x;

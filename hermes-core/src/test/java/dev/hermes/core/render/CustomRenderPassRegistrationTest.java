@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.render.RenderContext;
 import dev.hermes.api.render.RenderPass;
 import dev.hermes.api.render.RenderPassRegistry;
 import org.junit.jupiter.api.Test;
@@ -88,7 +89,7 @@ final class CustomRenderPassRegistrationTest {
         }
 
         @Override
-        public void render(World world) {
+        public void render(World world, RenderContext context) {
         }
 
         @Override

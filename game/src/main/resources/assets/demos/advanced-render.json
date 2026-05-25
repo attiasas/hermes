@@ -12,7 +12,9 @@
         "Camera": {
           "projection": "perspective",
           "active": true,
-          "fieldOfView": 60
+          "fieldOfView": 60,
+          "fitMode": "letterbox",
+          "lookAt": { "x": 0, "y": 0, "z": 0 }
         }
       }
     },

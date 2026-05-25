@@ -43,4 +43,26 @@ final class FramebufferBindTest {
         pool.endPass("sceneColor");
         pool.dispose();
     }
+
+    @Test
+    void targetDimensionsReturnFramebufferSize() {
+        PipelineDocument doc =
+                PipelineDocument.parse(
+                        "{\n"
+                                + "  \"version\": 1,\n"
+                                + "  \"framebuffers\": [\n"
+                                + "    { \"id\": \"sceneColor\", \"width\": 64, \"height\": 48, \"depth\": true }\n"
+                                + "  ],\n"
+                                + "  \"passes\": []\n"
+                                + "}\n");
+
+        FramebufferPool pool = new FramebufferPool(doc.framebuffers());
+        pool.resize(800, 600);
+
+        assertEquals(64, pool.targetWidth("sceneColor"));
+        assertEquals(48, pool.targetHeight("sceneColor"));
+        assertEquals(800, pool.targetWidth("screen"));
+        assertEquals(600, pool.targetHeight("screen"));
+        pool.dispose();
+    }
 }

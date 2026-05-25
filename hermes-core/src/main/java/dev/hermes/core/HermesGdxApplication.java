@@ -20,6 +20,7 @@ import dev.hermes.core.log.LoggingRuntime;
 import dev.hermes.core.config.RuntimeConfigServiceImpl;
 import dev.hermes.core.config.RuntimeConfigServices;
 import dev.hermes.core.render.RenderPipelineExecutor;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 /**
  * libGDX {@link ApplicationListener} that delegates lifecycle to a {@link HermesApplication}. Rendering uses libGDX
@@ -62,7 +63,10 @@ public final class HermesGdxApplication implements ApplicationListener {
             application.configureRendering(new HermesRenderConfigurator(passRegistry));
             renderPipeline =
                     new RenderPipelineExecutor(
-                            batch, HermesLauncherSupport.gameRenderPipelinePath(), passRegistry);
+                            batch,
+                            HermesLauncherSupport.gameRenderPipelinePath(),
+                            passRegistry,
+                            (ViewportServiceImpl) engine.viewport());
 
             String scenePath = HermesLauncherSupport.gameScenePath();
             if (scenePath != null && !scenePath.isBlank()) {
@@ -96,6 +100,7 @@ public final class HermesGdxApplication implements ApplicationListener {
             return;
         }
         if (renderPipeline != null) {
+            engine.viewport().onWindowResize(width, height);
             renderPipeline.resize(width, height);
         }
         application.resize(width, height);

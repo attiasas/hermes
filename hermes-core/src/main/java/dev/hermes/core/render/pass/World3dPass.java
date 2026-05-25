@@ -19,13 +19,11 @@ import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
-import dev.hermes.core.ecs.ActiveCamera;
-import dev.hermes.core.ecs.CameraResolver;
-import dev.hermes.core.ecs.SceneCamera;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.viewport.BoundCamera;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -43,14 +41,11 @@ public final class World3dPass {
     private final ShaderRegistry shaderRegistry;
     private final boolean disposeModelCache;
     private final ModelBatch modelBatch;
-    private final SceneCamera sceneCamera = new SceneCamera();
     private final Environment environment = new Environment();
     private final Matrix4 instanceTransform = new Matrix4();
     private final Map<String, Shader> g3dShaderCache = new HashMap<>();
     private final RenderablePool renderablePool = new RenderablePool();
     private final Array<Renderable> renderableScratch = new Array<>(1);
-    private float windowWidth = 640f;
-    private float windowHeight = 480f;
 
     public World3dPass(ModelCache modelCache) {
         this(modelCache, null, true);
@@ -71,29 +66,22 @@ public final class World3dPass {
         this.modelBatch = new ModelBatch();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
         environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
-        sceneCamera.resize(windowWidth, windowHeight);
     }
 
     public void resize(int width, int height) {
-        windowWidth = Math.max(1, width);
-        windowHeight = Math.max(1, height);
-        sceneCamera.resize(windowWidth, windowHeight);
     }
 
     public void render(World world) {
-        render(world, EnumSet.of(RenderLayer.Layer.WORLD));
+        throw new UnsupportedOperationException("Use render(World, layers, BoundCamera)");
     }
 
-    public void render(World world, Set<RenderLayer.Layer> layers) {
-        ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
-        sceneCamera.apply(active);
-
+    public void render(World world, Set<RenderLayer.Layer> layers, BoundCamera bound) {
         List<Entity> drawables = collectDrawables(world, layers);
         if (drawables.isEmpty()) {
             return;
         }
 
-        modelBatch.begin(sceneCamera.gdxCamera());
+        modelBatch.begin(bound.gdxCamera());
         for (Entity entity : drawables) {
             drawMesh(world, entity);
         }

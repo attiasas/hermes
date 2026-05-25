@@ -1,6 +1,8 @@
 package dev.hermes.core.render;
 
 import dev.hermes.api.ecs.World;
+import dev.hermes.core.viewport.BoundCamera;
+import dev.hermes.core.viewport.RenderSurface;
 
 /**
  * No-op render pass used when validating pipeline structure in unit tests.
@@ -23,7 +25,7 @@ final class StubRenderGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world) {
+    public void render(World world, RenderSurface surface, BoundCamera bound) {
     }
 
     @Override
