@@ -5,16 +5,18 @@ import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.World;
 
-/** Runtime context for a scene during lifecycle callbacks. */
+/**
+ * Runtime context for a scene during lifecycle callbacks.
+ */
 public interface SceneContext {
 
-  String sceneId();
+    String sceneId();
 
-  World world();
+    World world();
 
-  ComponentRegistry registry();
+    ComponentRegistry registry();
 
-  HermesEngine engine();
+    HermesEngine engine();
 
-  HermesSession session();
+    HermesSession session();
 }

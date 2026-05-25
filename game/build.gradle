@@ -1,37 +1,43 @@
 plugins {
-  id 'dev.hermes'
+    id 'dev.hermes'
 }
 
 version = '0.1.0'
 
 hermes {
-  applicationClass = 'dev.hermes.sample.SampleHermesGame'
-  assetsDirectory = 'src/main/resources/assets'
-  debug = true
+    applicationClass = 'dev.hermes.sample.SampleHermesGame'
+    assetsDirectory = 'src/main/resources/assets'
+    debug = true
 
-  platforms {
-    desktop {
-      width = 640
-      height = 480
-      vsync = true
-      resizable = true
-      foregroundFps = 0
-      bundleId = 'dev.hermes.game'
-      executableName = 'HermesGame'
+    logging {
+        // minLevel = ''
+        // patternType = 'WILDCARD'
+        patterns = ['*SceneStack*']
     }
-    html {
-      width = 640
-      height = 480
-      devServerPort = 8080
-      webAssembly = true
+
+    platforms {
+        desktop {
+            width = 640
+            height = 480
+            vsync = true
+            resizable = true
+            foregroundFps = 0
+            bundleId = 'dev.hermes.game'
+            executableName = 'HermesGame'
+        }
+        html {
+            width = 640
+            height = 480
+            devServerPort = 8080
+            webAssembly = true
+        }
+        android {
+            applicationId = 'dev.hermes.game'
+            minSdk = 21
+            targetSdk = 35
+            compileSdk = 35
+            versionCode = 1
+            screenOrientation = 'landscape'
+        }
     }
-    android {
-      applicationId = 'dev.hermes.game'
-      minSdk = 21
-      targetSdk = 35
-      compileSdk = 35
-      versionCode = 1
-      screenOrientation = 'landscape'
-    }
-  }
 }

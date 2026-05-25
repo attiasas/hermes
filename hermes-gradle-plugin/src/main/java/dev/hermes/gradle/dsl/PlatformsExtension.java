@@ -6,45 +6,47 @@ import dev.hermes.tooling.platform.HtmlPlatform;
 import dev.hermes.tooling.platform.Platforms;
 import groovy.lang.Closure;
 
-/** Platform details configured in {@code game/build.gradle}. */
+/**
+ * Platform details configured in {@code game/build.gradle}.
+ */
 public final class PlatformsExtension {
 
-  private final Platforms platforms = new Platforms();
+    private final Platforms platforms = new Platforms();
 
-  public DesktopPlatform getDesktop() {
-    return platforms.getDesktop();
-  }
+    public DesktopPlatform getDesktop() {
+        return platforms.getDesktop();
+    }
 
-  public HtmlPlatform getHtml() {
-    return platforms.getHtml();
-  }
+    public HtmlPlatform getHtml() {
+        return platforms.getHtml();
+    }
 
-  public AndroidPlatform getAndroid() {
-    return platforms.getAndroid();
-  }
+    public AndroidPlatform getAndroid() {
+        return platforms.getAndroid();
+    }
 
-  Platforms asPlatforms() {
-    return platforms;
-  }
+    Platforms asPlatforms() {
+        return platforms;
+    }
 
-  @SuppressWarnings("rawtypes")
-  public void desktop(Closure configure) {
-    configure.setDelegate(getDesktop());
-    configure.setResolveStrategy(Closure.DELEGATE_FIRST);
-    configure.call(getDesktop());
-  }
+    @SuppressWarnings("rawtypes")
+    public void desktop(Closure configure) {
+        configure.setDelegate(getDesktop());
+        configure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        configure.call(getDesktop());
+    }
 
-  @SuppressWarnings("rawtypes")
-  public void html(Closure configure) {
-    configure.setDelegate(getHtml());
-    configure.setResolveStrategy(Closure.DELEGATE_FIRST);
-    configure.call(getHtml());
-  }
+    @SuppressWarnings("rawtypes")
+    public void html(Closure configure) {
+        configure.setDelegate(getHtml());
+        configure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        configure.call(getHtml());
+    }
 
-  @SuppressWarnings("rawtypes")
-  public void android(Closure configure) {
-    configure.setDelegate(getAndroid());
-    configure.setResolveStrategy(Closure.DELEGATE_FIRST);
-    configure.call(getAndroid());
-  }
+    @SuppressWarnings("rawtypes")
+    public void android(Closure configure) {
+        configure.setDelegate(getAndroid());
+        configure.setResolveStrategy(Closure.DELEGATE_FIRST);
+        configure.call(getAndroid());
+    }
 }

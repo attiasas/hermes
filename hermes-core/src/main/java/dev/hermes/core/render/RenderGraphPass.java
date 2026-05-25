@@ -4,11 +4,11 @@ import dev.hermes.api.ecs.World;
 
 interface RenderGraphPass {
 
-  String id();
+    String id();
 
-  void resize(int width, int height);
+    void resize(int width, int height);
 
-  void render(World world);
+    void render(World world);
 
-  void dispose();
+    void dispose();
 }

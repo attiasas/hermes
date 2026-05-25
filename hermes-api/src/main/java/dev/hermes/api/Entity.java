@@ -7,11 +7,15 @@ import dev.hermes.api.ecs.EntityKind;
  */
 public interface Entity {
 
-  EntityId id();
+    EntityId id();
 
-  /** Optional logical name from scene JSON; empty when unnamed. */
-  String name();
+    /**
+     * Optional logical name from scene JSON; empty when unnamed.
+     */
+    String name();
 
-  /** Logical entity type; {@link EntityKind#UNSET} when unspecified. */
-  EntityKind kind();
+    /**
+     * Logical entity type; {@link EntityKind#UNSET} when unspecified.
+     */
+    EntityKind kind();
 }

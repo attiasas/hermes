@@ -18,69 +18,69 @@ import org.junit.jupiter.api.Test;
 
 final class SceneRegistryTest {
 
-  private HermesEngineImpl engine;
+    private HermesEngineImpl engine;
 
-  @BeforeAll
-  static void initGdx() {
-    TestGdx.initClasspathFiles();
-  }
+    @BeforeAll
+    static void initGdx() {
+        TestGdx.initClasspathFiles();
+    }
 
-  @BeforeEach
-  void setUp() {
-    engine = new HermesEngineImpl();
-  }
+    @BeforeEach
+    void setUp() {
+        engine = new HermesEngineImpl();
+    }
 
-  @Test
-  void registerIdAndAssetPathCreatesAssetSceneSource() {
-    engine.scenes().registry().register("main", "scenes/main.json");
+    @Test
+    void registerIdAndAssetPathCreatesAssetSceneSource() {
+        engine.scenes().registry().register("main", "scenes/main.json");
 
-    engine.scenes().request(SceneChangeRequest.goTo("main"));
-    engine.scenes().processPending();
+        engine.scenes().request(SceneChangeRequest.goTo("main"));
+        engine.scenes().processPending();
 
-    Entity logo = engine.scenes().activeWorld().findByName("logo");
-    assertNotNull(logo);
-    assertEquals(140f, engine.scenes().activeWorld().getComponent(logo.id(), Transform.class).x());
-    assertEquals(210f, engine.scenes().activeWorld().getComponent(logo.id(), Transform.class).y());
-    assertEquals(
-        "hermes-logo.png",
-        engine.scenes().activeWorld().getComponent(logo.id(), Sprite.class).texture());
-  }
+        Entity logo = engine.scenes().activeWorld().findByName("logo");
+        assertNotNull(logo);
+        assertEquals(140f, engine.scenes().activeWorld().getComponent(logo.id(), Transform.class).x());
+        assertEquals(210f, engine.scenes().activeWorld().getComponent(logo.id(), Transform.class).y());
+        assertEquals(
+                "hermes-logo.png",
+                engine.scenes().activeWorld().getComponent(logo.id(), Sprite.class).texture());
+    }
 
-  @Test
-  void registerSceneDefinitionRejectsDuplicateIds() {
-    SceneDefinition definition =
-        SceneDefinition.builder("main")
-            .source(new AssetSceneSource("scenes/main.json"))
-            .build();
+    @Test
+    void registerSceneDefinitionRejectsDuplicateIds() {
+        SceneDefinition definition =
+                SceneDefinition.builder("main")
+                        .source(new AssetSceneSource("scenes/main.json"))
+                        .build();
 
-    engine.scenes().registry().register(definition);
+        engine.scenes().registry().register(definition);
 
-    IllegalArgumentException error =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                engine
-                    .scenes()
-                    .registry()
-                    .register(
-                        SceneDefinition.builder("main")
-                            .source(new AssetSceneSource("scenes/other.json"))
-                            .build()));
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                engine
+                                        .scenes()
+                                        .registry()
+                                        .register(
+                                                SceneDefinition.builder("main")
+                                                        .source(new AssetSceneSource("scenes/other.json"))
+                                                        .build()));
 
-    assertTrue(error.getMessage().contains("main"));
-    assertTrue(error.getMessage().contains("already registered"));
-  }
+        assertTrue(error.getMessage().contains("main"));
+        assertTrue(error.getMessage().contains("already registered"));
+    }
 
-  @Test
-  void registerIdAndPathRejectsDuplicateIds() {
-    engine.scenes().registry().register("main", "scenes/main.json");
+    @Test
+    void registerIdAndPathRejectsDuplicateIds() {
+        engine.scenes().registry().register("main", "scenes/main.json");
 
-    IllegalArgumentException error =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> engine.scenes().registry().register("main", "scenes/other.json"));
+        IllegalArgumentException error =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> engine.scenes().registry().register("main", "scenes/other.json"));
 
-    assertTrue(error.getMessage().contains("main"));
-    assertTrue(error.getMessage().contains("already registered"));
-  }
+        assertTrue(error.getMessage().contains("main"));
+        assertTrue(error.getMessage().contains("already registered"));
+    }
 }

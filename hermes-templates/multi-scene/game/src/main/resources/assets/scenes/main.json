@@ -3,17 +3,34 @@
     {
       "id": "main-camera",
       "components": {
-        "Transform": { "x": 0, "y": 0, "z": 5 },
-        "Camera": { "projection": "perspective", "active": true, "fieldOfView": 60 }
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 5
+        },
+        "Camera": {
+          "projection": "perspective",
+          "active": true,
+          "fieldOfView": 60
+        }
       }
     },
     {
       "id": "cube",
       "components": {
-        "Transform": { "z": 0 },
-        "Mesh": { "model": "models/cube.obj" },
-        "Material": { "shader": "default/unlit" },
-        "PulseMarker": { "amplitude": 0.15, "speed": 2.5 }
+        "Transform": {
+          "z": 0
+        },
+        "Mesh": {
+          "model": "models/cube.obj"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        },
+        "PulseMarker": {
+          "amplitude": 0.15,
+          "speed": 2.5
+        }
       }
     }
   ]

@@ -7,6 +7,9 @@ package dev.hermes.api;
  */
 public interface HermesSession {
 
-  /** No-op session used until session services are implemented. */
-  HermesSession EMPTY = new HermesSession() {};
+    /**
+     * No-op session used until session services are implemented.
+     */
+    HermesSession EMPTY = new HermesSession() {
+    };
 }

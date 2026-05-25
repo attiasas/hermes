@@ -7,16 +7,16 @@ import org.junit.jupiter.api.Test;
 
 final class PipelineCacheFailureTest {
 
-  @Test
-  void failedPipelineBuild_isCachedAndRethrown() {
-    PipelineCache cache = new PipelineCache();
-    String badPath = "render/does-not-exist.json";
+    @Test
+    void failedPipelineBuild_isCachedAndRethrown() {
+        PipelineCache cache = new PipelineCache();
+        String badPath = "render/does-not-exist.json";
 
-    PipelineParseException first =
-        assertThrows(PipelineParseException.class, () -> cache.get(badPath));
-    PipelineParseException second =
-        assertThrows(PipelineParseException.class, () -> cache.get(badPath));
+        PipelineParseException first =
+                assertThrows(PipelineParseException.class, () -> cache.get(badPath));
+        PipelineParseException second =
+                assertThrows(PipelineParseException.class, () -> cache.get(badPath));
 
-    assertSame(first, second);
-  }
+        assertSame(first, second);
+    }
 }

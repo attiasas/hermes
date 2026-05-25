@@ -15,151 +15,153 @@ import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldImpl;
 import dev.hermes.core.scene.AssetSceneSource;
 import dev.hermes.core.scene.SceneStack;
+
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 final class ScenePipelineOverrideTest {
 
-  private static final String PROJECT_DEFAULT = "render/full-pipeline.json";
+    private static final String PROJECT_DEFAULT = "render/full-pipeline.json";
 
-  private ComponentRegistryImpl registry;
-  private SceneRegistryImpl sceneRegistry;
-  private SceneStack stack;
+    private ComponentRegistryImpl registry;
+    private SceneRegistryImpl sceneRegistry;
+    private SceneStack stack;
 
-  @BeforeAll
-  static void initGdx() {
-    TestGdx.initClasspathFiles();
-  }
+    @BeforeAll
+    static void initGdx() {
+        TestGdx.initClasspathFiles();
+    }
 
-  @BeforeEach
-  void setUp() {
-    registry = new ComponentRegistryImpl();
-    BuiltinComponents.register(registry);
-    sceneRegistry = new SceneRegistryImpl(registry);
-    stack = new SceneStack(sceneRegistry);
-  }
+    @BeforeEach
+    void setUp() {
+        registry = new ComponentRegistryImpl();
+        BuiltinComponents.register(registry);
+        sceneRegistry = new SceneRegistryImpl(registry);
+        stack = new SceneStack(sceneRegistry);
+    }
 
-  @Test
-  void sceneLoader_readsRenderPipelineFromSceneJson() {
-    WorldImpl world = new WorldImpl();
-    Optional<String> override =
-        SceneLoader.loadFromString(
-            "scenes/with-pipeline.json",
-            "{ \"renderPipeline\": \"render/ui-overlay.json\", \"entities\": [] }",
-            world,
-            registry);
+    @Test
+    void sceneLoader_readsRenderPipelineFromSceneJson() {
+        WorldImpl world = new WorldImpl();
+        Optional<String> override =
+                SceneLoader.loadFromString(
+                        "scenes/with-pipeline.json",
+                        "{ \"renderPipeline\": \"render/ui-overlay.json\", \"entities\": [] }",
+                        world,
+                        registry);
 
-    assertEquals(Optional.of("render/ui-overlay.json"), override);
-  }
+        assertEquals(Optional.of("render/ui-overlay.json"), override);
+    }
 
-  @Test
-  void sceneStack_loadsRenderPipelineOverrideFromAssetScene() {
-    sceneRegistry.register("overlay", "scenes/with-pipeline.json");
-    stack.goTo("overlay");
+    @Test
+    void sceneStack_loadsRenderPipelineOverrideFromAssetScene() {
+        sceneRegistry.register("overlay", "scenes/with-pipeline.json");
+        stack.goTo("overlay");
 
-    assertEquals(Optional.of("render/ui-overlay.json"), stack.active().renderPipelineOverride());
-  }
+        assertEquals(Optional.of("render/ui-overlay.json"), stack.active().renderPipelineOverride());
+    }
 
-  @Test
-  void resolvePipelinePath_sceneJsonWinsOverDefinitionAndProjectDefault() {
-    sceneRegistry.register(
-        SceneDefinition.builder("pause")
-            .source(new AssetSceneSource("scenes/with-pipeline.json"))
-            .renderPipeline("render/full-pipeline.json")
-            .build());
-    stack.goTo("pause");
+    @Test
+    void resolvePipelinePath_sceneJsonWinsOverDefinitionAndProjectDefault() {
+        sceneRegistry.register(
+                SceneDefinition.builder("pause")
+                        .source(new AssetSceneSource("scenes/with-pipeline.json"))
+                        .renderPipeline("render/full-pipeline.json")
+                        .build());
+        stack.goTo("pause");
 
-    assertEquals(
-        "render/ui-overlay.json",
-        RenderPipelineExecutor.resolvePipelinePath(stack.active(), PROJECT_DEFAULT));
-  }
+        assertEquals(
+                "render/ui-overlay.json",
+                RenderPipelineExecutor.resolvePipelinePath(stack.active(), PROJECT_DEFAULT));
+    }
 
-  @Test
-  void resolvePipelinePath_definitionUsedWhenNoJsonOverride() {
-    sceneRegistry.register(
-        SceneDefinition.builder("menu")
-            .source(new AssetSceneSource("scenes/main.json"))
-            .renderPipeline("render/ui-overlay.json")
-            .build());
-    stack.goTo("menu");
+    @Test
+    void resolvePipelinePath_definitionUsedWhenNoJsonOverride() {
+        sceneRegistry.register(
+                SceneDefinition.builder("menu")
+                        .source(new AssetSceneSource("scenes/main.json"))
+                        .renderPipeline("render/ui-overlay.json")
+                        .build());
+        stack.goTo("menu");
 
-    assertEquals(
-        "render/ui-overlay.json",
-        RenderPipelineExecutor.resolvePipelinePath(stack.active(), PROJECT_DEFAULT));
-  }
+        assertEquals(
+                "render/ui-overlay.json",
+                RenderPipelineExecutor.resolvePipelinePath(stack.active(), PROJECT_DEFAULT));
+    }
 
-  @Test
-  void resolvePipelinePath_fallsBackToProjectDefault() {
-    sceneRegistry.register("main", "scenes/main.json");
-    stack.goTo("main");
+    @Test
+    void resolvePipelinePath_fallsBackToProjectDefault() {
+        sceneRegistry.register("main", "scenes/main.json");
+        stack.goTo("main");
 
-    assertEquals(
-        PROJECT_DEFAULT, RenderPipelineExecutor.resolvePipelinePath(stack.active(), PROJECT_DEFAULT));
-  }
+        assertEquals(
+                PROJECT_DEFAULT, RenderPipelineExecutor.resolvePipelinePath(stack.active(), PROJECT_DEFAULT));
+    }
 
-  @Test
-  void pipelineCache_returnsSameGraphForSamePath() {
-    PipelineCache cache = new PipelineCache();
+    @Test
+    void pipelineCache_returnsSameGraphForSamePath() {
+        PipelineCache cache = new PipelineCache();
 
-    RenderGraph first = cache.get("render/ui-overlay.json");
-    RenderGraph second = cache.get("render/ui-overlay.json");
+        RenderGraph first = cache.get("render/ui-overlay.json");
+        RenderGraph second = cache.get("render/ui-overlay.json");
 
-    assertSame(first, second);
-    assertEquals(1, first.passCount());
-    assertEquals("ui", first.passId(0));
+        assertSame(first, second);
+        assertEquals(1, first.passCount());
+        assertEquals("ui", first.passId(0));
 
-    cache.dispose();
-  }
+        cache.dispose();
+    }
 
-  @Test
-  void resolvePipelinePath_nonSceneInstanceUsesOnlyJsonOverrideAndDefault() {
-    SceneHandle handle =
-        new SceneHandle() {
-          @Override
-          public String id() {
-            return "stub";
-          }
+    @Test
+    void resolvePipelinePath_nonSceneInstanceUsesOnlyJsonOverrideAndDefault() {
+        SceneHandle handle =
+                new SceneHandle() {
+                    @Override
+                    public String id() {
+                        return "stub";
+                    }
 
-          @Override
-          public dev.hermes.api.ecs.World world() {
-            return null;
-          }
+                    @Override
+                    public dev.hermes.api.ecs.World world() {
+                        return null;
+                    }
 
-          @Override
-          public boolean paused() {
-            return false;
-          }
+                    @Override
+                    public boolean paused() {
+                        return false;
+                    }
 
-          @Override
-          public Optional<String> renderPipelineOverride() {
-            return Optional.empty();
-          }
-        };
+                    @Override
+                    public Optional<String> renderPipelineOverride() {
+                        return Optional.empty();
+                    }
+                };
 
-    assertEquals(
-        PROJECT_DEFAULT, RenderPipelineExecutor.resolvePipelinePath(handle, PROJECT_DEFAULT));
-  }
+        assertEquals(
+                PROJECT_DEFAULT, RenderPipelineExecutor.resolvePipelinePath(handle, PROJECT_DEFAULT));
+    }
 
-  @Test
-  void assetSceneSource_populateStillLoadsEntities() {
-    WorldImpl world = new WorldImpl();
-    AssetSceneSource source = new AssetSceneSource("scenes/with-pipeline.json");
-    source.populate(
-        new SceneLoadContext() {
-          @Override
-          public dev.hermes.api.ecs.World world() {
-            return world;
-          }
+    @Test
+    void assetSceneSource_populateStillLoadsEntities() {
+        WorldImpl world = new WorldImpl();
+        AssetSceneSource source = new AssetSceneSource("scenes/with-pipeline.json");
+        source.populate(
+                new SceneLoadContext() {
+                    @Override
+                    public dev.hermes.api.ecs.World world() {
+                        return world;
+                    }
 
-          @Override
-          public dev.hermes.api.ecs.ComponentRegistry registry() {
-            return registry;
-          }
-        });
+                    @Override
+                    public dev.hermes.api.ecs.ComponentRegistry registry() {
+                        return registry;
+                    }
+                });
 
-    assertEquals(1, world.entityCount());
-    assertTrue(world.findByName("logo") != null);
-  }
+        assertEquals(1, world.entityCount());
+        assertTrue(world.findByName("logo") != null);
+    }
 }

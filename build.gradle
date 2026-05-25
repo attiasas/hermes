@@ -1,47 +1,47 @@
 buildscript {
-  repositories {
-    mavenCentral()
-    google()
-    gradlePluginPortal()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle:8.9.3'
-  }
+    repositories {
+        mavenCentral()
+        google()
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.3'
+    }
 }
 
 subprojects {
-  group = 'dev.hermes'
-  version = '0.1.0-SNAPSHOT'
+    group = 'dev.hermes'
+    version = '0.1.0-SNAPSHOT'
 
-  repositories {
-    mavenCentral()
-    google()
-    maven { url = 'https://jitpack.io' }
-    maven { url = 'https://teavm.org/maven/repository/' }
-  }
-
-  plugins.withId('java') {
-    java {
-      sourceCompatibility = JavaVersion.VERSION_11
-      targetCompatibility = JavaVersion.VERSION_11
+    repositories {
+        mavenCentral()
+        google()
+        maven { url = 'https://jitpack.io' }
+        maven { url = 'https://teavm.org/maven/repository/' }
     }
-  }
 
-  tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-    if (!project.plugins.hasPlugin('com.android.application')
-        && !project.plugins.hasPlugin('com.android.library')) {
-      options.release = 11
+    plugins.withId('java') {
+        java {
+            sourceCompatibility = JavaVersion.VERSION_11
+            targetCompatibility = JavaVersion.VERSION_11
+        }
     }
-  }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        if (!project.plugins.hasPlugin('com.android.application')
+                && !project.plugins.hasPlugin('com.android.library')) {
+            options.release = 11
+        }
+    }
 }
 
 def pluginIncludedBuild = gradle.includedBuilds.find { it.name == 'hermes-gradle-plugin' }
 def toolingTest = pluginIncludedBuild?.task(':hermes-tooling:test')
 if (toolingTest != null) {
-  tasks.register('hermes-tooling-test') {
-    group = 'verification'
-    description = 'Runs :hermes-gradle-plugin:hermes-tooling:test (tooling is composite-included under the plugin build).'
-    dependsOn toolingTest
-  }
+    tasks.register('hermes-tooling-test') {
+        group = 'verification'
+        description = 'Runs :hermes-gradle-plugin:hermes-tooling:test (tooling is composite-included under the plugin build).'
+        dependsOn toolingTest
+    }
 }

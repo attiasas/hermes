@@ -6,5 +6,6 @@ package dev.hermes.launcher.html;
  */
 public final class TeaVMLauncher {
 
-  private TeaVMLauncher() {}
+    private TeaVMLauncher() {
+    }
 }

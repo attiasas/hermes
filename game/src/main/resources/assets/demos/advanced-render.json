@@ -4,27 +4,54 @@
     {
       "id": "camera",
       "components": {
-        "Transform": { "x": 0, "y": 0, "z": 8 },
-        "Camera": { "projection": "perspective", "active": true, "fieldOfView": 60 }
+        "Transform": {
+          "x": 0,
+          "y": 0,
+          "z": 8
+        },
+        "Camera": {
+          "projection": "perspective",
+          "active": true,
+          "fieldOfView": 60
+        }
       }
     },
     {
       "id": "water-plane",
       "components": {
-        "Transform": { "y": 0, "scaleX": 1, "scaleY": 1, "scaleZ": 1 },
-        "Mesh": { "model": "models/plane.obj" },
+        "Transform": {
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "scaleZ": 1
+        },
+        "Mesh": {
+          "model": "models/plane.obj"
+        },
         "Material": {
           "shader": "water",
-          "uniforms": { "u_time": [0] }
+          "uniforms": {
+            "u_time": [
+              0
+            ]
+          }
         }
       }
     },
     {
       "id": "cube",
       "components": {
-        "Transform": { "x": 0, "y": 0.6, "z": 0 },
-        "Mesh": { "model": "models/cube.obj" },
-        "Material": { "shader": "default/unlit" }
+        "Transform": {
+          "x": 0,
+          "y": 0.6,
+          "z": 0
+        },
+        "Mesh": {
+          "model": "models/cube.obj"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        }
       }
     }
   ]

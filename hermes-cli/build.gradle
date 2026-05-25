@@ -1,55 +1,55 @@
 plugins {
-  id 'application'
+    id 'application'
 }
 
 application {
-  mainClass = 'dev.hermes.cli.HermesCli'
-  applicationName = 'hermes'
+    mainClass = 'dev.hermes.cli.HermesCli'
+    applicationName = 'hermes'
 }
 
 repositories {
-  mavenLocal()
+    mavenLocal()
 }
 
 def hermesToolingVersion = findProperty('hermesEngineVersion') ?: version
 
 dependencies {
-  implementation 'info.picocli:picocli:4.7.7'
-  implementation "dev.hermes:hermes-tooling:${hermesToolingVersion}"
+    implementation 'info.picocli:picocli:4.7.7'
+    implementation "dev.hermes:hermes-tooling:${hermesToolingVersion}"
 
-  testImplementation platform('org.junit:junit-bom:5.11.4')
-  testImplementation 'org.junit.jupiter:junit-jupiter'
-  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-  dependsOn tasks.named('processResources')
-  useJUnitPlatform()
+    dependsOn tasks.named('processResources')
+    useJUnitPlatform()
 }
 
 def publishHermesTooling = gradle.includedBuilds.find { it.name == 'hermes-gradle-plugin' }
-    ?.task(':hermes-tooling:publishToMavenLocal')
+        ?.task(':hermes-tooling:publishToMavenLocal')
 
 tasks.named('compileJava') {
-  if (publishHermesTooling != null) {
-    dependsOn publishHermesTooling
-  }
+    if (publishHermesTooling != null) {
+        dependsOn publishHermesTooling
+    }
 }
 
 tasks.register('copyTemplates', Sync) {
-  from('../hermes-templates/minimal') {
-    into 'minimal'
-  }
-  from('../hermes-templates/2d') {
-    into '2d'
-  }
-  from('../hermes-templates/multi-scene') {
-    into 'multi-scene'
-  }
-  from('../hermes-templates/platforms') {
-    into 'platforms'
-  }
-  into layout.buildDirectory.dir('generated/hermes-cli-templates/hermes-templates')
+    from('../hermes-templates/minimal') {
+        into 'minimal'
+    }
+    from('../hermes-templates/2d') {
+        into '2d'
+    }
+    from('../hermes-templates/multi-scene') {
+        into 'multi-scene'
+    }
+    from('../hermes-templates/platforms') {
+        into 'platforms'
+    }
+    into layout.buildDirectory.dir('generated/hermes-cli-templates/hermes-templates')
 }
 
 sourceSets.main.resources.srcDir(layout.buildDirectory.dir('generated/hermes-cli-templates'))

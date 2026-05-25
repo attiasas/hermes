@@ -18,44 +18,44 @@ import org.junit.jupiter.api.Test;
 
 final class AssetSceneSourceTest {
 
-  private World world;
-  private ComponentRegistry registry;
+    private World world;
+    private ComponentRegistry registry;
 
-  @BeforeAll
-  static void initGdx() {
-    TestGdx.initClasspathFiles();
-  }
+    @BeforeAll
+    static void initGdx() {
+        TestGdx.initClasspathFiles();
+    }
 
-  @BeforeEach
-  void setUp() {
-    world = new WorldImpl();
-    registry = new HermesEngineImpl().registry();
-  }
+    @BeforeEach
+    void setUp() {
+        world = new WorldImpl();
+        registry = new HermesEngineImpl().registry();
+    }
 
-  @Test
-  void populateCreatesEntitiesFromAsset() {
-    AssetSceneSource source = new AssetSceneSource("scenes/main.json");
-    source.populate(sceneLoadContext(world, registry));
+    @Test
+    void populateCreatesEntitiesFromAsset() {
+        AssetSceneSource source = new AssetSceneSource("scenes/main.json");
+        source.populate(sceneLoadContext(world, registry));
 
-    assertEquals(1, world.entityCount());
-    Entity logo = world.findByName("logo");
-    assertNotNull(logo);
-    assertEquals(140f, world.getComponent(logo.id(), Transform.class).x());
-    assertEquals(210f, world.getComponent(logo.id(), Transform.class).y());
-    assertEquals("hermes-logo.png", world.getComponent(logo.id(), Sprite.class).texture());
-  }
+        assertEquals(1, world.entityCount());
+        Entity logo = world.findByName("logo");
+        assertNotNull(logo);
+        assertEquals(140f, world.getComponent(logo.id(), Transform.class).x());
+        assertEquals(210f, world.getComponent(logo.id(), Transform.class).y());
+        assertEquals("hermes-logo.png", world.getComponent(logo.id(), Sprite.class).texture());
+    }
 
-  private static SceneLoadContext sceneLoadContext(World world, ComponentRegistry registry) {
-    return new SceneLoadContext() {
-      @Override
-      public World world() {
-        return world;
-      }
+    private static SceneLoadContext sceneLoadContext(World world, ComponentRegistry registry) {
+        return new SceneLoadContext() {
+            @Override
+            public World world() {
+                return world;
+            }
 
-      @Override
-      public ComponentRegistry registry() {
-        return registry;
-      }
-    };
-  }
+            @Override
+            public ComponentRegistry registry() {
+                return registry;
+            }
+        };
+    }
 }

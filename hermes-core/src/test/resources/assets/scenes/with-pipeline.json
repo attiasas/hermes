@@ -4,10 +4,19 @@
     {
       "id": "logo",
       "components": {
-        "Transform": { "x": 1, "y": 2 },
-        "Sprite": { "texture": "hermes-logo.png" },
-        "Material": { "shader": "default/unlit" },
-        "RenderLayer": { "layer": "UI" }
+        "Transform": {
+          "x": 1,
+          "y": 2
+        },
+        "Sprite": {
+          "texture": "hermes-logo.png"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        },
+        "RenderLayer": {
+          "layer": "UI"
+        }
       }
     }
   ]

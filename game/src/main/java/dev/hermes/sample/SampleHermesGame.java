@@ -4,6 +4,8 @@ import dev.hermes.api.HermesApplication;
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.SystemScope;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.render.HermesRenderConfigurator;
 
 /**
@@ -14,51 +16,62 @@ import dev.hermes.api.render.HermesRenderConfigurator;
  */
 public final class SampleHermesGame implements HermesApplication {
 
-  @Override
-  public HermesSession createSession() {
-    return new SampleHermesSession();
-  }
+    private static final Logger log = Logs.get(SampleHermesGame.class);
 
-  @Override
-  public void configureRendering(HermesRenderConfigurator configurator) {
-    configurator.registerPass("water", new WaterPass());
-  }
+    @Override
+    public HermesSession createSession() {
+        return new SampleHermesSession();
+    }
 
-  @Override
-  public void onCreate(HermesEngine engine) {
-    engine
-        .registry()
-        .register(
-            "BounceMarker",
-            BounceMarker.class,
-            data -> {
-              BounceMarker bounce = new BounceMarker();
-              bounce.setAmplitude(data.getFloat("amplitude", 20f));
-              bounce.setSpeed(data.getFloat("speed", 2f));
-              return bounce;
-            });
-    engine.scenes().registry().register("pause", "scenes/pause.json");
-    engine.scenes().registry().register("advanced-render", "demos/advanced-render.json");
-    engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
-    engine.addSystem(new SceneNavigationSystem(engine.scenes(), 4f));
-    engine.addSystem(new AdvancedRenderDemoSystem(engine.scenes(), 12f), SystemScope.GLOBAL);
-  }
+    @Override
+    public void configureRendering(HermesRenderConfigurator configurator) {
+        configurator.registerPass("water", new WaterPass());
+    }
 
-  @Override
-  public void resize(int width, int height) {}
+    @Override
+    public void onCreate(HermesEngine engine) {
+        log.debug("Custom User application creating...");
+        engine
+                .registry()
+                .register(
+                        "BounceMarker",
+                        BounceMarker.class,
+                        data -> {
+                            BounceMarker bounce = new BounceMarker();
+                            bounce.setAmplitude(data.getFloat("amplitude", 20f));
+                            bounce.setSpeed(data.getFloat("speed", 2f));
+                            return bounce;
+                        });
+        engine.scenes().registry().register("pause", "scenes/pause.json");
+        engine.scenes().registry().register("advanced-render", "demos/advanced-render.json");
+        engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
+        engine.addSystem(new SceneNavigationSystem(engine.scenes(), 4f));
+        engine.addSystem(new AdvancedRenderDemoSystem(engine.scenes(), 12f), SystemScope.GLOBAL);
+    }
 
-  @Override
-  public void render() {}
+    @Override
+    public void resize(int width, int height) {
+    }
 
-  @Override
-  public void pause() {}
+    @Override
+    public void render() {
+    }
 
-  @Override
-  public void resume() {}
+    @Override
+    public void pause() {
+    }
 
-  @Override
-  public void dispose() {}
+    @Override
+    public void resume() {
+    }
 
-  /** Stub session for cross-scene state; replace when save/audio services land. */
-  private static final class SampleHermesSession implements HermesSession {}
+    @Override
+    public void dispose() {
+    }
+
+    /**
+     * Stub session for cross-scene state; replace when save/audio services land.
+     */
+    private static final class SampleHermesSession implements HermesSession {
+    }
 }

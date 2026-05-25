@@ -1,5 +1,6 @@
 package dev.hermes.api;
 
+import dev.hermes.api.config.RuntimeConfigBuilder;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.render.HermesRenderConfigurator;
 
@@ -12,27 +13,37 @@ import dev.hermes.api.render.HermesRenderConfigurator;
  */
 public interface HermesApplication {
 
-  /**
-   * Called once before pending scene requests are processed. Register custom components and systems, and create
-   * entities in code here.
-   */
-  void onCreate(HermesEngine engine);
+    /**
+     * Called once before pending scene requests are processed. Register custom components and systems, and create
+     * entities in code here.
+     */
+    void onCreate(HermesEngine engine);
 
-  /** Registers custom render passes referenced by pipeline JSON {@code custom} handlers. */
-  default void configureRendering(HermesRenderConfigurator configurator) {}
+    /**
+     * Registers custom render passes referenced by pipeline JSON {@code custom} handlers.
+     */
+    default void configureRendering(HermesRenderConfigurator configurator) {
+    }
 
-  /** Creates the session shared across scenes; override when save/audio state is needed. */
-  default HermesSession createSession() {
-    return HermesSession.EMPTY;
-  }
+    /**
+     * Optional programmatic overrides applied before engine bootstrap and logging initialization.
+     */
+    default void configureRuntime(RuntimeConfigBuilder config) {}
 
-  void resize(int width, int height);
+    /**
+     * Creates the session shared across scenes; override when save/audio state is needed.
+     */
+    default HermesSession createSession() {
+        return HermesSession.EMPTY;
+    }
 
-  void render();
+    void resize(int width, int height);
 
-  void pause();
+    void render();
 
-  void resume();
+    void pause();
 
-  void dispose();
+    void resume();
+
+    void dispose();
 }
