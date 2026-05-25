@@ -22,6 +22,10 @@ public final class HermesRuntimeConfig {
         return PACKAGED.getProperty(key, defaultValue);
     }
 
+    public static void reload() {
+        // stub for Task 1; Task 2 replaces with real lazy load
+    }
+
     private static Properties loadPackaged() {
         Properties properties = new Properties();
         try (InputStream in =
