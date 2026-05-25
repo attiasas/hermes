@@ -47,6 +47,7 @@ public final class HermesGdxApplication implements ApplicationListener {
     public void create() {
         fatalErrorScreen = new HermesFatalErrorScreen();
         try {
+            HermesRuntimeConfig.reload();
             RuntimeConfigServiceImpl runtimeConfig = new RuntimeConfigServiceImpl();
             application.configureRuntime(runtimeConfig.builder());
             runtimeConfig.applyOverrides();
