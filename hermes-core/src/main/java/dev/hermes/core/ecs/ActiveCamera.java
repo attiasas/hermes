@@ -94,11 +94,11 @@ public final class ActiveCamera {
         return far;
     }
 
-    float viewportWidth() {
+    public float viewportWidth() {
         return viewportWidth;
     }
 
-    float viewportHeight() {
+    public float viewportHeight() {
         return viewportHeight;
     }
 }

@@ -60,7 +60,8 @@ public final class UiPass {
                 Comparator.comparingDouble(e -> world.getComponent(e.id(), Transform.class).z()));
 
         ActiveCamera active =
-                CameraResolver.resolveNamed(world, cameraEntityName, windowWidth, windowHeight);
+                CameraResolver.resolveNamed(
+                        world, cameraEntityName, "screen", windowWidth, windowHeight);
         sceneCamera.apply(active);
 
         batch.setProjectionMatrix(sceneCamera.combined());

@@ -13,12 +13,21 @@ public final class CameraResolver {
     private CameraResolver() {
     }
 
-    public static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
+    /**
+     * Resolves the camera for a render pass using surface pixel dimensions (not window size).
+     * When {@code passTargetId} is not {@code "screen"}, prefers a camera whose
+     * {@link Camera#renderTarget()} matches the pass target.
+     */
+    public static ActiveCamera resolveForPass(
+            World world, String passTargetId, float surfaceWidth, float surfaceHeight) {
+        Entity renderTargetEntity = null;
+        Camera renderTargetCamera = null;
         Entity activeEntity = null;
         Camera activeCamera = null;
         Entity fallbackEntity = null;
         Camera fallbackCamera = null;
         int activeCount = 0;
+        boolean matchTarget = passTargetId != null && !passTargetId.isBlank() && !"screen".equals(passTargetId);
 
         for (Entity entity : world.entitiesWith(Camera.class)) {
             Camera camera = world.getComponent(entity.id(), Camera.class);
@@ -29,6 +38,12 @@ public final class CameraResolver {
                 fallbackEntity = entity;
                 fallbackCamera = camera;
             }
+            if (matchTarget && passTargetId.equals(camera.renderTarget())) {
+                if (renderTargetEntity == null) {
+                    renderTargetEntity = entity;
+                    renderTargetCamera = camera;
+                }
+            }
             if (camera.active()) {
                 activeCount++;
                 if (activeEntity == null) {
@@ -38,16 +53,22 @@ public final class CameraResolver {
             }
         }
 
-        if (activeCount > 1) {
+        if (activeCount > 1 && renderTargetEntity == null) {
             System.err.println(
                     "Warning: multiple active Camera components found; using the first active camera.");
         }
 
-        Entity chosen = activeEntity != null ? activeEntity : fallbackEntity;
-        Camera chosenCamera = activeCamera != null ? activeCamera : fallbackCamera;
+        Entity chosen =
+                renderTargetEntity != null
+                        ? renderTargetEntity
+                        : (activeEntity != null ? activeEntity : fallbackEntity);
+        Camera chosenCamera =
+                renderTargetCamera != null
+                        ? renderTargetCamera
+                        : (activeCamera != null ? activeCamera : fallbackCamera);
 
         if (chosen == null || chosenCamera == null) {
-            return defaultCamera(windowWidth, windowHeight);
+            return defaultCamera(surfaceWidth, surfaceHeight);
         }
 
         Transform transform = world.getComponent(chosen.id(), Transform.class);
@@ -59,26 +80,34 @@ public final class CameraResolver {
         }
 
         float viewportWidth =
-                chosenCamera.viewportWidth() > 0f ? chosenCamera.viewportWidth() : windowWidth;
+                chosenCamera.viewportWidth() > 0f ? chosenCamera.viewportWidth() : surfaceWidth;
         float viewportHeight =
-                chosenCamera.viewportHeight() > 0f ? chosenCamera.viewportHeight() : windowHeight;
+                chosenCamera.viewportHeight() > 0f ? chosenCamera.viewportHeight() : surfaceHeight;
 
         return fromComponents(transform, chosenCamera, viewportWidth, viewportHeight);
     }
 
+    public static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
+        return resolveForPass(world, "screen", windowWidth, windowHeight);
+    }
+
     /**
-     * Resolves the camera on a named entity; falls back to {@link #resolve} when not found.
+     * Resolves the camera on a named entity; falls back to {@link #resolveForPass} when not found.
      */
     public static ActiveCamera resolveNamed(
-            World world, String entityName, float windowWidth, float windowHeight) {
+            World world,
+            String entityName,
+            String passTargetId,
+            float surfaceWidth,
+            float surfaceHeight) {
         if (entityName == null || entityName.isBlank()) {
-            return resolve(world, windowWidth, windowHeight);
+            return resolveForPass(world, passTargetId, surfaceWidth, surfaceHeight);
         }
         Entity entity = world.findByName(entityName);
         if (entity == null) {
             System.err.println(
                     "Warning: UI pass camera entity '" + entityName + "' not found; using active camera.");
-            return resolve(world, windowWidth, windowHeight);
+            return resolveForPass(world, passTargetId, surfaceWidth, surfaceHeight);
         }
         Camera camera = world.getComponent(entity.id(), Camera.class);
         Transform transform = world.getComponent(entity.id(), Transform.class);
@@ -89,9 +118,9 @@ public final class CameraResolver {
                             + "' must have Camera and Transform components on the same entity.");
         }
         float viewportWidth =
-                camera.viewportWidth() > 0f ? camera.viewportWidth() : windowWidth;
+                camera.viewportWidth() > 0f ? camera.viewportWidth() : surfaceWidth;
         float viewportHeight =
-                camera.viewportHeight() > 0f ? camera.viewportHeight() : windowHeight;
+                camera.viewportHeight() > 0f ? camera.viewportHeight() : surfaceHeight;
         return fromComponents(transform, camera, viewportWidth, viewportHeight);
     }
 
