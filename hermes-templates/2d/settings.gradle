@@ -29,9 +29,9 @@ rootProject.name = '{{ROOT_PROJECT_NAME}}'
 
 hermes {
     platforms {
-        desktop { enabled = { { DESKTOP_ENABLED } } }
-        html { enabled = { { HTML_ENABLED } } }
-        android { enabled = { { ANDROID_ENABLED } } }
+        desktop { enabled = {{DESKTOP_ENABLED}} }
+        html { enabled = {{HTML_ENABLED}} }
+        android { enabled = {{ANDROID_ENABLED}} }
     }
 }
 

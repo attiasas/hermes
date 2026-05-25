@@ -22,6 +22,26 @@ class TemplateSupportTest {
     }
 
     @Test
+    void templateSource_settingsGradleDeclaresSubstitutablePlatformTokens() throws Exception {
+        for (String templateId : new String[] {"minimal", "2d", "multi-scene"}) {
+            Path root = TemplateSupport.locateTemplateRoot(templateId);
+            String settings = Files.readString(root.resolve("settings.gradle"), StandardCharsets.UTF_8);
+            assertTrue(
+                    settings.contains("{{DESKTOP_ENABLED}}"),
+                    templateId + " settings.gradle must use {{DESKTOP_ENABLED}} token");
+            assertTrue(
+                    settings.contains("{{HTML_ENABLED}}"),
+                    templateId + " settings.gradle must use {{HTML_ENABLED}} token");
+            assertTrue(
+                    settings.contains("{{ANDROID_ENABLED}}"),
+                    templateId + " settings.gradle must use {{ANDROID_ENABLED}} token");
+            assertFalse(
+                    settings.contains("{ { DESKTOP_ENABLED } }"),
+                    templateId + " settings.gradle has broken spaced token syntax");
+        }
+    }
+
+    @Test
     void materialize_gradlewIsExecutable(@TempDir Path target) throws Exception {
         materialize(target);
 
