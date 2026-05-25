@@ -26,7 +26,7 @@ public final class ViewportLayout {
         if (mode == ViewportFitMode.LETTERBOX) {
             computeLetterbox(surfaceW, surfaceH, targetAspect, out);
         } else if (mode == ViewportFitMode.CROP) {
-            computeCrop(surfaceW, surfaceH, targetAspect, out);
+            out.set(0f, 0f, surfaceW, surfaceH);
         } else {
             out.set(0f, 0f, surfaceW, surfaceH);
         }
@@ -42,19 +42,6 @@ public final class ViewportLayout {
             float width = surfaceW;
             float height = width / targetAspect;
             out.set(0f, (surfaceH - height) * 0.5f, width, height);
-        }
-    }
-
-    private static void computeCrop(int surfaceW, int surfaceH, float targetAspect, Rect4 out) {
-        float surfaceAspect = (float) surfaceW / surfaceH;
-        if (surfaceAspect > targetAspect) {
-            float width = surfaceW;
-            float height = width / targetAspect;
-            out.set(0f, (surfaceH - height) * 0.5f, width, height);
-        } else {
-            float height = surfaceH;
-            float width = height * targetAspect;
-            out.set((surfaceW - width) * 0.5f, 0f, width, height);
         }
     }
 }
