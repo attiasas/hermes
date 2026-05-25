@@ -49,9 +49,14 @@ public final class PipelineCache {
                     assetPath,
                     path -> {
                         PipelineDocument document = PipelineLoader.load(path);
-                        return batch == null
-                                ? builder.buildWithStubs(document)
-                                : builder.build(document, batch);
+                        RenderGraph graph =
+                                batch == null
+                                        ? builder.buildWithStubs(document)
+                                        : builder.build(document, batch);
+                        graph.resize(
+                                Math.max(1, viewport.windowWidth()),
+                                Math.max(1, viewport.windowHeight()));
+                        return graph;
                     });
         } catch (RuntimeException error) {
             failures.put(assetPath, error);
@@ -72,5 +77,22 @@ public final class PipelineCache {
         }
         graphs.clear();
         failures.clear();
+    }
+
+    /** Builds and caches a graph from an in-memory document (tests only). */
+    RenderGraph getForTest(PipelineDocument document) {
+        String key = "test:" + document.hashCode();
+        return graphs.computeIfAbsent(
+                key,
+                ignored -> {
+                    RenderGraph graph =
+                            batch == null
+                                    ? builder.buildWithStubs(document)
+                                    : builder.build(document, batch);
+                    graph.resize(
+                            Math.max(1, viewport.windowWidth()),
+                            Math.max(1, viewport.windowHeight()));
+                    return graph;
+                });
     }
 }

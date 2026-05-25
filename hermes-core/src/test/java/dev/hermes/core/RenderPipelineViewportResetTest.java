@@ -3,6 +3,7 @@ package dev.hermes.core;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.headless.mock.graphics.MockGraphics;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.ecs.World;
 import dev.hermes.api.scene.SceneHandle;
@@ -30,6 +31,7 @@ final class RenderPipelineViewportResetTest {
         gl = FramebufferGlMock.create();
         Gdx.gl20 = gl.gl();
         Gdx.gl = Gdx.gl20;
+        Gdx.graphics = new ResizableMockGraphics(800, 600);
     }
 
     @BeforeEach
@@ -100,5 +102,35 @@ final class RenderPipelineViewportResetTest {
                 gl.viewportCalls().stream()
                         .anyMatch(c -> c[0] == 0 && c[1] == 0 && c[2] == 640 && c[3] == 480),
                 "resize must apply full backbuffer viewport immediately");
+    }
+
+    private static final class ResizableMockGraphics extends MockGraphics {
+        private int width;
+        private int height;
+
+        ResizableMockGraphics(int width, int height) {
+            this.width = width;
+            this.height = height;
+        }
+
+        @Override
+        public int getWidth() {
+            return width;
+        }
+
+        @Override
+        public int getHeight() {
+            return height;
+        }
+
+        @Override
+        public int getBackBufferWidth() {
+            return width;
+        }
+
+        @Override
+        public int getBackBufferHeight() {
+            return height;
+        }
     }
 }

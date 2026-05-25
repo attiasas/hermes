@@ -11,7 +11,8 @@
         "Camera": {
           "projection": "perspective",
           "active": true,
-          "fieldOfView": 60
+          "fieldOfView": 60,
+          "fitMode": "stretch"
         }
       }
     },
