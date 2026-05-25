@@ -27,6 +27,7 @@ final class FramebufferGlMock {
         private final List<int[]> viewportCalls = new ArrayList<>();
         private int nextFramebufferId = 10;
         private int nextTextureId = 20;
+        private int nextBufferId = 30;
 
         GL20 gl() {
             return (GL20) Proxy.newProxyInstance(GL20.class.getClassLoader(), new Class<?>[]{GL20.class}, this);
@@ -57,6 +58,11 @@ final class FramebufferGlMock {
                     return GL20.GL_FRAMEBUFFER_COMPLETE;
                 case "glGenTexture":
                     return nextTextureId++;
+                case "glGenBuffers":
+                    return nextBufferId++;
+                case "glBindBuffer":
+                case "glBufferData":
+                case "glDeleteBuffers":
                 case "glBindTexture":
                 case "glTexImage2D":
                 case "glTexParameteri":

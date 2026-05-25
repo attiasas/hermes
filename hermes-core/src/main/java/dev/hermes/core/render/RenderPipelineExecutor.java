@@ -7,6 +7,7 @@ import dev.hermes.api.ecs.World;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.scene.SceneInstance;
+import dev.hermes.core.viewport.GlViewport;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import java.util.Objects;
@@ -40,10 +41,13 @@ public final class RenderPipelineExecutor {
     }
 
     public void resize(int width, int height) {
+        viewport.onWindowResize(width, height);
+        GlViewport.applyFullBackbuffer(width, height);
         cache.resize(width, height);
     }
 
     public void execute(Iterable<? extends SceneHandle> scenes) {
+        GlViewport.applyFullBackbuffer(viewport.windowWidth(), viewport.windowHeight());
         boolean cleared = false;
         for (SceneHandle scene : scenes) {
             RenderGraph graph = cache.get(resolvePipelinePath(scene));

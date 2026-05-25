@@ -100,7 +100,6 @@ public final class HermesGdxApplication implements ApplicationListener {
             return;
         }
         if (renderPipeline != null) {
-            engine.viewport().onWindowResize(width, height);
             renderPipeline.resize(width, height);
         }
         application.resize(width, height);
