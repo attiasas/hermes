@@ -58,6 +58,15 @@ final class JsonComponentData implements ComponentData {
         return Boolean.parseBoolean(value.asString());
     }
 
+    float getNestedFloat(String objectKey, String field, float defaultValue) {
+        JsonValue nested = object.get(objectKey);
+        if (nested == null || !nested.isObject()) {
+            return defaultValue;
+        }
+        JsonValue value = nested.get(field);
+        return value == null || value.isNull() ? defaultValue : value.asFloat();
+    }
+
     Map<String, float[]> getFloatArrayMap(String key) {
         JsonValue map = object.get(key);
         if (map == null || !map.isObject()) {

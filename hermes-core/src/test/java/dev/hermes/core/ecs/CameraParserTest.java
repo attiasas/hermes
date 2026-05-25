@@ -95,4 +95,35 @@ final class CameraParserTest {
         assertEquals(500f, camera.far());
         assertFalse(camera.active());
     }
+
+    @Test
+    void parsesFitModeAndLookAt() {
+        String json =
+                "{\n"
+                        + "  \"entities\": [\n"
+                        + "    {\n"
+                        + "      \"id\": \"cam\",\n"
+                        + "      \"components\": {\n"
+                        + "        \"Transform\": { \"x\": 0, \"y\": 0, \"z\": 0 },\n"
+                        + "        \"Camera\": {\n"
+                        + "          \"projection\": \"perspective\",\n"
+                        + "          \"fitMode\": \"letterbox\",\n"
+                        + "          \"designAspect\": 1.7777778,\n"
+                        + "          \"lookAt\": { \"x\": 1, \"y\": 2, \"z\": 3 }\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  ]\n"
+                        + "}\n";
+
+        WorldImpl world = new WorldImpl();
+        SceneLoader.loadFromString("scenes/test.json", json, world, registry);
+
+        Camera c = world.getComponent(world.findByName("cam").id(), Camera.class);
+        assertEquals(dev.hermes.api.ecs.ViewportFitMode.LETTERBOX, c.fitMode());
+        assertEquals(1.7777778f, c.designAspect(), 0.0001f);
+        assertEquals(1f, c.lookAtX(), 0.001f);
+        assertEquals(2f, c.lookAtY(), 0.001f);
+        assertEquals(3f, c.lookAtZ(), 0.001f);
+    }
 }

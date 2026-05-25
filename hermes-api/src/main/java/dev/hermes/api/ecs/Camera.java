@@ -22,9 +22,14 @@ public final class Camera implements Component {
     private float viewportWidth;
     private float viewportHeight;
     /**
-     * Optional pipeline framebuffer id; reserved for future camera-target routing.
+     * Optional pipeline framebuffer id; unset means eligible for any pass target.
      */
     private String renderTarget;
+    private ViewportFitMode fitMode = ViewportFitMode.LETTERBOX;
+    private float designAspect;
+    private float lookAtX = Float.NaN;
+    private float lookAtY = Float.NaN;
+    private float lookAtZ = Float.NaN;
 
     public Projection projection() {
         return projection;
@@ -110,5 +115,40 @@ public final class Camera implements Component {
         } else {
             this.renderTarget = renderTarget.trim();
         }
+    }
+
+    public ViewportFitMode fitMode() {
+        return fitMode;
+    }
+
+    public void setFitMode(ViewportFitMode fitMode) {
+        this.fitMode = fitMode == null ? ViewportFitMode.LETTERBOX : fitMode;
+    }
+
+    public float designAspect() {
+        return designAspect;
+    }
+
+    public void setDesignAspect(float designAspect) {
+        this.designAspect = designAspect;
+    }
+
+  /** World point perspective camera aims at; NaN means use direction + rotation. */
+    public float lookAtX() {
+        return lookAtX;
+    }
+
+    public float lookAtY() {
+        return lookAtY;
+    }
+
+    public float lookAtZ() {
+        return lookAtZ;
+    }
+
+    public void setLookAt(float x, float y, float z) {
+        this.lookAtX = x;
+        this.lookAtY = y;
+        this.lookAtZ = z;
     }
 }

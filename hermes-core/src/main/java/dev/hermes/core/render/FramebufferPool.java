@@ -78,7 +78,6 @@ public final class FramebufferPool {
         if ("screen".equals(target)) {
             if (allocateGpu) {
                 FrameBuffer.unbind();
-                Gdx.gl.glViewport(0, 0, windowWidth, windowHeight);
             }
             return;
         }
@@ -108,6 +107,22 @@ public final class FramebufferPool {
         }
         buffers.clear();
         allocationOrder.clear();
+    }
+
+    public int targetWidth(String targetId) {
+        if ("screen".equals(targetId)) {
+            return windowWidth;
+        }
+        FrameBuffer fb = buffers.get(targetId);
+        return fb != null ? fb.getWidth() : windowWidth;
+    }
+
+    public int targetHeight(String targetId) {
+        if ("screen".equals(targetId)) {
+            return windowHeight;
+        }
+        FrameBuffer fb = buffers.get(targetId);
+        return fb != null ? fb.getHeight() : windowHeight;
     }
 
     private FrameBuffer createBuffer(PipelineDocument.FramebufferDef def, int width, int height) {

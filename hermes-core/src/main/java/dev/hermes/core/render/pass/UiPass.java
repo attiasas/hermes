@@ -11,9 +11,7 @@ import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.HermesAssetPaths;
-import dev.hermes.core.ecs.ActiveCamera;
-import dev.hermes.core.ecs.CameraResolver;
-import dev.hermes.core.ecs.SceneCamera;
+import dev.hermes.core.viewport.BoundCamera;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,16 +22,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Renders UI-layer sprites using an optional named scene camera or screen-space ortho.
+ * Renders UI-layer sprites using the bound scene camera.
  */
 public final class UiPass {
 
     private final SpriteBatch batch;
     private final Map<String, TextureRegion> regions = new HashMap<>();
-    private final SceneCamera sceneCamera = new SceneCamera();
-    private final String cameraEntityName;
-    private float windowWidth = 640f;
-    private float windowHeight = 480f;
 
     public UiPass(SpriteBatch batch) {
         this(batch, null);
@@ -41,17 +35,12 @@ public final class UiPass {
 
     public UiPass(SpriteBatch batch, String cameraEntityName) {
         this.batch = batch;
-        this.cameraEntityName = cameraEntityName;
-        sceneCamera.resize(windowWidth, windowHeight);
     }
 
     public void resize(int width, int height) {
-        windowWidth = Math.max(1, width);
-        windowHeight = Math.max(1, height);
-        sceneCamera.resize(windowWidth, windowHeight);
     }
 
-    public void render(World world, Set<RenderLayer.Layer> layers) {
+    public void render(World world, Set<RenderLayer.Layer> layers, BoundCamera bound) {
         List<Entity> drawables = collectDrawableEntities(world, layers);
         if (drawables.isEmpty()) {
             return;
@@ -59,11 +48,7 @@ public final class UiPass {
         drawables.sort(
                 Comparator.comparingDouble(e -> world.getComponent(e.id(), Transform.class).z()));
 
-        ActiveCamera active =
-                CameraResolver.resolveNamed(world, cameraEntityName, windowWidth, windowHeight);
-        sceneCamera.apply(active);
-
-        batch.setProjectionMatrix(sceneCamera.combined());
+        batch.setProjectionMatrix(bound.combined());
         batch.begin();
         for (Entity entity : drawables) {
             drawSprite(world, entity);

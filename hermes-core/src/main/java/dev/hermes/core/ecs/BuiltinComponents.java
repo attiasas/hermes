@@ -65,6 +65,17 @@ public final class BuiltinComponents {
                     if (data.has("renderTarget")) {
                         camera.setRenderTarget(data.getString("renderTarget", ""));
                     }
+                    camera.setFitMode(parseFitMode(data.getString("fitMode", "letterbox")));
+                    camera.setDesignAspect(data.getFloat("designAspect", 0f));
+                    if (data instanceof JsonComponentData) {
+                        JsonComponentData json = (JsonComponentData) data;
+                        if (json.has("lookAt")) {
+                            camera.setLookAt(
+                                    json.getNestedFloat("lookAt", "x", 0f),
+                                    json.getNestedFloat("lookAt", "y", 0f),
+                                    json.getNestedFloat("lookAt", "z", 0f));
+                        }
+                    }
                     return camera;
                 });
         registry.register(
@@ -124,5 +135,22 @@ public final class BuiltinComponents {
             return Camera.Projection.PERSPECTIVE;
         }
         return Camera.Projection.ORTHOGRAPHIC;
+    }
+
+    private static dev.hermes.api.ecs.ViewportFitMode parseFitMode(String value) {
+        if (value == null) {
+            return dev.hermes.api.ecs.ViewportFitMode.LETTERBOX;
+        }
+        String normalized = value.trim().toLowerCase();
+        if ("stretch".equals(normalized)) {
+            return dev.hermes.api.ecs.ViewportFitMode.STRETCH;
+        }
+        if ("crop".equals(normalized)) {
+            return dev.hermes.api.ecs.ViewportFitMode.CROP;
+        }
+        if ("fixed".equals(normalized)) {
+            return dev.hermes.api.ecs.ViewportFitMode.FIXED;
+        }
+        return dev.hermes.api.ecs.ViewportFitMode.LETTERBOX;
     }
 }

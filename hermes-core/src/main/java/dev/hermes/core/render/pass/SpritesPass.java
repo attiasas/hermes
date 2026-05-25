@@ -15,12 +15,11 @@ import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.HermesAssetPaths;
 import dev.hermes.core.ecs.ActiveCamera;
-import dev.hermes.core.ecs.CameraResolver;
-import dev.hermes.core.ecs.SceneCamera;
 import dev.hermes.core.ecs.SpriteDrawOrder;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.viewport.BoundCamera;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -30,17 +29,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Renders sprites in world space using the active scene camera projection.
+ * Renders sprites in world space using the bound scene camera projection.
  */
 public final class SpritesPass {
 
     private final SpriteBatch batch;
     private final ShaderRegistry shaderRegistry;
     private final Map<String, TextureRegion> regions = new HashMap<>();
-    private final SceneCamera sceneCamera = new SceneCamera();
     private final Vector3 projected = new Vector3();
-    private float windowWidth = 640f;
-    private float windowHeight = 480f;
 
     public SpritesPass(SpriteBatch batch) {
         this(batch, null);
@@ -49,35 +45,29 @@ public final class SpritesPass {
     public SpritesPass(SpriteBatch batch, ShaderRegistry shaderRegistry) {
         this.batch = batch;
         this.shaderRegistry = shaderRegistry;
-        sceneCamera.resize(windowWidth, windowHeight);
     }
 
     public void resize(int width, int height) {
-        windowWidth = Math.max(1, width);
-        windowHeight = Math.max(1, height);
-        sceneCamera.resize(windowWidth, windowHeight);
     }
 
     public void render(World world) {
-        render(world, EnumSet.of(RenderLayer.Layer.WORLD));
+        throw new UnsupportedOperationException("Use render(World, layers, BoundCamera)");
     }
 
-    public void render(World world, Set<RenderLayer.Layer> layers) {
-        ActiveCamera active = CameraResolver.resolve(world, windowWidth, windowHeight);
-        sceneCamera.apply(active);
-
+    public void render(World world, Set<RenderLayer.Layer> layers, BoundCamera bound) {
+        ActiveCamera active = bound.active();
         List<Entity> drawables = collectDrawableEntities(world, layers);
         SpriteDrawOrder.sort(drawables, world, active);
 
-        batch.setProjectionMatrix(sceneCamera.combined());
+        batch.setProjectionMatrix(bound.combined());
         batch.begin();
         for (Entity entity : drawables) {
-            drawSprite(world, entity, active, sceneCamera);
+            drawSprite(world, entity, active, bound);
         }
         batch.end();
     }
 
-    private void drawSprite(World world, Entity entity, ActiveCamera active, SceneCamera sceneCamera) {
+    private void drawSprite(World world, Entity entity, ActiveCamera active, BoundCamera bound) {
         Transform transform = world.getComponent(entity.id(), Transform.class);
         Sprite sprite = world.getComponent(entity.id(), Sprite.class);
         if (transform == null || sprite == null) {
@@ -114,7 +104,7 @@ public final class SpritesPass {
         try {
             if (active.projection() == Camera.Projection.PERSPECTIVE) {
                 projected.set(x, y, transform.z());
-                sceneCamera.gdxCamera().project(projected);
+                bound.gdxCamera().project(projected);
                 batch.draw(
                         region, projected.x, projected.y, originX, originY, width, height, 1f, 1f, rotation);
             } else {
@@ -144,9 +134,6 @@ public final class SpritesPass {
         return shaderRegistry.requireProgram(shaderId);
     }
 
-    /**
-     * Package-visible for tests.
-     */
     ShaderProgram resolveSpriteShaderForTest(Material material) {
         return resolveSpriteShader(material);
     }

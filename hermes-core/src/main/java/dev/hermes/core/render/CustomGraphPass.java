@@ -2,15 +2,20 @@ package dev.hermes.core.render;
 
 import dev.hermes.api.ecs.World;
 import dev.hermes.api.render.RenderPass;
+import dev.hermes.core.viewport.BoundCamera;
+import dev.hermes.core.viewport.RenderSurface;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 final class CustomGraphPass implements RenderGraphPass {
 
     private final String id;
     private final RenderPass delegate;
+    private final ViewportServiceImpl viewport;
 
-    CustomGraphPass(String id, RenderPass delegate) {
+    CustomGraphPass(String id, RenderPass delegate, ViewportServiceImpl viewport) {
         this.id = id;
         this.delegate = delegate;
+        this.viewport = viewport;
     }
 
     @Override
@@ -24,8 +29,9 @@ final class CustomGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world) {
-        delegate.render(world);
+    public void render(World world, RenderSurface surface, BoundCamera bound) {
+        RenderContextImpl context = new RenderContextImpl(surface, bound, viewport);
+        delegate.render(world, context);
     }
 
     @Override

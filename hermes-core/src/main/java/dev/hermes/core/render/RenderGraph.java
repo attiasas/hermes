@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import dev.hermes.api.ecs.World;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import java.util.List;
 
@@ -17,11 +18,12 @@ public final class RenderGraph {
     private final ModelCache sharedModelCache;
     private final ShaderRegistry shaderRegistry;
     private final FramebufferPool framebufferPool;
+    private final ViewportServiceImpl viewport;
     private int backbufferWidth = -1;
     private int backbufferHeight = -1;
 
     RenderGraph(float[] clearColor, List<RenderGraphPass> passes, ModelCache sharedModelCache) {
-        this(clearColor, passes, sharedModelCache, null, null);
+        this(clearColor, passes, sharedModelCache, null, null, new ViewportServiceImpl());
     }
 
     RenderGraph(
@@ -29,7 +31,7 @@ public final class RenderGraph {
             List<RenderGraphPass> passes,
             ModelCache sharedModelCache,
             ShaderRegistry shaderRegistry) {
-        this(clearColor, passes, sharedModelCache, shaderRegistry, null);
+        this(clearColor, passes, sharedModelCache, shaderRegistry, null, new ViewportServiceImpl());
     }
 
     RenderGraph(
@@ -37,12 +39,14 @@ public final class RenderGraph {
             List<RenderGraphPass> passes,
             ModelCache sharedModelCache,
             ShaderRegistry shaderRegistry,
-            FramebufferPool framebufferPool) {
+            FramebufferPool framebufferPool,
+            ViewportServiceImpl viewport) {
         this.clearColor = clearColor.clone();
         this.passes = List.copyOf(passes);
         this.sharedModelCache = sharedModelCache;
         this.shaderRegistry = shaderRegistry;
         this.framebufferPool = framebufferPool;
+        this.viewport = viewport;
     }
 
     public float[] clearColor() {
@@ -75,6 +79,9 @@ public final class RenderGraph {
     public void resize(int width, int height) {
         backbufferWidth = Math.max(1, width);
         backbufferHeight = Math.max(1, height);
+        if (viewport != null) {
+            viewport.onWindowResize(backbufferWidth, backbufferHeight);
+        }
         if (framebufferPool != null) {
             framebufferPool.resize(backbufferWidth, backbufferHeight);
         }
@@ -86,7 +93,7 @@ public final class RenderGraph {
     public void render(World world) {
         syncBackbufferSize();
         for (RenderGraphPass pass : passes) {
-            pass.render(world);
+            pass.render(world, null, null);
         }
     }
 

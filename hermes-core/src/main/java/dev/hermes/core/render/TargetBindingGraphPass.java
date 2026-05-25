@@ -1,20 +1,34 @@
 package dev.hermes.core.render;
 
 import dev.hermes.api.ecs.World;
+import dev.hermes.core.ecs.ActiveCamera;
+import dev.hermes.core.ecs.CameraResolver;
+import dev.hermes.core.viewport.BoundCamera;
+import dev.hermes.core.viewport.RenderSurface;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 /**
- * Wraps a render pass with framebuffer target bind/unbind.
+ * Wraps a render pass with framebuffer target bind/unbind and viewport camera binding.
  */
 final class TargetBindingGraphPass implements RenderGraphPass {
 
     private final String target;
+    private final String cameraEntityName;
     private final RenderGraphPass delegate;
     private final FramebufferPool pool;
+    private final ViewportServiceImpl viewport;
 
-    TargetBindingGraphPass(String target, RenderGraphPass delegate, FramebufferPool pool) {
+    TargetBindingGraphPass(
+            String target,
+            String cameraEntityName,
+            RenderGraphPass delegate,
+            FramebufferPool pool,
+            ViewportServiceImpl viewport) {
         this.target = target;
+        this.cameraEntityName = cameraEntityName;
         this.delegate = delegate;
         this.pool = pool;
+        this.viewport = viewport;
     }
 
     String target() {
@@ -32,13 +46,30 @@ final class TargetBindingGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world) {
+    public void render(World world, RenderSurface surface, BoundCamera ignored) {
         pool.beginPass(target);
         try {
-            delegate.render(world);
+            RenderSurface passSurface = viewport.surfaceForPass(target, pool, world);
+            ActiveCamera active = resolveCamera(world, passSurface);
+            BoundCamera bound = viewport.binder().bind(active, passSurface);
+            bound.applyGlViewport();
+            delegate.render(world, passSurface, bound);
         } finally {
             pool.endPass(target);
         }
+    }
+
+    private ActiveCamera resolveCamera(World world, RenderSurface passSurface) {
+        if (cameraEntityName != null && !cameraEntityName.isBlank()) {
+            return CameraResolver.resolveNamed(
+                    world,
+                    cameraEntityName,
+                    target,
+                    passSurface.pixelWidth(),
+                    passSurface.pixelHeight());
+        }
+        return CameraResolver.resolveForPass(
+                world, target, passSurface.pixelWidth(), passSurface.pixelHeight());
     }
 
     @Override

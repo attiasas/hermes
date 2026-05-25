@@ -1,6 +1,7 @@
 package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.ViewportFitMode;
 
 /**
  * Resolved view state for the active scene camera (or the engine default).
@@ -20,6 +21,12 @@ public final class ActiveCamera {
     private final float far;
     private final float viewportWidth;
     private final float viewportHeight;
+    private final ViewportFitMode fitMode;
+    private final float designAspect;
+    private final float lookAtX;
+    private final float lookAtY;
+    private final float lookAtZ;
+    private final String renderTarget;
 
     public ActiveCamera(
             Camera.Projection projection,
@@ -34,7 +41,13 @@ public final class ActiveCamera {
             float near,
             float far,
             float viewportWidth,
-            float viewportHeight) {
+            float viewportHeight,
+            ViewportFitMode fitMode,
+            float designAspect,
+            float lookAtX,
+            float lookAtY,
+            float lookAtZ,
+            String renderTarget) {
         this.projection = projection;
         this.x = x;
         this.y = y;
@@ -48,6 +61,12 @@ public final class ActiveCamera {
         this.far = far;
         this.viewportWidth = viewportWidth;
         this.viewportHeight = viewportHeight;
+        this.fitMode = fitMode == null ? ViewportFitMode.LETTERBOX : fitMode;
+        this.designAspect = designAspect;
+        this.lookAtX = lookAtX;
+        this.lookAtY = lookAtY;
+        this.lookAtZ = lookAtZ;
+        this.renderTarget = renderTarget;
     }
 
     public Camera.Projection projection() {
@@ -94,11 +113,39 @@ public final class ActiveCamera {
         return far;
     }
 
-    float viewportWidth() {
+    public float viewportWidth() {
         return viewportWidth;
     }
 
-    float viewportHeight() {
+    public float viewportHeight() {
         return viewportHeight;
+    }
+
+    public ViewportFitMode fitMode() {
+        return fitMode;
+    }
+
+    public float designAspect() {
+        return designAspect;
+    }
+
+    public float lookAtX() {
+        return lookAtX;
+    }
+
+    public float lookAtY() {
+        return lookAtY;
+    }
+
+    public float lookAtZ() {
+        return lookAtZ;
+    }
+
+    public boolean hasLookAt() {
+        return !Float.isNaN(lookAtX) && !Float.isNaN(lookAtY) && !Float.isNaN(lookAtZ);
+    }
+
+    public String renderTarget() {
+        return renderTarget;
     }
 }

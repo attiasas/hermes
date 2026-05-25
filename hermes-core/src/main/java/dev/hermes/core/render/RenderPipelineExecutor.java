@@ -7,6 +7,9 @@ import dev.hermes.api.ecs.World;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.scene.SceneInstance;
+import dev.hermes.core.viewport.BackbufferSize;
+import dev.hermes.core.viewport.GlViewport;
+import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -18,22 +21,39 @@ public final class RenderPipelineExecutor {
 
     private final String projectDefaultPipelinePath;
     private final PipelineCache cache;
+    private final ViewportServiceImpl viewport;
 
     public RenderPipelineExecutor(
-            SpriteBatch batch, String projectDefaultPipelinePath, RenderPassRegistry passRegistry) {
+            SpriteBatch batch,
+            String projectDefaultPipelinePath,
+            RenderPassRegistry passRegistry,
+            ViewportServiceImpl viewport) {
         this.projectDefaultPipelinePath =
                 Objects.requireNonNull(projectDefaultPipelinePath, "projectDefaultPipelinePath");
         if (this.projectDefaultPipelinePath.isBlank()) {
             throw new IllegalArgumentException("project default render pipeline path is required");
         }
-        this.cache = new PipelineCache(batch, passRegistry);
+        this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
+        this.cache = new PipelineCache(batch, passRegistry, this.viewport);
+    }
+
+    public ViewportServiceImpl viewport() {
+        return viewport;
     }
 
     public void resize(int width, int height) {
+        viewport.onWindowResize(width, height);
+        GlViewport.applyFullBackbuffer(width, height);
         cache.resize(width, height);
     }
 
     public void execute(Iterable<? extends SceneHandle> scenes) {
+        int width = BackbufferSize.width();
+        int height = BackbufferSize.height();
+        if (width != viewport.windowWidth() || height != viewport.windowHeight()) {
+            resize(width, height);
+        }
+        GlViewport.applyFullBackbuffer(width, height);
         boolean cleared = false;
         for (SceneHandle scene : scenes) {
             RenderGraph graph = cache.get(resolvePipelinePath(scene));

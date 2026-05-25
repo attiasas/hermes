@@ -113,8 +113,9 @@ On a `Camera` component, optional `renderTarget` names a pipeline framebuffer id
 }
 ```
 
-The field is parsed and stored on the component for future routing (e.g. binding the active camera’s FBO before world
-passes). Today, pass `target` in JSON controls where each pass draws.
+The field selects which camera entity applies when a pass targets that framebuffer. Pass `target` in JSON still controls
+where drawing happens; matching `renderTarget` on the camera links the two. Projection uses the **FBO pixel size**, not
+the window size (see [coordinate-spaces.md](coordinate-spaces.md)).
 
 ## Scene overrides
 
