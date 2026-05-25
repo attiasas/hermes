@@ -23,7 +23,11 @@ precision mediump float;
 
 attribute vec3 a_position;
 uniform mat4 u_projViewTrans;
+#ifdef GL_ES
+uniform mediump float u_time;
+#else
 uniform float u_time;
+#endif
 
 #if defined(colorFlag)
 varying vec4 v_color;

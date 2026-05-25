@@ -116,7 +116,11 @@ uniform vec4 u_fogColor;
 varying float v_fog;
 #endif // fogFlag
 
+#ifdef GL_ES
+uniform mediump float u_time;
+#else
 uniform float u_time;
+#endif
 void main() {
 	#if defined(normalFlag)
 		vec3 normal = v_normal;
