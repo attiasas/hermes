@@ -6,8 +6,11 @@ import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.MaterialUniform;
 import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.RenderLayer;
+import dev.hermes.api.ecs.Selectable;
+import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
+import dev.hermes.api.input.PickLayer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +23,8 @@ public final class BuiltinComponents {
     static final String MESH = "Mesh";
     static final String MATERIAL = "Material";
     static final String RENDER_LAYER = "RenderLayer";
+    static final String SELECTABLE = "Selectable";
+    static final String SELECTED = "Selected";
 
     private BuiltinComponents() {
     }
@@ -113,6 +118,28 @@ public final class BuiltinComponents {
                     renderLayer.setLayer(parseRenderLayer(data.getString("layer", "WORLD")));
                     return renderLayer;
                 });
+        registry.register(
+                SELECTABLE,
+                Selectable.class,
+                data -> {
+                    Selectable selectable = new Selectable();
+                    selectable.setEnabled(data.getBoolean("enabled", true));
+                    selectable.setRadius(data.getFloat("radius", 16f));
+                    selectable.setLayer(parsePickLayer(data.getString("layer", "WORLD")));
+                    return selectable;
+                });
+        registry.register(SELECTED, Selected.class, data -> new Selected());
+    }
+
+    private static PickLayer parsePickLayer(String value) {
+        if (value == null) {
+            return PickLayer.WORLD;
+        }
+        String normalized = value.trim().toUpperCase();
+        if ("UI".equals(normalized)) {
+            return PickLayer.UI;
+        }
+        return PickLayer.WORLD;
     }
 
     private static RenderLayer.Layer parseRenderLayer(String value) {

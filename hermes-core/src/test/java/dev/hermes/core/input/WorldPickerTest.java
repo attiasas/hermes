@@ -18,6 +18,9 @@ import dev.hermes.api.viewport.ViewportService;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.mock.graphics.MockGraphics;
 import dev.hermes.core.TestGdx;
+import dev.hermes.core.ecs.BuiltinComponents;
+import dev.hermes.core.ecs.ComponentRegistryImpl;
+import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.WorldImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 import java.util.Optional;
@@ -34,6 +37,7 @@ final class WorldPickerTest {
     @BeforeAll
     static void initGdx() {
         TestGdx.initHeadlessGl();
+        TestGdx.initClasspathFiles();
     }
 
     @BeforeEach
@@ -166,6 +170,27 @@ final class WorldPickerTest {
         assertEquals(target.id(), hit.get().entity);
         assertEquals("cube", hit.get().entityName);
         assertTrue(hit.get().distance > 0f);
+    }
+
+    @Test
+    void pickTestScene_closestEntityWins() {
+        ComponentRegistryImpl registry = new ComponentRegistryImpl();
+        BuiltinComponents.register(registry);
+        world = new WorldImpl();
+        SceneLoader.load("scenes/pick-test.json", world, registry);
+
+        Entity near = world.findByName("near");
+        Entity far = world.findByName("far");
+        assertEquals(80f, world.getComponent(near.id(), Selectable.class).radius(), 0.01f);
+        assertEquals(40f, world.getComponent(far.id(), Selectable.class).radius(), 0.01f);
+
+        Vec2 screen = new Vec2();
+        viewport.forWorld(world).worldToScreen(165f, 240f, 0f, screen);
+
+        Optional<PickHit> hit = picker.pick(world, screen.x, screen.y, PickLayer.WORLD);
+        assertTrue(hit.isPresent());
+        assertEquals(near.id(), hit.get().entity);
+        assertEquals("near", hit.get().entityName);
     }
 
     @Test
