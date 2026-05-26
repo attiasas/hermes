@@ -3,6 +3,17 @@ plugins {
     id 'maven-publish'
 }
 
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
 publishing {
     publications {
         maven(MavenPublication) {
