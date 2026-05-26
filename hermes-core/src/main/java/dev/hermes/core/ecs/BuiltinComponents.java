@@ -13,6 +13,8 @@ import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.input.PickLayer;
+import dev.hermes.core.input.CameraSceneControlSystem;
+import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
 
 import java.util.HashMap;
@@ -136,6 +138,8 @@ public final class BuiltinComponents {
 
     public static void registerSystems(HermesEngine engine) {
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
+        engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
+        engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
     }
 
     private static PickLayer parsePickLayer(String value) {

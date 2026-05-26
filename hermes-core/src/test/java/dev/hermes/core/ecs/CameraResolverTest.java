@@ -1,13 +1,22 @@
 package dev.hermes.core.ecs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Transform;
+import dev.hermes.core.TestGdx;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 final class CameraResolverTest {
+
+    @BeforeAll
+    static void initClasspath() {
+        TestGdx.initClasspathFiles();
+    }
 
     @Test
     void usesFirstActiveCamera() {
@@ -52,6 +61,19 @@ final class CameraResolverTest {
         assertEquals(Camera.Projection.PERSPECTIVE, active.projection());
         assertEquals(45f, active.fieldOfView());
         assertEquals(1f, active.x());
+    }
+
+    @Test
+    void activeCameraEntity_returnsFirstActiveWithTransform() {
+        WorldImpl world = new WorldImpl();
+        ComponentRegistryImpl registry = new ComponentRegistryImpl();
+        BuiltinComponents.register(registry);
+        SceneLoader.load("scenes/camera-pick-test.json", world, registry);
+
+        Optional<Entity> cam = CameraResolver.activeCameraEntity(world);
+
+        assertTrue(cam.isPresent());
+        assertEquals("main-camera", cam.get().name());
     }
 
     @Test
