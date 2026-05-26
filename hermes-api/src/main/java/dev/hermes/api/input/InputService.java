@@ -11,6 +11,9 @@ import java.util.Optional;
  */
 public interface InputService {
 
+    /** Polls devices and updates remapped actions for the current frame. Call once per frame before systems. */
+    void poll(float deltaSeconds);
+
     InputActions actions();
 
     InputDevices devices();

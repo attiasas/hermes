@@ -49,6 +49,15 @@ public final class InputFrame {
                 .build();
     }
 
+    public static InputFrame pointerPressed(float x, float y, int button) {
+        return builder().pointer(x, y).pointerPressed(button).build();
+    }
+
+    /** Pressed button at a new screen position (drag frame). */
+    public static InputFrame pointerDrag(float x, float y, int button) {
+        return pointerPressed(x, y, button);
+    }
+
     public static InputFrame withKeyboardPressed(int key) {
         return builder().keyboardPressed(key).build();
     }
@@ -177,6 +186,17 @@ public final class InputFrame {
 
         public Builder gamepadPressed(int button) {
             gamepadPressed.add(button);
+            return this;
+        }
+
+        public Builder gamepadJustPressed(int button) {
+            gamepadJustPressed.add(button);
+            gamepadPressed.add(button);
+            return this;
+        }
+
+        public Builder gamepadJustReleased(int button) {
+            gamepadJustReleased.add(button);
             return this;
         }
 

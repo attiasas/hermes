@@ -123,6 +123,7 @@ public final class HermesGdxApplication implements ApplicationListener {
             engine.scenes().processPending();
 
             float delta = Gdx.graphics.getDeltaTime();
+            engine.input().poll(delta);
             boolean hasActiveScene = engine.scenes().stackDepth() > 0;
             SceneStackPolicy stackPolicy = engine.scenes().stackPolicy();
 

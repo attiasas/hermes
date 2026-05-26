@@ -7,6 +7,7 @@ import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.config.RuntimeConfigService;
 import dev.hermes.api.input.InputService;
 import dev.hermes.core.config.RuntimeConfigServices;
+import dev.hermes.core.input.InputServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 import dev.hermes.api.viewport.ViewportService;
 
@@ -23,12 +24,13 @@ public final class HermesEngineImpl implements HermesEngine {
     private final SceneManagerImpl sceneManager;
     private final ComponentRegistryImpl registry;
     private final ViewportServiceImpl viewport = new ViewportServiceImpl();
-    private final InputService input = new UnimplementedInputService(viewport);
+    private final InputServiceImpl input;
     private final List<SystemEntry> systems = new ArrayList<>();
 
     public HermesEngineImpl() {
         this.registry = new ComponentRegistryImpl();
         this.sceneManager = new SceneManagerImpl(registry);
+        this.input = new InputServiceImpl(this);
         BuiltinComponents.register(registry);
         loadServiceRegistrations();
     }

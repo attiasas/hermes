@@ -6,13 +6,20 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.World;
+import dev.hermes.core.TestGdx;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 final class HermesEngineImplTest {
+
+    @BeforeAll
+    static void initGdx() {
+        TestGdx.initClasspathFiles();
+    }
 
     @Test
     void systemsReturnsEntriesWithScope() {
