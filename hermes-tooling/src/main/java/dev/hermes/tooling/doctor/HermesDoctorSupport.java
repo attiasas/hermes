@@ -8,6 +8,7 @@ import dev.hermes.tooling.config.HermesConfigException;
 import dev.hermes.tooling.config.HermesGameConfig;
 import dev.hermes.tooling.config.HermesGameConfigParser;
 import dev.hermes.tooling.gradle.HermesHomeResolver;
+import dev.hermes.tooling.project.GameModuleNames;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,20 +80,38 @@ public final class HermesDoctorSupport {
     private HermesDoctorSupport() {
     }
 
+    public static String resolveGameModule(Path projectRoot) {
+        if (projectRoot == null) {
+            return GameModuleNames.defaultName();
+        }
+        Path settings = projectRoot.resolve("settings.gradle");
+        if (!Files.isRegularFile(settings)) {
+            return GameModuleNames.defaultName();
+        }
+        try {
+            return GameModuleNames.parseFromSettingsGradle(
+                    Files.readString(settings, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            return GameModuleNames.defaultName();
+        }
+    }
+
     public static List<CheckResult> runStandalone(Path projectDir) {
         List<CheckResult> results = new ArrayList<>();
         results.add(checkJdk());
         results.add(checkHermesHomeEnv());
         results.add(checkMavenLocalArtifacts(projectDir));
         if (projectDir != null) {
-            results.add(checkHermesJson(projectDir.resolve("game/hermes.json").toFile()));
-            if (!Files.isDirectory(projectDir.resolve("game"))) {
+            String gameModule = resolveGameModule(projectDir);
+            Path gameRoot = projectDir.resolve(gameModule);
+            results.add(checkHermesJson(gameRoot.resolve("hermes.json").toFile(), gameModule));
+            if (!Files.isDirectory(gameRoot)) {
                 results.add(
                         new CheckResult(
                                 "project-layout",
                                 Status.FAIL,
-                                "Missing game/ module in " + projectDir,
-                                "Run hermes new or ensure the project contains a game/ directory."));
+                                "Missing " + gameModule + "/ module in " + projectDir,
+                                "Run hermes new or ensure settings.gradle gameModule matches an included module."));
             }
         }
         return results;
@@ -159,13 +178,13 @@ public final class HermesDoctorSupport {
                 "Install JDK 11 or newer and set JAVA_HOME.");
     }
 
-    private static CheckResult checkHermesJson(File file) {
+    private static CheckResult checkHermesJson(File file, String gameModule) {
         if (file == null || !file.isFile()) {
             return new CheckResult(
                     "hermes.json",
                     Status.WARN,
                     "hermes.json not found",
-                    "Add game/hermes.json with title and scene path.");
+                    "Add " + gameModule + "/hermes.json with title and scene path.");
         }
         try {
             HermesGameConfigParser.parse(file);
@@ -212,7 +231,8 @@ public final class HermesDoctorSupport {
                     "HTML platform disabled; custom GLSL allowed for desktop.",
                     null);
         }
-        List<String> nonBuiltin = findNonBuiltinShaderPathsInReferencedPipelines(projectRoot);
+        List<String> nonBuiltin =
+                findNonBuiltinShaderPathsInReferencedPipelines(projectRoot, resolveGameModule(projectRoot));
         if (nonBuiltin.isEmpty()) {
             return new CheckResult(
                     "html-custom-shaders",
@@ -230,9 +250,10 @@ public final class HermesDoctorSupport {
                         + "render pipeline (TeaVM supports builtin shaders only in v1).");
     }
 
-    static List<String> findNonBuiltinShaderPathsInReferencedPipelines(Path projectRoot) {
-        Path assets = projectRoot.resolve("game/src/main/resources/assets");
-        Set<String> pipelinePaths = collectReferencedPipelinePaths(projectRoot);
+    static List<String> findNonBuiltinShaderPathsInReferencedPipelines(
+            Path projectRoot, String gameModule) {
+        Path assets = projectRoot.resolve(gameModule).resolve("src/main/resources/assets");
+        Set<String> pipelinePaths = collectReferencedPipelinePaths(projectRoot, gameModule);
         List<String> violations = new ArrayList<>();
         for (String relative : pipelinePaths) {
             Path pipelineFile = assets.resolve(relative);
@@ -244,9 +265,9 @@ public final class HermesDoctorSupport {
         return violations.stream().distinct().sorted().collect(Collectors.toList());
     }
 
-    static Set<String> collectReferencedPipelinePaths(Path projectRoot) {
+    static Set<String> collectReferencedPipelinePaths(Path projectRoot, String gameModule) {
         LinkedHashSet<String> paths = new LinkedHashSet<>();
-        Path hermesJson = projectRoot.resolve("game/hermes.json");
+        Path hermesJson = projectRoot.resolve(gameModule).resolve("hermes.json");
         if (Files.isRegularFile(hermesJson)) {
             try {
                 HermesGameConfig config = HermesGameConfigParser.parse(hermesJson.toFile());
@@ -255,7 +276,8 @@ public final class HermesDoctorSupport {
                 // hermes.json validity is reported by a separate check
             }
         }
-        Path scenesDir = projectRoot.resolve("game/src/main/resources/assets/scenes");
+        Path scenesDir =
+                projectRoot.resolve(gameModule).resolve("src/main/resources/assets/scenes");
         if (Files.isDirectory(scenesDir)) {
             try (Stream<Path> sceneFiles = Files.list(scenesDir)) {
                 sceneFiles

@@ -118,6 +118,67 @@ final class HermesDoctorSupportTest {
     }
 
     @Test
+    void runStandalone_usesCustomGameModuleFromSettings(@TempDir Path project) throws IOException {
+        Files.writeString(
+                project.resolve("settings.gradle"),
+                "hermes {\n    gameModule = 'my-game'\n}\ninclude 'my-game'\n",
+                StandardCharsets.UTF_8);
+        Files.createDirectories(project.resolve("my-game"));
+        Files.writeString(
+                project.resolve("my-game/hermes.json"),
+                "{\"title\":\"Test\",\"scene\":\"scenes/main.json\",\"renderPipeline\":\"render/pipeline.json\"}",
+                StandardCharsets.UTF_8);
+
+        var results = HermesDoctorSupport.runStandalone(project);
+
+        assertTrue(
+                results.stream()
+                        .anyMatch(
+                                r ->
+                                        "hermes.json".equals(r.name())
+                                                && r.status() == Status.OK),
+                "hermes.json check should pass for my-game module");
+        assertTrue(
+                results.stream().noneMatch(r -> "project-layout".equals(r.name())),
+                "project-layout should not fail when my-game module exists");
+    }
+
+    @Test
+    void checkHtmlCustomShaders_usesCustomGameModulePaths(@TempDir Path project) throws IOException {
+        writeHtmlEnabled(project);
+        Files.writeString(
+                project.resolve("settings.gradle"),
+                "hermes {\n    gameModule = 'my-game'\n    platforms { html { enabled = true } }\n}\n",
+                StandardCharsets.UTF_8);
+        Files.createDirectories(project.resolve("my-game/src/main/resources/assets/render"));
+        Files.writeString(
+                project.resolve("my-game/hermes.json"),
+                "{"
+                        + "\"title\":\"Test\","
+                        + "\"scene\":\"scenes/main.json\","
+                        + "\"renderPipeline\":\"render/custom-pipeline.json\""
+                        + "}",
+                StandardCharsets.UTF_8);
+        Files.writeString(
+                project.resolve("my-game/src/main/resources/assets/render/custom-pipeline.json"),
+                "{"
+                        + "\"version\":1,"
+                        + "\"shaders\":{"
+                        + "\"water\":{"
+                        + "\"vertex\":\"shaders/water.vert\","
+                        + "\"fragment\":\"shaders/water.frag\""
+                        + "}},"
+                        + "\"passes\":[]"
+                        + "}",
+                StandardCharsets.UTF_8);
+
+        CheckResult result = HermesDoctorSupport.checkHtmlCustomShaders(project);
+
+        assertEquals(Status.FAIL, result.status());
+        assertTrue(result.message().contains("water.frag"));
+    }
+
+    @Test
     void findCustomShaderFiles_ignoresDefaultShaders(@TempDir Path shadersDir) throws IOException {
         Files.createDirectories(shadersDir);
         Files.writeString(shadersDir.resolve("default.vert"), "", StandardCharsets.UTF_8);

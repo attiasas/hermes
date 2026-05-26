@@ -11,8 +11,8 @@ of loaded scenes, and a queue of **change requests** processed once per frame.
 | **Push overlay** | `SceneChangeRequest.push(id)` | Pauses the current top scene, loads the new scene on top, and makes it active. Underlying scenes stay loaded and are **visible** for rendering (bottom → top). |
 | **Pop overlay**  | `SceneChangeRequest.pop()`    | Exits and disposes the top scene, then **resumes** the scene below.                                                                                            |
 
-The sample game ([`game/`](../game/)) registers a `pause` scene and uses [
-`SceneNavigationSystem`](../game/src/main/java/dev/hermes/sample/SceneNavigationSystem.java) to push/pop it on a timer.
+The dogfood sample ([`dogfood-simulation/`](../dogfood-simulation/)) registers a `pause` scene and uses [
+`SceneNavigationSystem`](../dogfood-simulation/src/main/java/dev/hermes/sample/SceneNavigationSystem.java) to push/pop it on a timer.
 The multi-scene CLI template demonstrates the same pattern.
 
 **Rendering:** global systems run once per frame; each **visible** scene in the stack gets `System.render(world)` called

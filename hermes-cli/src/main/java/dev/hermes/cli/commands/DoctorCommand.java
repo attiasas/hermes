@@ -1,10 +1,8 @@
 package dev.hermes.cli.commands;
 
 import dev.hermes.tooling.doctor.HermesDoctorSupport;
-import dev.hermes.tooling.project.GameModuleNames;
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -36,7 +34,7 @@ public final class DoctorCommand implements Runnable {
         List<HermesDoctorSupport.CheckResult> results = new ArrayList<>();
         results.addAll(HermesDoctorSupport.runStandalone(root));
         if (isGradleProject(root) && noGradle) {
-            String gameModule = resolveGameModule(root);
+            String gameModule = HermesDoctorSupport.resolveGameModule(root);
             results.add(
                     new HermesDoctorSupport.CheckResult(
                             "gradle-delegate",
@@ -58,26 +56,13 @@ public final class DoctorCommand implements Runnable {
                 || Files.isRegularFile(root.resolve("settings.gradle.kts"));
     }
 
-    private static String resolveGameModule(Path root) {
-        Path settings = root.resolve("settings.gradle");
-        if (!Files.isRegularFile(settings)) {
-            return GameModuleNames.defaultName();
-        }
-        try {
-            return GameModuleNames.parseFromSettingsGradle(
-                    Files.readString(settings, StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            return GameModuleNames.defaultName();
-        }
-    }
-
     private static int runGradleDoctor(Path root) {
         File gradlew = root.resolve("gradlew").toFile();
         if (!gradlew.isFile()) {
             System.err.println("settings.gradle found but gradlew is missing; running standalone checks.");
             return -1;
         }
-        String task = ":" + resolveGameModule(root) + ":hermesDoctor";
+        String task = ":" + HermesDoctorSupport.resolveGameModule(root) + ":hermesDoctor";
         ProcessBuilder builder =
                 new ProcessBuilder(gradlew.getAbsolutePath(), task, "--no-daemon", "--stacktrace");
         builder.directory(root.toFile());
