@@ -63,6 +63,16 @@ public final class InputProfile {
         return gamepadDeadzone;
     }
 
+    /** True when the profile binds at least one keyboard/pointer/gamepad source to a gamepad control. */
+    public boolean hasGamepadBindings() {
+        for (Binding binding : bindings) {
+            if (binding.source() == BindingSource.GAMEPAD) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static final class Binding {
         private final String action;
         private final BindingSource source;

@@ -1,7 +1,6 @@
 package dev.hermes.core.input;
 
 import dev.hermes.api.ecs.World;
-import com.badlogic.gdx.controllers.Controllers;
 import dev.hermes.api.input.GamepadSnapshot;
 import dev.hermes.api.input.InputActions;
 import dev.hermes.api.input.InputButton;
@@ -28,6 +27,7 @@ public final class InputServiceImpl implements InputService {
     private final WorldPicker worldPicker;
     private final InputActionsState actionsState = new InputActionsState();
     private InputFrame currentFrame = InputFrame.builder().build();
+    private int connectedGamepadCount;
 
     public InputServiceImpl(HermesEngineImpl engine) {
         this(engine, InputProfileLoader.load(HermesLauncherSupport.inputProfilePath()));
@@ -48,6 +48,7 @@ public final class InputServiceImpl implements InputService {
 
     void pollFrame(InputFrame frame) {
         currentFrame = frame;
+        connectedGamepadCount = frame.connectedGamepadCount();
         mapper.apply(frame, resolveContext(), actionsState);
     }
 
@@ -98,7 +99,7 @@ public final class InputServiceImpl implements InputService {
 
                 @Override
                 public int gamepadCount() {
-                    return Controllers.getControllers().size > 0 ? 1 : 0;
+                    return connectedGamepadCount;
                 }
 
                 @Override

@@ -21,6 +21,7 @@ public final class InputFrame {
     private final Set<Integer> gamepadPressed;
     private final Set<Integer> gamepadJustPressed;
     private final Set<Integer> gamepadJustReleased;
+    private final int connectedGamepadCount;
 
     private InputFrame(Builder builder) {
         this.keyboardPressed = Set.copyOf(builder.keyboardPressed);
@@ -35,6 +36,11 @@ public final class InputFrame {
         this.gamepadPressed = Set.copyOf(builder.gamepadPressed);
         this.gamepadJustPressed = Set.copyOf(builder.gamepadJustPressed);
         this.gamepadJustReleased = Set.copyOf(builder.gamepadJustReleased);
+        this.connectedGamepadCount = builder.connectedGamepadCount;
+    }
+
+    public int connectedGamepadCount() {
+        return connectedGamepadCount;
     }
 
     public static Builder builder() {
@@ -134,6 +140,12 @@ public final class InputFrame {
         private final Set<Integer> gamepadPressed = new HashSet<>();
         private final Set<Integer> gamepadJustPressed = new HashSet<>();
         private final Set<Integer> gamepadJustReleased = new HashSet<>();
+        private int connectedGamepadCount;
+
+        public Builder connectedGamepadCount(int count) {
+            connectedGamepadCount = Math.max(0, count);
+            return this;
+        }
 
         public Builder keyboardPressed(int key) {
             keyboardPressed.add(key);

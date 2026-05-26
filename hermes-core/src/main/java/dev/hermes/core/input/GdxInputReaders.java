@@ -16,6 +16,7 @@ final class GdxInputReaders {
     private final int[] pointerButtons;
     private final int[] gamepadButtons;
     private final int[] gamepadAxes;
+    private final boolean pollGamepad;
     private final Set<Integer> previousKeyboardPressed = new HashSet<>();
     private final Set<Integer> previousPointerPressed = new HashSet<>();
     private final Set<Integer> previousGamepadPressed = new HashSet<>();
@@ -53,6 +54,7 @@ final class GdxInputReaders {
         pointerButtons = buttons.stream().mapToInt(Integer::intValue).toArray();
         gamepadButtons = padButtons.stream().mapToInt(Integer::intValue).toArray();
         gamepadAxes = axes.stream().mapToInt(Integer::intValue).toArray();
+        pollGamepad = gamepadButtons.length > 0 || gamepadAxes.length > 0;
     }
 
     InputFrame poll() {
@@ -105,11 +107,23 @@ final class GdxInputReaders {
     }
 
     private void pollGamepad(InputFrame.Builder builder) {
-        Array<Controller> controllers = Controllers.getControllers();
-        if (controllers.size == 0) {
+        if (!pollGamepad) {
             previousGamepadPressed.clear();
             return;
         }
+        Array<Controller> controllers;
+        try {
+            controllers = Controllers.getControllers();
+        } catch (RuntimeException ex) {
+            previousGamepadPressed.clear();
+            return;
+        }
+        if (controllers.size == 0) {
+            previousGamepadPressed.clear();
+            builder.connectedGamepadCount(0);
+            return;
+        }
+        builder.connectedGamepadCount(1);
         Controller controller = controllers.first();
         for (int axis : gamepadAxes) {
             builder.gamepadAxis(axis, controller.getAxis(axis));
