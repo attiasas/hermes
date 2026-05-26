@@ -14,10 +14,12 @@ final class SceneDocument {
 
     private final List<EntitySpec> entities;
     private final String renderPipeline;
+    private final String inputContext;
 
-    private SceneDocument(List<EntitySpec> entities, String renderPipeline) {
+    private SceneDocument(List<EntitySpec> entities, String renderPipeline, String inputContext) {
         this.entities = entities;
         this.renderPipeline = renderPipeline;
+        this.inputContext = inputContext;
     }
 
     static SceneDocument parse(String scenePath, String json) {
@@ -54,7 +56,15 @@ final class SceneDocument {
                             "Scene '" + scenePath + "': \"renderPipeline\" must be non-empty when set.");
                 }
             }
-            return new SceneDocument(entities, renderPipeline);
+            String inputContext = null;
+            if (root.has("inputContext")) {
+                inputContext = root.getString("inputContext", "").trim();
+                if (inputContext.isEmpty()) {
+                    throw new SceneParseException(
+                            "Scene '" + scenePath + "': \"inputContext\" must be non-empty when set.");
+                }
+            }
+            return new SceneDocument(entities, renderPipeline, inputContext);
         } catch (SceneParseException e) {
             throw e;
         } catch (Exception e) {
@@ -68,6 +78,10 @@ final class SceneDocument {
 
     Optional<String> renderPipeline() {
         return Optional.ofNullable(renderPipeline);
+    }
+
+    Optional<String> inputContext() {
+        return Optional.ofNullable(inputContext);
     }
 
     static final class EntitySpec {

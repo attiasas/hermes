@@ -32,6 +32,7 @@ public final class HermesEngineImpl implements HermesEngine {
         this.sceneManager = new SceneManagerImpl(registry);
         this.input = new InputServiceImpl(this);
         BuiltinComponents.register(registry);
+        BuiltinComponents.registerSystems(this);
         loadServiceRegistrations();
     }
 

@@ -19,4 +19,9 @@ public interface SceneHandle {
      * Scene JSON {@code renderPipeline} override, when the loaded scene file declares one.
      */
     Optional<String> renderPipelineOverride();
+
+    /**
+     * Scene JSON {@code inputContext} override, when the loaded scene file declares one.
+     */
+    Optional<String> inputContext();
 }

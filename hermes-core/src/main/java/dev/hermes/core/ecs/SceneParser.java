@@ -17,7 +17,7 @@ final class SceneParser {
     private SceneParser() {
     }
 
-    static Optional<String> loadIntoWorld(
+    static SceneLoadMetadata loadIntoWorld(
             String scenePath, String json, World world, ComponentRegistryImpl registry) {
         SceneDocument document = SceneDocument.parse(scenePath, json);
         for (SceneDocument.EntitySpec entitySpec : document.entities()) {
@@ -35,7 +35,7 @@ final class SceneParser {
             }
             validateDrawableMaterial(scenePath, entitySpec.id(), components);
         }
-        return document.renderPipeline();
+        return new SceneLoadMetadata(document.renderPipeline(), document.inputContext());
     }
 
     private static void validateDrawableMaterial(

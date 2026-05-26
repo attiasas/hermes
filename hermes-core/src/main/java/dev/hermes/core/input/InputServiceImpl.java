@@ -11,6 +11,7 @@ import dev.hermes.api.input.KeyboardSnapshot;
 import dev.hermes.api.input.PickHit;
 import dev.hermes.api.input.PickLayer;
 import dev.hermes.api.input.PointerSnapshot;
+import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.viewport.SceneViewport;
 import dev.hermes.core.HermesLauncherSupport;
 import dev.hermes.core.ecs.HermesEngineImpl;
@@ -76,6 +77,10 @@ public final class InputServiceImpl implements InputService {
     }
 
     private String resolveContext() {
+        SceneHandle active = engine.scenes().active();
+        if (active != null) {
+            return active.inputContext().orElse(profile.defaultContext());
+        }
         return profile.defaultContext();
     }
 

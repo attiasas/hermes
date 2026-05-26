@@ -74,6 +74,11 @@ final class RenderPipelineViewportResetTest {
                     }
 
                     @Override
+                    public Optional<String> inputContext() {
+                        return Optional.empty();
+                    }
+
+                    @Override
                     public boolean paused() {
                         return false;
                     }

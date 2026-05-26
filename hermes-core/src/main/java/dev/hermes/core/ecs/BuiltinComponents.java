@@ -2,6 +2,8 @@ package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.ComponentRegistry;
+import dev.hermes.api.ecs.HermesEngine;
+import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.MaterialUniform;
 import dev.hermes.api.ecs.Mesh;
@@ -11,6 +13,7 @@ import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.input.PickLayer;
+import dev.hermes.core.input.SelectionSystem;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -129,6 +132,10 @@ public final class BuiltinComponents {
                     return selectable;
                 });
         registry.register(SELECTED, Selected.class, data -> new Selected());
+    }
+
+    public static void registerSystems(HermesEngine engine) {
+        engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
     }
 
     private static PickLayer parsePickLayer(String value) {
