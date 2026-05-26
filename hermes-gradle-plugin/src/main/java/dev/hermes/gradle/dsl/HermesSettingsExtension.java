@@ -4,6 +4,8 @@ import groovy.lang.Closure;
 
 import java.io.File;
 
+import org.gradle.api.GradleException;
+
 /**
  * Engine and platform toggles configured in {@code settings.gradle}.
  */
@@ -11,6 +13,7 @@ public class HermesSettingsExtension {
 
     private File home;
     private String engineVersion;
+    private String gameModule;
     private final SettingsPlatformsExtension platforms = new SettingsPlatformsExtension();
 
     public File getHome() {
@@ -27,6 +30,18 @@ public class HermesSettingsExtension {
 
     public void setEngineVersion(String engineVersion) {
         this.engineVersion = engineVersion;
+    }
+
+    public String getGameModule() {
+        if (gameModule == null || gameModule.isBlank()) {
+            throw new GradleException(
+                    "hermes.gameModule is required in settings.gradle, e.g. hermes { gameModule = 'game' }");
+        }
+        return gameModule;
+    }
+
+    public void setGameModule(String gameModule) {
+        this.gameModule = gameModule;
     }
 
     public SettingsPlatformsExtension getPlatforms() {

@@ -1,0 +1,4 @@
+.hermes/
+.gradle/
+build/
+local.properties

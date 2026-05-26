@@ -1,6 +1,7 @@
 package dev.hermes.cli.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.cli.HermesCli;
@@ -85,6 +86,33 @@ class NewCommandTest {
         Path target = parent.resolve("bad-template");
 
         int exit = new CommandLine(new HermesCli()).execute("new", target.toString(), "--template", "nope");
+
+        assertEquals(2, exit);
+    }
+
+    @Test
+    void new_customModule(@TempDir Path parent) throws Exception {
+        Path target = parent.resolve("custom-layout");
+
+        int exit =
+                new CommandLine(new HermesCli())
+                        .execute("new", target.toString(), "--module", "my-game", "--package", "dev.hermes.mygame");
+
+        assertEquals(0, exit);
+        assertTrue(Files.isRegularFile(target.resolve("my-game/build.gradle")));
+        assertFalse(Files.exists(target.resolve("game")));
+        String settings = Files.readString(target.resolve("settings.gradle"), StandardCharsets.UTF_8);
+        assertTrue(settings.contains("gameModule = 'my-game'"));
+        assertTrue(settings.contains("include 'my-game'"));
+    }
+
+    @Test
+    void new_rejectsHermesLauncherModuleName(@TempDir Path parent) {
+        Path target = parent.resolve("bad-module");
+
+        int exit =
+                new CommandLine(new HermesCli())
+                        .execute("new", target.toString(), "--module", "hermes-launcher-desktop");
 
         assertEquals(2, exit);
     }

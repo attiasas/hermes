@@ -6,8 +6,8 @@ build/
 .hermes/
 **/build/generated-tea-sources/
 
-# Generated asset index (regenerate: ./gradlew :game:generateAssetList)
-game/build/generated/hermes-assets/
+# Generated asset index (regenerate: ./gradlew :dogfood-simulation:generateAssetList)
+dogfood-simulation/build/generated/hermes-assets/
 
 # --- Android SDK & signing (never commit secrets) ---
 local.properties

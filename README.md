@@ -19,11 +19,11 @@ Hermes is a Java-first game engine layered on [libGDX](https://libgdx.com/). Gam
 ### Run the sample game
 
 ```bash
-./gradlew :game:hermesRunDesktop
+./gradlew :dogfood-simulation:hermesRunDesktop
 ```
 
 You should see a 640×480 window with a textured 3D cube (config-only scene JSON). Game logic lives in [
-`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes
+`SampleHermesGame`](dogfood-simulation/src/main/java/dev/hermes/sample/SampleHermesGame.java); the Gradle plugin passes
 `-Dhermes.applicationClass` at launch. Every 12 seconds the sample auto-switches to the `advanced-render` demo (animated
 water plane + cube); you can also `goTo("advanced-render")` manually.
 
@@ -39,7 +39,7 @@ Full build:
 
 | Module                         | Role                                                                    |
 |--------------------------------|-------------------------------------------------------------------------|
-| `game`                         | In-repo sample game (dogfood project)                                   |
+| `dogfood-simulation`           | In-repo sample game (dogfood project)                                   |
 | `hermes-api`                   | Public engine API (compile-only for games)                              |
 | `hermes-core`                  | ECS, scenes, libGDX integration                                         |
 | `hermes-tooling`               | Shared config, doctor, SDK helpers (published + used by plugin/CLI)     |
@@ -54,10 +54,10 @@ Full build:
 ## Scenes and ECS
 
 Scenes under the game assets directory drive entities at startup. The sample [
-`main.json`](game/src/main/resources/assets/scenes/main.json) is a config-only 3D scene (`Mesh` + `Material` +
-perspective `Camera`). [`advanced-render.json`](game/src/main/resources/assets/demos/advanced-render.json) demonstrates
+`main.json`](dogfood-simulation/src/main/resources/assets/scenes/main.json) is a config-only 3D scene (`Mesh` + `Material` +
+perspective `Camera`). [`advanced-render.json`](dogfood-simulation/src/main/resources/assets/demos/advanced-render.json) demonstrates
 a custom render pipeline and `WaterPass` (opt-in demo, not scanned by `hermesDoctor` HTML shader check). A [
-`pause.json`](game/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer.
+`pause.json`](dogfood-simulation/src/main/resources/assets/scenes/pause.json) overlay is pushed on a timer.
 See [docs/scene-format-v1.md](docs/scene-format-v1.md) and [docs/scene-management.md](docs/scene-management.md).
 
 ### Custom components
@@ -65,10 +65,10 @@ See [docs/scene-format-v1.md](docs/scene-format-v1.md) and [docs/scene-managemen
 Implement `dev.hermes.api.Component`, register the type, and add a `System` that reads or mutates it each frame (no
 libGDX imports in game code).
 
-- **Explicit (`onCreate`):** [`BounceMarker`](game/src/main/java/dev/hermes/sample/BounceMarker.java) +
-  `BounceMarkerSystem` in [`SampleHermesGame`](game/src/main/java/dev/hermes/sample/SampleHermesGame.java).
-- **ServiceLoader:** [`SpinMarker`](game/src/main/java/dev/hermes/sample/SpinMarker.java) via [
-  `META-INF/services/...`](game/src/main/resources/META-INF/services/dev.hermes.api.ecs.ComponentRegistration).
+- **Explicit (`onCreate`):** [`BounceMarker`](dogfood-simulation/src/main/java/dev/hermes/sample/BounceMarker.java) +
+  `BounceMarkerSystem` in [`SampleHermesGame`](dogfood-simulation/src/main/java/dev/hermes/sample/SampleHermesGame.java).
+- **ServiceLoader:** [`SpinMarker`](dogfood-simulation/src/main/java/dev/hermes/sample/SpinMarker.java) via [
+  `META-INF/services/...`](dogfood-simulation/src/main/resources/META-INF/services/dev.hermes.api.ecs.ComponentRegistration).
 
 ```bash
 ./gradlew :hermes-core:test
@@ -80,9 +80,9 @@ libGDX imports in game code).
 
 | Source                                                            | Purpose                                                            |
 |-------------------------------------------------------------------|--------------------------------------------------------------------|
-| [`game/hermes.json`](game/hermes.json)                            | Game data — `title`, `scene` path                                  |
+| [`dogfood-simulation/hermes.json`](dogfood-simulation/hermes.json)                            | Game data — `title`, `scene` path                                  |
 | [`settings.gradle`](settings.gradle) `hermes { platforms { … } }` | Which launchers are included (`desktop` / `html` / `android`)      |
-| [`game/build.gradle`](game/build.gradle) `hermes { … }`           | `applicationClass`, assets, `debug`, icons, window/export settings |
+| [`dogfood-simulation/build.gradle`](dogfood-simulation/build.gradle) `hermes { … }`           | `applicationClass`, assets, `debug`, icons, window/export settings |
 
 Example `hermes.json`:
 
@@ -93,7 +93,7 @@ Example `hermes.json`:
 }
 ```
 
-Example `game/build.gradle`:
+Example `dogfood-simulation/build.gradle`:
 
 ```groovy
 plugins {
@@ -125,7 +125,7 @@ hermes {
 
 ---
 
-## Gradle tasks (`:game`)
+## Gradle tasks (`:dogfood-simulation`)
 
 | Task                  | Description                                                         |
 |-----------------------|---------------------------------------------------------------------|
@@ -142,9 +142,9 @@ hermes {
 | `hermesExport`        | All enabled platform exports                                        |
 
 ```bash
-./gradlew :game:hermesRunHtml
-./gradlew :game:hermesRunAndroid   # device/emulator + SDK required
-./gradlew :game:hermesDoctor
+./gradlew :dogfood-simulation:hermesRunHtml
+./gradlew :dogfood-simulation:hermesRunAndroid   # device/emulator + SDK required
+./gradlew :dogfood-simulation:hermesDoctor
 ```
 
 ---
@@ -168,6 +168,8 @@ a module.
 export PATH="$PWD/hermes-cli/build/install/hermes/bin:$PATH"
 
 hermes new my-game --name MyGame --package dev.hermes.mygame --platforms desktop,html
+# Optional custom module name:
+# hermes new my-game --module my-game
 cd my-game
 hermes doctor
 ./gradlew :game:hermesRunDesktop
@@ -175,8 +177,8 @@ hermes doctor
 
 | Command               | Description                                                                                     |
 |-----------------------|-------------------------------------------------------------------------------------------------|
-| `hermes new <dir>`    | Copy a project template (`--template minimal` or `multi-scene`, `--platforms`, `--android-sdk`) |
-| `hermes doctor [dir]` | Run `./gradlew :game:hermesDoctor` or standalone checks                                         |
+| `hermes new <dir>`    | Copy a project template (`--template`, `--platforms`, `--android-sdk`, `--module` for game module name) |
+| `hermes doctor [dir]` | Run `./gradlew :<gameModule>:hermesDoctor` (from `settings.gradle`) or standalone checks        |
 | `hermes --version`    | CLI / engine version                                                                            |
 
 Template sources: [`hermes-templates/minimal`](hermes-templates/minimal), [
@@ -186,34 +188,34 @@ Template sources: [`hermes-templates/minimal`](hermes-templates/minimal), [
 
 ## Export
 
-Distribution builds use `hermes.debug=false` even when `debug = true` in `game/build.gradle`. Replace icons under
+Distribution builds use `hermes.debug=false` even when `debug = true` in `dogfood-simulation/build.gradle`. Replace icons under
 `src/main/resources/assets/icons/` (shipped in the minimal template).
 
 | Task                  | Output                                                                          |
 |-----------------------|---------------------------------------------------------------------------------|
-| `hermesExportDesktop` | `game/build/dist/desktop/*-{linux-x64,macos-aarch64,macos-x64,windows-x64}.zip` |
-| `hermesExportHtml`    | `game/build/dist/html/*-html.zip`                                               |
-| `hermesExportAndroid` | `game/build/dist/android/*-android.zip`                                         |
+| `hermesExportDesktop` | `dogfood-simulation/build/dist/desktop/*-{linux-x64,macos-aarch64,macos-x64,windows-x64}.zip` |
+| `hermesExportHtml`    | `dogfood-simulation/build/dist/html/*-html.zip`                                               |
+| `hermesExportAndroid` | `dogfood-simulation/build/dist/android/*-android.zip`                                         |
 | `hermesExport`        | All enabled platforms                                                           |
 
 ```bash
-./gradlew :game:hermesExportDesktop
-./gradlew :game:hermesExportHtml
-./gradlew :game:hermesExportAndroid
+./gradlew :dogfood-simulation:hermesExportDesktop
+./gradlew :dogfood-simulation:hermesExportHtml
+./gradlew :dogfood-simulation:hermesExportAndroid
 ```
 
 ---
 
 ## Module dependencies
 
-- `game` → `hermes-api` (compile); `hermes-core` (runtime)
+- `dogfood-simulation` → `hermes-api` (compile); `hermes-core` (runtime)
 - `hermes-core` → `hermes-api` + libGDX (internal)
 - `hermes-launcher-*` → `hermes-core` + platform backends
 - `hermes-gradle-plugin` → `hermes-tooling`; composite-included via `includeBuild` for monorepo work; publishable with
   `:hermes-gradle-plugin:publishToMavenLocal`
 - `hermes-cli` → `hermes-tooling` (Maven local)
 
-Doctor fails the build if `com.badlogicgames.gdx` appears under `game/src/`.
+Doctor fails the build if `com.badlogicgames.gdx` appears under `dogfood-simulation/src/`.
 
 ---
 

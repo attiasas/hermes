@@ -37,14 +37,14 @@ jobs:
 
       - name: Export game distributions
         run: |
-          ./gradlew :game:hermesExportHtml :game:hermesExportAndroid :game:zipHermesExportDesktopLinuxX64 --no-daemon --stacktrace
+          ./gradlew :dogfood-simulation:hermesExportHtml :dogfood-simulation:hermesExportAndroid :dogfood-simulation:zipHermesExportDesktopLinuxX64 --no-daemon --stacktrace
 
       - name: Validate export zips
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
-          .github/scripts/validate-export-zip.sh html "$(ls game/build/dist/html/*-html.zip)"
-          .github/scripts/validate-export-zip.sh android "$(ls game/build/dist/android/*-android.zip)"
-          .github/scripts/validate-export-zip.sh desktop-linux "$(ls game/build/dist/desktop/*-linux-x64.zip)"
+          .github/scripts/validate-export-zip.sh html "$(ls dogfood-simulation/build/dist/html/*-html.zip)"
+          .github/scripts/validate-export-zip.sh android "$(ls dogfood-simulation/build/dist/android/*-android.zip)"
+          .github/scripts/validate-export-zip.sh desktop-linux "$(ls dogfood-simulation/build/dist/desktop/*-linux-x64.zip)"
 
       - name: Upload engine artifacts
         uses: actions/upload-artifact@v7
@@ -56,8 +56,8 @@ jobs:
             hermes-launcher-desktop/build/libs/*.jar
             hermes-api/build/libs/*.jar
             hermes-core/build/libs/*.jar
-            game/build/libs/*.jar
-            game/build/dist/**/*.zip
+            dogfood-simulation/build/libs/*.jar
+            dogfood-simulation/build/dist/**/*.zip
 
   build-cli:
     needs: build-engine

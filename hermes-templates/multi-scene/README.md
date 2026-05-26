@@ -23,8 +23,8 @@ updating and drawing under the UI overlay.
 - **Android** (only if `android` is enabled in `settings.gradle`): Android SDK with `sdk.dir` in `local.properties` (
   see [Configuration](#configuration))
 
-This repo contains only the **`game`** module. Platform launchers are synced under `.hermes/platforms/` when you build
-or run — not the full Hermes engine tree.
+This repo contains only the game module. By default it is named `game` (or your `hermes new --module <name>` value).
+Platform launchers are synced under `.hermes/platforms/` when you build or run — not the full Hermes engine tree.
 
 ## Quick start
 
@@ -32,6 +32,8 @@ or run — not the full Hermes engine tree.
 ./gradlew :game:hermesDoctor
 ./gradlew :game:hermesRunDesktop
 ```
+
+If you generated with a custom module name, replace `:game:` with your module path (for example `:my-game:`).
 
 The pause overlay appears every five seconds while the main scene keeps running underneath.
 

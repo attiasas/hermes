@@ -9,18 +9,15 @@ version = '0.1.0-SNAPSHOT'
 def bundledPlatformsResources = layout.buildDirectory.dir('generated/hermes-platforms-resources')
 
 tasks.register('bundleHermesPlatforms', Copy) {
-    description = 'Bundle launcher sources and platform build templates for standalone game sync'
+    description = 'Bundle launcher modules for standalone game sync into .hermes/platforms'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     into bundledPlatformsResources
-    from('../hermes-templates/platforms') {
-        into 'hermes-templates/platforms'
-    }
     ['hermes-launcher-desktop', 'hermes-launcher-html', 'hermes-launcher-android'].each { module ->
         def moduleDir = file("../${module}")
         inputs.dir(moduleDir).withPropertyName("${module}-sources")
         from(moduleDir) {
             into "hermes-platforms/${module}"
-            exclude 'build/**', '.gradle/**', 'bin/**', 'build.gradle'
+            exclude 'build/**', '.gradle/**', 'bin/**'
         }
     }
 }
@@ -44,6 +41,18 @@ gradlePlugin {
             id = 'dev.hermes.settings'
             implementationClass = 'dev.hermes.gradle.HermesSettingsPlugin'
         }
+        hermesLauncherDesktop {
+            id = 'dev.hermes.launcher.desktop'
+            implementationClass = 'dev.hermes.gradle.launcher.HermesDesktopLauncherPlugin'
+        }
+        hermesLauncherHtml {
+            id = 'dev.hermes.launcher.html'
+            implementationClass = 'dev.hermes.gradle.launcher.HermesHtmlLauncherPlugin'
+        }
+        hermesLauncherAndroid {
+            id = 'dev.hermes.launcher.android'
+            implementationClass = 'dev.hermes.gradle.launcher.HermesAndroidLauncherPlugin'
+        }
     }
 }
 
@@ -55,6 +64,7 @@ dependencies {
     implementation localGroovy()
     implementation 'org.apache.groovy:groovy:4.0.26'
     testImplementation gradleTestKit()
+    testImplementation 'org.mockito:mockito-core:5.14.2'
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

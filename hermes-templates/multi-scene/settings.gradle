@@ -16,6 +16,7 @@ plugins {
 }
 
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
         mavenCentral()
         mavenLocal()
@@ -28,6 +29,7 @@ dependencyResolutionManagement {
 rootProject.name = '{{ROOT_PROJECT_NAME}}'
 
 hermes {
+    gameModule = '{{GAME_MODULE}}'
     platforms {
         desktop { enabled = {{DESKTOP_ENABLED}} }
         html { enabled = {{HTML_ENABLED}} }
@@ -35,4 +37,4 @@ hermes {
     }
 }
 
-include 'game'
+include '{{GAME_MODULE}}'

@@ -12,6 +12,7 @@ import dev.hermes.gradle.platform.HermesPlatformSync;
 
 import java.io.File;
 
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
 
@@ -34,6 +35,7 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
                             String engineVersion = HermesEngineVersion.resolve(settings, extension);
                             File hermesHome = HermesHomeGradle.resolve(settings);
                             HermesEnginePropertyPropagator.apply(settings, hermesHome);
+                            extension.getGameModule();
                             SettingsPlatformsExtension platforms = extension.getPlatforms();
                             settings
                                     .getGradle()
@@ -47,6 +49,10 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
                                                         .getExtensions()
                                                         .getExtraProperties()
                                                         .set(HermesConfig.ENGINE_VERSION_PROPERTY, engineVersion);
+                                                project
+                                                        .getExtensions()
+                                                        .getExtraProperties()
+                                                        .set(HermesConfig.GAME_MODULE_PROPERTY, extension.getGameModule());
                                             });
                             includeLauncher(settings, extension, "hermes-launcher-desktop", platforms.getDesktop().isEnabled(), engineVersion);
                             includeLauncher(settings, extension, "hermes-launcher-html", platforms.getHtml().isEnabled(), engineVersion);
@@ -71,14 +77,31 @@ public final class HermesSettingsPlugin implements Plugin<Settings> {
         if (settings.findProject(":" + moduleName) != null) {
             return;
         }
-        if (new File(settings.getRootDir(), moduleName).isDirectory()) {
+
+        // 1. Monorepo dogfood: launchers at repo root
+        File atRoot = new File(settings.getRootDir(), moduleName);
+        if (atRoot.isDirectory()) {
             settings.include(moduleName);
             return;
         }
+
+        // 2. HERMES_HOME checkout
+        File hermesHome = HermesHomeGradle.resolve(settings);
+        if (HermesHomeGradle.isHermesCheckout(hermesHome)) {
+            File homeLauncher = new File(hermesHome, moduleName);
+            if (homeLauncher.isDirectory()) {
+                settings.include(moduleName);
+                settings.project(":" + moduleName).setProjectDir(homeLauncher);
+                return;
+            }
+        }
+
+        // 3. Sync to .hermes/platforms/
         HermesPlatformSync.syncIfNeeded(settings, moduleName, engineVersion);
         File synced = HermesPlatformSync.launcherDir(settings, moduleName);
         if (!synced.isDirectory()) {
-            return;
+            throw new GradleException(
+                    "Failed to sync " + moduleName + " into " + synced.getAbsolutePath());
         }
         settings.include(moduleName);
         settings.project(":" + moduleName).setProjectDir(synced);
