@@ -24,6 +24,7 @@ public final class InputServiceImpl implements InputService {
     private final InputProfile profile;
     private final ActionMapper mapper;
     private final GdxInputReaders readers;
+    private final WorldPicker worldPicker;
     private final InputActionsState actionsState = new InputActionsState();
     private InputFrame currentFrame = InputFrame.builder().build();
 
@@ -36,6 +37,7 @@ public final class InputServiceImpl implements InputService {
         this.profile = profile;
         this.mapper = new ActionMapper(profile);
         this.readers = new GdxInputReaders(profile);
+        this.worldPicker = new WorldPicker(engine.viewport());
     }
 
     @Override
@@ -70,7 +72,7 @@ public final class InputServiceImpl implements InputService {
 
     @Override
     public Optional<PickHit> pick(World world, float screenX, float screenY, PickLayer layer) {
-        return Optional.empty();
+        return worldPicker.pick(world, screenX, screenY, layer);
     }
 
     private String resolveContext() {
