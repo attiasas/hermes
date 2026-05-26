@@ -53,4 +53,24 @@ public final class GameModuleNames {
         }
         return defaultName();
     }
+
+    /**
+     * When materializing templates, rename paths under the default module directory ({@code game})
+     * to a custom {@code gameModule} name. Normalizes Windows backslashes first.
+     */
+    public static String remapTemplatePath(String relativePath, String gameModule) {
+        String normalized = relativePath.replace('\\', '/');
+        String target = normalize(gameModule);
+        if (defaultName().equals(target)) {
+            return normalized;
+        }
+        if (defaultName().equals(normalized)) {
+            return target;
+        }
+        String prefix = defaultName() + "/";
+        if (normalized.startsWith(prefix)) {
+            return target + normalized.substring(prefix.length() - 1);
+        }
+        return normalized;
+    }
 }

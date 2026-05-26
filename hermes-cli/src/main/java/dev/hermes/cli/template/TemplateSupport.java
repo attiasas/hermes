@@ -259,20 +259,6 @@ public final class TemplateSupport {
         return tokens;
     }
 
-    private static String remapGameModuleInPath(String relativeString, String gameModule) {
-        if (GameModuleNames.defaultName().equals(gameModule)) {
-            return relativeString;
-        }
-        if (GameModuleNames.defaultName().equals(relativeString)) {
-            return gameModule;
-        }
-        String gamePrefix = GameModuleNames.defaultName() + "/";
-        if (relativeString.startsWith(gamePrefix)) {
-            return gameModule + relativeString.substring(gamePrefix.length() - 1);
-        }
-        return relativeString;
-    }
-
     private static void copyAndSubstitute(
             Path source, Path target, Map<String, String> tokens, String gameModule) throws IOException {
         Files.walkFileTree(
@@ -285,7 +271,7 @@ public final class TemplateSupport {
                         if (!tokens.isEmpty()) {
                             relativeString = TemplateEngine.substitute(relativeString, tokens);
                         }
-                        relativeString = remapGameModuleInPath(relativeString, gameModule);
+                        relativeString = GameModuleNames.remapTemplatePath(relativeString, gameModule);
                         Path destDir = target.resolve(relativeString);
                         Files.createDirectories(destDir);
                         return FileVisitResult.CONTINUE;
@@ -298,7 +284,7 @@ public final class TemplateSupport {
                         if (!tokens.isEmpty()) {
                             relativeString = TemplateEngine.substitute(relativeString, tokens);
                         }
-                        relativeString = remapGameModuleInPath(relativeString, gameModule);
+                        relativeString = GameModuleNames.remapTemplatePath(relativeString, gameModule);
                         Path dest = target.resolve(relativeString);
                         Files.createDirectories(dest.getParent());
                         if (isTextFile(file)) {

@@ -45,4 +45,23 @@ class GameModuleNamesTest {
     void parseFromSettingsGradle_defaultsWhenMissing() {
         assertEquals("game", GameModuleNames.parseFromSettingsGradle("include 'game'"));
     }
+
+    @Test
+    void remapTemplatePath_renamesGamePrefix() {
+        assertEquals("my-game/build.gradle", GameModuleNames.remapTemplatePath("game/build.gradle", "my-game"));
+    }
+
+    @Test
+    void remapTemplatePath_handlesWindowsSeparators() {
+        assertEquals("my-game/build.gradle", GameModuleNames.remapTemplatePath("game\\build.gradle", "my-game"));
+        assertEquals(
+                "my-game/src/main/java/App.java",
+                GameModuleNames.remapTemplatePath("game\\src\\main\\java\\App.java", "my-game"));
+    }
+
+    @Test
+    void remapTemplatePath_noopForDefaultModule() {
+        assertEquals("game/build.gradle", GameModuleNames.remapTemplatePath("game/build.gradle", "game"));
+        assertEquals("game/build.gradle", GameModuleNames.remapTemplatePath("game\\build.gradle", "game"));
+    }
 }

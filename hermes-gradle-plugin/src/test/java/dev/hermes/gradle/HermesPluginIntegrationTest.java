@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import dev.hermes.tooling.project.GameModuleNames;
+
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeAll;
@@ -298,7 +300,7 @@ class HermesPluginIntegrationTest {
                             try {
                                 Path relative = source.relativize(path);
                                 String rel = relative.toString().replace('\\', '/');
-                                rel = remapGameModuleInPath(rel, gameModule);
+                                rel = GameModuleNames.remapTemplatePath(rel, gameModule);
                                 rel =
                                         rel.replace("{{PROJECT_NAME}}", name)
                                                 .replace("{{ROOT_PROJECT_NAME}}", name.toLowerCase())
@@ -346,19 +348,6 @@ class HermesPluginIntegrationTest {
         if (Files.isRegularFile(gradlew)) {
             gradlew.toFile().setExecutable(true);
         }
-    }
-
-    private static String remapGameModuleInPath(String relativeString, String gameModule) {
-        if ("game".equals(gameModule)) {
-            return relativeString;
-        }
-        if ("game".equals(relativeString)) {
-            return gameModule;
-        }
-        if (relativeString.startsWith("game/")) {
-            return gameModule + relativeString.substring(4);
-        }
-        return relativeString;
     }
 
     private static boolean isText(Path path) {
