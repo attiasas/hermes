@@ -15,7 +15,7 @@ dogfood-simulation ──api──► hermes-api ◄── hermes-core (+ libGDX
 
 | Module                 | Role                                                                                                                                                                                               |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hermes-api`           | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene stack (`SceneManager`, `SceneChangeRequest`), `ViewportService`, scene-facing components (`Transform`, `Sprite`, `Camera`). No libGDX. |
+| `hermes-api`           | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, scene-facing components (`Transform`, `Sprite`, `Camera`, `Selectable`). No libGDX. |
 | `hermes-core`          | Engine implementation: `SceneManagerImpl`, scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath).                                         |
 | `hermes-launcher-*`    | Platform entrypoints (LWJGL3, TeaVM, Android). Depend on `hermes-core`. Included by the settings plugin when enabled.                                                                              |
 | `dogfood-simulation`   | Engine monorepo dogfood game. `api` → `hermes-api`, `runtimeOnly` → `hermes-core`.                                                                    |
@@ -178,9 +178,25 @@ Games interact with scenes through `HermesEngine.scenes()` (`SceneManager`):
 Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, calls `onCreate` (component/system
 registration), then requests `goTo("main")`. See [Scene management](scene-management.md).
 
+## Input
+
+`HermesEngine.input()` exposes `InputService` (poll, remapped actions, device snapshots, screen picking). Profiles load
+from `hermes.json` → `inputProfile` (asset path, default `input/profile.json`). Scene JSON may set `inputContext` to
+switch binding sets while that scene is active.
+
+Built-in **GLOBAL** systems in `BuiltinComponents` (no game Java for stock demos):
+
+- `SelectionSystem` — pointer `select` action → `Selected` on `Selectable` hits
+- `CameraSceneControlSystem` — perspective scenes: empty left-drag orbits active camera
+- `EntityDragSystem` — orthographic scenes: drag moves `Selected` entity
+
+Coordinate conversion for picks and drags uses `ViewportService` only (same path as rendering). See [input.md](input.md)
+and [coordinate-spaces.md](coordinate-spaces.md).
+
 ## Related docs
 
 - [Scene management](scene-management.md)
+- [Input system](input.md)
 - [Coordinate spaces & viewport service](coordinate-spaces.md)
 - [Render pipeline](render-pipeline.md)
 - [Scene format v1](scene-format-v1.md)
