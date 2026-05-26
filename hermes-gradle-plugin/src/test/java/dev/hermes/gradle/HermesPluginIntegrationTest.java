@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import dev.hermes.tooling.project.GameModuleNames;
+
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.BeforeAll;
@@ -78,9 +80,16 @@ class HermesPluginIntegrationTest {
                         .build();
         assertEquals(SUCCESS, compile.task(":game:compileJava").getOutcome());
         assertTrue(projectDir.resolve("game/build/classes/java/main").toFile().exists());
+        assertFalse(
+                projectDir.resolve("hermes-launcher-desktop").toFile().exists(),
+                "launcher must not appear at repo root");
+        Path syncedDesktopBuild =
+                projectDir.resolve(".hermes/platforms/hermes-launcher-desktop/build.gradle");
+        assertTrue(syncedDesktopBuild.toFile().exists(), "desktop launcher must be synced under .hermes/platforms");
+        String desktopLauncherBuild = Files.readString(syncedDesktopBuild, StandardCharsets.UTF_8);
         assertTrue(
-                projectDir.resolve(".hermes/platforms/hermes-launcher-desktop/build.gradle").toFile().exists(),
-                "desktop launcher must be synced under .hermes/platforms");
+                desktopLauncherBuild.contains("dev.hermes.launcher.desktop"),
+                "synced desktop launcher must apply the Hermes convention plugin");
         assertTrue(
                 projectDir.resolve("game/src/main/resources/assets/models/cube.obj").toFile().exists(),
                 "minimal template must ship models/cube.obj for 3D demo");
@@ -108,14 +117,67 @@ class HermesPluginIntegrationTest {
                         projectDir.resolve(".hermes/platforms/hermes-launcher-android/build.gradle"),
                         StandardCharsets.UTF_8);
         assertTrue(
-                launcherBuild.replace("\r\n", "\n").startsWith("buildscript {"),
-                "synced Android launcher must use buildscript for AGP resolution");
+                launcherBuild.contains("com.android.application"),
+                "synced Android launcher must declare AGP via plugins DSL");
         assertTrue(
-                launcherBuild.contains("com.android.tools.build:gradle:"),
-                "synced Android launcher must pin AGP version in buildscript");
-        assertFalse(
-                launcherBuild.contains("repositories {\n  google()"),
-                "synced Android launcher must not declare google-only project repositories");
+                launcherBuild.contains("dev.hermes.launcher.android"),
+                "synced Android launcher must apply the Hermes convention plugin");
+    }
+
+    @Test
+    void templateProject_androidLauncherResolvesAndroidx(@TempDir Path tempDir) throws IOException {
+        Path projectDir = materializeTemplate(tempDir.resolve("android-resolve"));
+        enableOnlyPlatform(projectDir, "android");
+
+        BuildResult deps =
+                GradleRunner.create()
+                        .withProjectDir(projectDir.toFile())
+                        .withPluginClasspath()
+                        .withArguments(
+                                ":hermes-launcher-android:checkDebugAarMetadata",
+                                "-q")
+                        .build();
+
+        assertEquals(SUCCESS, deps.task(":hermes-launcher-android:checkDebugAarMetadata").getOutcome());
+    }
+
+    @Test
+    void templateProject_lateSortingGameModule_configuresWithAllPlatforms(@TempDir Path tempDir)
+            throws IOException {
+        Path projectDir = materializeTemplate(tempDir.resolve("late-sort"), "my-game-module");
+        enableAllPlatforms(projectDir);
+
+        BuildResult configure =
+                GradleRunner.create()
+                        .withProjectDir(projectDir.toFile())
+                        .withPluginClasspath()
+                        .withArguments("projects", "-q")
+                        .build();
+
+        assertTrue(configure.getOutput().contains("my-game-module"));
+        assertTrue(configure.getOutput().contains("hermes-launcher-desktop"));
+        assertTrue(configure.getOutput().contains("hermes-launcher-html"));
+        assertTrue(configure.getOutput().contains("hermes-launcher-android"));
+
+        BuildResult doctor =
+                GradleRunner.create()
+                        .withProjectDir(projectDir.toFile())
+                        .withPluginClasspath()
+                        .withArguments(":my-game-module:hermesDoctor", "-q")
+                        .build();
+        assertEquals(SUCCESS, doctor.task(":my-game-module:hermesDoctor").getOutcome());
+    }
+
+    @Test
+    void templateProject_customGameModule(@TempDir Path tempDir) throws IOException {
+        Path projectDir = materializeTemplate(tempDir.resolve("custom"), "demo-game");
+        BuildResult compile =
+                GradleRunner.create()
+                        .withProjectDir(projectDir.toFile())
+                        .withPluginClasspath()
+                        .withArguments(":demo-game:compileJava", "-q")
+                        .build();
+        assertEquals(SUCCESS, compile.task(":demo-game:compileJava").getOutcome());
     }
 
     @Test
@@ -182,6 +244,16 @@ class HermesPluginIntegrationTest {
         assertTrue(props.contains("hermes.log.patterns=*Scene*"));
     }
 
+    private static void enableAllPlatforms(Path projectDir) throws IOException {
+        Path settingsFile = projectDir.resolve("settings.gradle");
+        String settings = Files.readString(settingsFile, StandardCharsets.UTF_8).replace("\r\n", "\n");
+        for (String name : new String[]{"desktop", "html", "android"}) {
+            settings = settings.replace(name + " { enabled = false", name + " { enabled = true");
+            settings = settings.replace(name + " { enabled = true", name + " { enabled = true");
+        }
+        Files.writeString(settingsFile, settings, StandardCharsets.UTF_8);
+    }
+
     private static void enableOnlyPlatform(Path projectDir, String platform) throws IOException {
         Path settingsFile = projectDir.resolve("settings.gradle");
         String settings = Files.readString(settingsFile, StandardCharsets.UTF_8).replace("\r\n", "\n");
@@ -202,9 +274,13 @@ class HermesPluginIntegrationTest {
     }
 
     private static Path materializeTemplate(Path targetDir) throws IOException {
+        return materializeTemplate(targetDir, "game");
+    }
+
+    private static Path materializeTemplate(Path targetDir, String gameModule) throws IOException {
         Path templateRoot = hermesRoot.toPath().resolve("hermes-templates/minimal");
         Files.createDirectories(targetDir);
-        copySubstitute(templateRoot, targetDir, "Demo", "dev.hermes.demo", "0.1.0-SNAPSHOT");
+        copySubstitute(templateRoot, targetDir, "Demo", "dev.hermes.demo", "0.1.0-SNAPSHOT", gameModule);
         String props =
                 """
                         hermes.engineVersion=0.1.0-SNAPSHOT
@@ -215,7 +291,8 @@ class HermesPluginIntegrationTest {
         return targetDir;
     }
 
-    private static void copySubstitute(Path source, Path target, String name, String pkg, String version)
+    private static void copySubstitute(
+            Path source, Path target, String name, String pkg, String version, String gameModule)
             throws IOException {
         Files.walk(source)
                 .forEach(
@@ -223,6 +300,7 @@ class HermesPluginIntegrationTest {
                             try {
                                 Path relative = source.relativize(path);
                                 String rel = relative.toString().replace('\\', '/');
+                                rel = GameModuleNames.remapTemplatePath(rel, gameModule);
                                 rel =
                                         rel.replace("{{PROJECT_NAME}}", name)
                                                 .replace("{{ROOT_PROJECT_NAME}}", name.toLowerCase())
@@ -231,6 +309,7 @@ class HermesPluginIntegrationTest {
                                                 .replace("{{APPLICATION_CLASS}}", pkg + ".Game")
                                                 .replace("{{ENGINE_VERSION}}", version)
                                                 .replace("{{packageDir}}", pkg.replace('.', '/'))
+                                                .replace("{{GAME_MODULE}}", gameModule)
                                                 .replace("{{DESKTOP_ENABLED}}", "true")
                                                 .replace("{{HTML_ENABLED}}", "false")
                                                 .replace("{{ANDROID_ENABLED}}", "false")
@@ -251,6 +330,7 @@ class HermesPluginIntegrationTest {
                                                         .replace("{{APPLICATION_CLASS}}", pkg + ".Game")
                                                         .replace("{{ENGINE_VERSION}}", version)
                                                         .replace("{{packageDir}}", pkg.replace('.', '/'))
+                                                        .replace("{{GAME_MODULE}}", gameModule)
                                                         .replace("{{DESKTOP_ENABLED}}", "true")
                                                         .replace("{{HTML_ENABLED}}", "false")
                                                         .replace("{{ANDROID_ENABLED}}", "false")

@@ -34,11 +34,14 @@ public final class DoctorCommand implements Runnable {
         List<HermesDoctorSupport.CheckResult> results = new ArrayList<>();
         results.addAll(HermesDoctorSupport.runStandalone(root));
         if (isGradleProject(root) && noGradle) {
+            String gameModule = HermesDoctorSupport.resolveGameModule(root);
             results.add(
                     new HermesDoctorSupport.CheckResult(
                             "gradle-delegate",
                             HermesDoctorSupport.Status.WARN,
-                            "Gradle project detected; run ./gradlew :game:hermesDoctor for full checks.",
+                            "Gradle project detected; run ./gradlew :"
+                                    + gameModule
+                                    + ":hermesDoctor for full checks.",
                             null));
         }
         HermesDoctorSupport.printResults(results);
@@ -59,12 +62,9 @@ public final class DoctorCommand implements Runnable {
             System.err.println("settings.gradle found but gradlew is missing; running standalone checks.");
             return -1;
         }
+        String task = ":" + HermesDoctorSupport.resolveGameModule(root) + ":hermesDoctor";
         ProcessBuilder builder =
-                new ProcessBuilder(
-                        gradlew.getAbsolutePath(),
-                        ":game:hermesDoctor",
-                        "--no-daemon",
-                        "--stacktrace");
+                new ProcessBuilder(gradlew.getAbsolutePath(), task, "--no-daemon", "--stacktrace");
         builder.directory(root.toFile());
         builder.inheritIO();
         try {

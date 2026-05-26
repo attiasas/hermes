@@ -1,6 +1,7 @@
 package dev.hermes.cli.commands;
 
 import dev.hermes.cli.template.TemplateSupport;
+import dev.hermes.tooling.project.GameModuleNames;
 
 import java.nio.file.Path;
 import java.util.Locale;
@@ -47,6 +48,11 @@ public final class NewCommand implements Runnable {
             description = "Android SDK path (used when android is in --platforms)")
     Path androidSdk;
 
+    @Option(
+            names = "--module",
+            description = "Gradle subproject name for the game module (default: game)")
+    String module;
+
     @Override
     public void run() {
         if (!SUPPORTED_TEMPLATES.contains(template)) {
@@ -61,6 +67,7 @@ public final class NewCommand implements Runnable {
                         : "dev.hermes." + projectName.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
         Set<String> enabledPlatforms;
         try {
+            String gameModule = GameModuleNames.normalize(module);
             enabledPlatforms = TemplateSupport.parsePlatforms(platforms);
             TemplateSupport.materializeTemplate(
                     template,
@@ -69,24 +76,30 @@ public final class NewCommand implements Runnable {
                     pkg,
                     engineVersion,
                     enabledPlatforms,
-                    androidSdk);
+                    androidSdk,
+                    gameModule);
+            String gradleModule = ":" + gameModule + ":";
             System.out.println("Created Hermes project at " + targetDir.toAbsolutePath());
             System.out.println("Next:");
             System.out.println("  cd " + targetDir);
-            System.out.println("  ./gradlew :game:hermesDoctor");
+            System.out.println("  ./gradlew " + gradleModule + "hermesDoctor");
             if (enabledPlatforms.contains("desktop")) {
-                System.out.println("  ./gradlew :game:hermesRunDesktop");
+                System.out.println("  ./gradlew " + gradleModule + "hermesRunDesktop");
             }
             if (enabledPlatforms.contains("html")) {
-                System.out.println("  ./gradlew :game:hermesRunHtml");
+                System.out.println("  ./gradlew " + gradleModule + "hermesRunHtml");
             }
             if (enabledPlatforms.contains("android")) {
-                System.out.println("  ./gradlew :game:hermesRunAndroid");
+                System.out.println("  ./gradlew " + gradleModule + "hermesRunAndroid");
                 if (androidSdk == null) {
                     System.out.println(
                             "  (Android: add sdk.dir to local.properties, or pass --android-sdk / set ANDROID_SDK_ROOT)");
                 }
             }
+        } catch (IllegalArgumentException e) {
+            System.err.println(e.getMessage());
+            throw new picocli.CommandLine.ParameterException(
+                    new picocli.CommandLine(NewCommand.class), e.getMessage(), e);
         } catch (Exception e) {
             System.err.println("Failed to create project: " + e.getMessage());
             throw new picocli.CommandLine.ExecutionException(

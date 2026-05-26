@@ -3,6 +3,7 @@ package dev.hermes.cli.template;
 import dev.hermes.cli.HermesHomeDetector;
 import dev.hermes.tooling.android.AndroidSdkLocator;
 import dev.hermes.tooling.android.AndroidSdkValidator;
+import dev.hermes.tooling.project.GameModuleNames;
 import dev.hermes.tooling.template.TemplateEngine;
 
 import java.io.IOException;
@@ -38,9 +39,11 @@ public final class TemplateSupport {
             String packageName,
             String engineVersion,
             Set<String> enabledPlatforms,
-            Path androidSdk)
+            Path androidSdk,
+            String gameModule)
             throws IOException {
         validateTemplateId(templateId);
+        String module = GameModuleNames.normalize(gameModule);
         if (Files.exists(targetDir)) {
             try (Stream<Path> entries = Files.list(targetDir)) {
                 if (entries.findAny().isPresent()) {
@@ -50,8 +53,9 @@ public final class TemplateSupport {
         }
         Files.createDirectories(targetDir);
         Path templateRoot = locateTemplateRoot(templateId);
-        Map<String, String> tokens = buildTokens(projectName, packageName, engineVersion, enabledPlatforms);
-        copyAndSubstitute(templateRoot, targetDir, tokens);
+        Map<String, String> tokens =
+                buildTokens(projectName, packageName, engineVersion, enabledPlatforms, module);
+        copyAndSubstitute(templateRoot, targetDir, tokens, module);
         mergeHermesKeysIntoGradleProperties(targetDir);
         if (enabledPlatforms.contains("android")) {
             configureAndroidSdk(targetDir, androidSdk);
@@ -207,7 +211,7 @@ public final class TemplateSupport {
         }
         try {
             Path sourceDir = Path.of(rootUrl.toURI());
-            copyAndSubstitute(sourceDir, targetDir, Map.of());
+            copyAndSubstitute(sourceDir, targetDir, Map.of(), GameModuleNames.defaultName());
         } catch (java.net.URISyntaxException e) {
             throw new IOException("Invalid template resource URI: " + rootUrl, e);
         }
@@ -226,7 +230,11 @@ public final class TemplateSupport {
     }
 
     private static Map<String, String> buildTokens(
-            String projectName, String packageName, String engineVersion, Set<String> enabledPlatforms) {
+            String projectName,
+            String packageName,
+            String engineVersion,
+            Set<String> enabledPlatforms,
+            String gameModule) {
         String safeName = projectName.replaceAll("[^a-zA-Z0-9_-]", "");
         if (safeName.isBlank()) {
             safeName = "game";
@@ -247,21 +255,24 @@ public final class TemplateSupport {
         tokens.put("{{HTML_ENABLED}}", Boolean.toString(enabledPlatforms.contains("html")));
         tokens.put("{{ANDROID_ENABLED}}", Boolean.toString(enabledPlatforms.contains("android")));
         tokens.put("{{ANDROID_APPLICATION_ID}}", androidApplicationId);
+        tokens.put("{{GAME_MODULE}}", gameModule);
         return tokens;
     }
 
-    private static void copyAndSubstitute(Path source, Path target, Map<String, String> tokens) throws IOException {
+    private static void copyAndSubstitute(
+            Path source, Path target, Map<String, String> tokens, String gameModule) throws IOException {
         Files.walkFileTree(
                 source,
                 new SimpleFileVisitor<>() {
                     @Override
                     public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                         Path relative = source.relativize(dir);
-                        Path destDir = target.resolve(relative);
-                        if (relative.toString().contains("{{packageDir}}") && !tokens.isEmpty()) {
-                            String replaced = TemplateEngine.substitute(relative.toString(), tokens);
-                            destDir = target.resolve(replaced);
+                        String relativeString = relative.toString();
+                        if (!tokens.isEmpty()) {
+                            relativeString = TemplateEngine.substitute(relativeString, tokens);
                         }
+                        relativeString = GameModuleNames.remapTemplatePath(relativeString, gameModule);
+                        Path destDir = target.resolve(relativeString);
                         Files.createDirectories(destDir);
                         return FileVisitResult.CONTINUE;
                     }
@@ -273,6 +284,7 @@ public final class TemplateSupport {
                         if (!tokens.isEmpty()) {
                             relativeString = TemplateEngine.substitute(relativeString, tokens);
                         }
+                        relativeString = GameModuleNames.remapTemplatePath(relativeString, gameModule);
                         Path dest = target.resolve(relativeString);
                         Files.createDirectories(dest.getParent());
                         if (isTextFile(file)) {

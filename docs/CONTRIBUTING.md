@@ -31,7 +31,7 @@ Cold-cache smoke:
 | Tooling                         | `./gradlew :hermes-gradle-plugin:hermes-tooling:test` (alias: `./gradlew hermes-tooling-test`) |
 | Gradle plugin                   | `./gradlew :hermes-gradle-plugin:test`                                                         |
 | CLI                             | `./gradlew :hermes-cli:test`                                                                   |
-| Game (no unit tests by default) | `./gradlew :game:hermesDoctor`                                                                 |
+| Dogfood simulation (no unit tests by default) | `./gradlew :dogfood-simulation:hermesDoctor`                                                                 |
 
 Run a single test class:
 
@@ -44,7 +44,7 @@ Run a single test class:
 **Doctor** — forbidden libGDX imports, engine resolution, JDK/SDK hints:
 
 ```bash
-./gradlew :game:hermesDoctor
+./gradlew :dogfood-simulation:hermesDoctor
 ```
 
 From a template project: same task on `:game`, or `hermes doctor` after installing the CLI.
@@ -52,9 +52,9 @@ From a template project: same task on `:game`, or `hermes doctor` after installi
 **Export smoke** (CI runs these on push; optional locally):
 
 ```bash
-./gradlew :game:hermesExportHtml
-./gradlew :game:hermesExportAndroid    # requires Android SDK
-./gradlew :game:hermesExportDesktop
+./gradlew :dogfood-simulation:hermesExportHtml
+./gradlew :dogfood-simulation:hermesExportAndroid    # requires Android SDK
+./gradlew :dogfood-simulation:hermesExportDesktop
 ```
 
 Validate ZIP layout with `.github/scripts/validate-export-zip.sh` when debugging export regressions.
@@ -64,11 +64,11 @@ Validate ZIP layout with `.github/scripts/validate-export-zip.sh` when debugging
 **Manual** — opens the sample window:
 
 ```bash
-./gradlew :game:hermesRunDesktop
+./gradlew :dogfood-simulation:hermesRunDesktop
 ```
 
 Expect a 640×480 window with the sample scene. Game class is set via `hermes { applicationClass = '…' }` in
-`game/build.gradle`.
+`dogfood-simulation/build.gradle`.
 
 If desktop is enabled but the launcher is missing, `hermesRunDesktop` reports a clear error — run
 `./gradlew hermesSyncPlatforms` and ensure the engine version in `settings.gradle` / `gradle.properties` is published to
@@ -124,6 +124,6 @@ first.
 
 ## Code conventions
 
-- No libGDX imports under `game/src/`.
+- No libGDX imports under `dogfood-simulation/src/`.
 - Public API changes belong in `hermes-api`; implementation in `hermes-core`.
 - Shared non-Gradle logic belongs in `hermes-tooling` (see [ARCHITECTURE.md](ARCHITECTURE.md)).

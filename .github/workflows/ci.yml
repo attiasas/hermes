@@ -76,22 +76,22 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
       - name: Export HTML
-        run: ./gradlew :game:hermesExportHtml --no-daemon --stacktrace
+        run: ./gradlew :dogfood-simulation:hermesExportHtml --no-daemon --stacktrace
       - name: Validate HTML export zip
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
-          ZIP=$(ls game/build/dist/html/*-html.zip)
+          ZIP=$(ls dogfood-simulation/build/dist/html/*-html.zip)
           .github/scripts/validate-export-zip.sh html "$ZIP"
       - name: Write export summary
         if: success()
         run: |
           chmod +x .github/scripts/write-export-summary.sh
-          .github/scripts/write-export-summary.sh "HTML export" export-html "game/build/dist/html/*-html.zip"
+          .github/scripts/write-export-summary.sh "HTML export" export-html "dogfood-simulation/build/dist/html/*-html.zip"
       - name: Upload HTML export
         uses: actions/upload-artifact@v7
         with:
           name: export-html
-          path: game/build/dist/html/*.zip
+          path: dogfood-simulation/build/dist/html/*.zip
           if-no-files-found: error
 
   export-android:
@@ -108,22 +108,22 @@ jobs:
       - uses: android-actions/setup-android@v4
       - uses: gradle/actions/setup-gradle@v6
       - name: Export Android
-        run: ./gradlew :game:hermesExportAndroid --no-daemon --stacktrace
+        run: ./gradlew :dogfood-simulation:hermesExportAndroid --no-daemon --stacktrace
       - name: Validate Android export zip
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
-          ZIP=$(ls game/build/dist/android/*-android.zip)
+          ZIP=$(ls dogfood-simulation/build/dist/android/*-android.zip)
           .github/scripts/validate-export-zip.sh android "$ZIP"
       - name: Write export summary
         if: success()
         run: |
           chmod +x .github/scripts/write-export-summary.sh
-          .github/scripts/write-export-summary.sh "Android export" export-android "game/build/dist/android/*-android.zip"
+          .github/scripts/write-export-summary.sh "Android export" export-android "dogfood-simulation/build/dist/android/*-android.zip"
       - name: Upload Android export
         uses: actions/upload-artifact@v7
         with:
           name: export-android
-          path: game/build/dist/android/*.zip
+          path: dogfood-simulation/build/dist/android/*.zip
           if-no-files-found: error
 
   export-desktop-linux:
@@ -139,22 +139,22 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
       - name: Export desktop (linuxX64)
-        run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
+        run: ./gradlew :dogfood-simulation:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop linux export zip
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
-          ZIP=$(ls game/build/dist/desktop/*-linux-x64.zip)
+          ZIP=$(ls dogfood-simulation/build/dist/desktop/*-linux-x64.zip)
           .github/scripts/validate-export-zip.sh desktop-linux "$ZIP"
       - name: Write export summary
         if: success()
         run: |
           chmod +x .github/scripts/write-export-summary.sh
-          .github/scripts/write-export-summary.sh "Desktop Linux export" export-desktop-linux "game/build/dist/desktop/*-linux-x64.zip"
+          .github/scripts/write-export-summary.sh "Desktop Linux export" export-desktop-linux "dogfood-simulation/build/dist/desktop/*-linux-x64.zip"
       - name: Upload desktop linux zip
         uses: actions/upload-artifact@v7
         with:
           name: export-desktop-linux
-          path: game/build/dist/desktop/*-linux-x64.zip
+          path: dogfood-simulation/build/dist/desktop/*-linux-x64.zip
           if-no-files-found: error
 
   export-desktop-macos:
@@ -170,23 +170,23 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
       - name: Export desktop (mac)
-        run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
+        run: ./gradlew :dogfood-simulation:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop mac export zips
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
-          for ZIP in game/build/dist/desktop/*-macos-*.zip; do
+          for ZIP in dogfood-simulation/build/dist/desktop/*-macos-*.zip; do
             .github/scripts/validate-export-zip.sh desktop-macos "$ZIP"
           done
       - name: Write export summary
         if: success()
         run: |
           chmod +x .github/scripts/write-export-summary.sh
-          .github/scripts/write-export-summary.sh "Desktop macOS export" export-desktop-macos "game/build/dist/desktop/*-macos-*.zip"
+          .github/scripts/write-export-summary.sh "Desktop macOS export" export-desktop-macos "dogfood-simulation/build/dist/desktop/*-macos-*.zip"
       - name: Upload desktop mac zips
         uses: actions/upload-artifact@v7
         with:
           name: export-desktop-macos
-          path: game/build/dist/desktop/*-macos-*.zip
+          path: dogfood-simulation/build/dist/desktop/*-macos-*.zip
           if-no-files-found: error
 
   export-desktop-windows:
@@ -202,22 +202,22 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
       - name: Export desktop (winX64)
-        run: ./gradlew :game:hermesExportDesktop --no-daemon --stacktrace
+        run: ./gradlew :dogfood-simulation:hermesExportDesktop --no-daemon --stacktrace
       - name: Validate desktop windows export zip
         shell: bash
         run: |
           chmod +x .github/scripts/validate-export-zip.sh
-          ZIP=$(ls game/build/dist/desktop/*-windows-x64.zip)
+          ZIP=$(ls dogfood-simulation/build/dist/desktop/*-windows-x64.zip)
           .github/scripts/validate-export-zip.sh desktop-windows "$ZIP"
       - name: Write export summary
         if: success()
         shell: bash
         run: |
           chmod +x .github/scripts/write-export-summary.sh
-          .github/scripts/write-export-summary.sh "Desktop Windows export" export-desktop-windows "game/build/dist/desktop/*-windows-x64.zip"
+          .github/scripts/write-export-summary.sh "Desktop Windows export" export-desktop-windows "dogfood-simulation/build/dist/desktop/*-windows-x64.zip"
       - name: Upload desktop windows zip
         uses: actions/upload-artifact@v7
         with:
           name: export-desktop-windows
-          path: game/build/dist/desktop/*-windows-x64.zip
+          path: dogfood-simulation/build/dist/desktop/*-windows-x64.zip
           if-no-files-found: error

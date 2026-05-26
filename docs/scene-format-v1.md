@@ -1,7 +1,7 @@
 # Scene format v1
 
 Scene files describe entities and their components. They live under the game module assets directory (default
-`src/main/resources/assets/`, configurable via `hermes.assetsDirectory` in `game/build.gradle`) and are referenced from
+`src/main/resources/assets/`, configurable via `hermes.assetsDirectory` in the game module's `build.gradle`) and are referenced from
 `hermes.json` via the `scene` field.
 
 Hermes is **pre-release**; the scene format stays **v1** until 1.0. JSON rules may change — update this doc in the same

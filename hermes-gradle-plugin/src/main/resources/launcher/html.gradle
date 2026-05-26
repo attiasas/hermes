@@ -1,0 +1,57 @@
+def gameModule = dev.hermes.gradle.launcher.HermesGameModule.resolveName(rootProject)
+def gameProjectPath = ":${gameModule}"
+
+def generatedTeaSources = layout.buildDirectory.dir('generated-tea-sources')
+sourceSets.main.java.srcDirs += generatedTeaSources
+
+tasks.named('processResources').configure {
+    dependsOn "${gameProjectPath}:generateAssetList"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+dependencies {
+    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+    implementation "com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion"
+}
+
+tasks.register('runRelease', JavaExec) {
+    description = 'Run the TeaVM application hosted via a local Jetty server at http://localhost:8080/'
+    group = 'application'
+    dependsOn classes
+    mainClass = 'dev.hermes.launcher.html.TeaVMBuilder'
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = projectDir
+    args 'run'
+}
+
+tasks.register('runDebug', JavaExec) {
+    description = 'Run the TeaVM application with debug enabled'
+    group = 'application'
+    dependsOn classes
+    mainClass = 'dev.hermes.launcher.html.TeaVMBuilder'
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = projectDir
+    args 'debug', 'run'
+}
+
+tasks.register('buildRelease', JavaExec) {
+    description = 'Build the TeaVM application'
+    group = 'build'
+    dependsOn classes
+    mainClass = 'dev.hermes.launcher.html.TeaVMBuilder'
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = projectDir
+}
+
+tasks.register('run') {
+    dependsOn runRelease
+}
+
+build.dependsOn buildRelease

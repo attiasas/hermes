@@ -4,6 +4,7 @@ import dev.hermes.gradle.doctor.HermesDoctor;
 import dev.hermes.gradle.dsl.HermesConfig;
 import dev.hermes.gradle.dsl.HermesExtension;
 import dev.hermes.gradle.export.HermesExportTasks;
+import dev.hermes.gradle.internal.GradleProjectEvaluate;
 import dev.hermes.gradle.internal.HermesDependencyResolver;
 import dev.hermes.gradle.internal.HermesGameConfigs;
 import dev.hermes.gradle.internal.HermesHomeGradle;
@@ -52,7 +53,8 @@ public final class HermesPlugin implements Plugin<Project> {
         registerHermesDoctorTask(project);
         HermesExportTasks.register(project);
 
-        project.afterEvaluate(
+        GradleProjectEvaluate.whenEvaluated(
+                project,
                 evaluated -> {
                     if (extension.getApplicationClass() == null || extension.getApplicationClass().isBlank()) {
                         throw new GradleException(

@@ -62,7 +62,6 @@ public final class HermesPlatformSync {
         if (!isSynced(rootDir, moduleName) || engineVersionOutdated(rootDir, engineVersion)) {
             populateLauncherSources(rootDir, moduleName, hermesHome);
         }
-        renderBuildGradle(rootDir, moduleName, engineVersion);
         writeVersionStamp(rootDir, engineVersion);
     }
 
@@ -91,15 +90,12 @@ public final class HermesPlatformSync {
             File rootDir, SettingsPlatformsExtension platforms, String engineVersion, File hermesHome) {
         if (platforms.getDesktop().isEnabled()) {
             populateLauncherSources(rootDir, "hermes-launcher-desktop", hermesHome);
-            renderBuildGradle(rootDir, "hermes-launcher-desktop", engineVersion);
         }
         if (platforms.getHtml().isEnabled()) {
             populateLauncherSources(rootDir, "hermes-launcher-html", hermesHome);
-            renderBuildGradle(rootDir, "hermes-launcher-html", engineVersion);
         }
         if (platforms.getAndroid().isEnabled()) {
             populateLauncherSources(rootDir, "hermes-launcher-android", hermesHome);
-            renderBuildGradle(rootDir, "hermes-launcher-android", engineVersion);
         }
         writeVersionStamp(rootDir, engineVersion);
     }
@@ -110,19 +106,6 @@ public final class HermesPlatformSync {
                 extension.getPlatforms(),
                 engineVersion,
                 HermesHomeGradle.resolve(settings));
-    }
-
-    private static void renderBuildGradle(File rootDir, String moduleName, String engineVersion) {
-        File launcherDir = launcherDir(rootDir, moduleName);
-        PlatformSyncContext context = PlatformSyncContext.forStandalone(moduleName, engineVersion, rootDir);
-        String content = PlatformTemplateRenderer.render(moduleName, context);
-        try {
-            Files.createDirectories(launcherDir.toPath());
-            Files.writeString(new File(launcherDir, "build.gradle").toPath(), content);
-        } catch (IOException e) {
-            throw new GradleException(
-                    "Failed to write build.gradle for " + moduleName + " at " + launcherDir.getAbsolutePath(), e);
-        }
     }
 
     static boolean engineVersionOutdated(File rootDir, String engineVersion) {
@@ -193,9 +176,6 @@ public final class HermesPlatformSync {
                         continue;
                     }
                     String relative = entry.getName().substring(prefix.length());
-                    if ("build.gradle".equals(relative)) {
-                        continue;
-                    }
                     Path dest = targetDir.resolve(relative);
                     Files.createDirectories(dest.getParent());
                     try (InputStream in = jar.getInputStream(entry)) {
@@ -214,14 +194,10 @@ public final class HermesPlatformSync {
     }
 
     static void copyLauncherSources(Path source, Path target) throws IOException {
-        copyTree(source, target, true);
+        copyTree(source, target);
     }
 
     static void copyTree(Path source, Path target) throws IOException {
-        copyTree(source, target, false);
-    }
-
-    private static void copyTree(Path source, Path target, boolean skipBuildGradle) throws IOException {
         Files.walkFileTree(
                 source,
                 new SimpleFileVisitor<>() {
@@ -240,9 +216,6 @@ public final class HermesPlatformSync {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                         if (shouldSkip(file)) {
-                            return FileVisitResult.CONTINUE;
-                        }
-                        if (skipBuildGradle && "build.gradle".equals(file.getFileName().toString())) {
                             return FileVisitResult.CONTINUE;
                         }
                         Path relative = source.relativize(file);

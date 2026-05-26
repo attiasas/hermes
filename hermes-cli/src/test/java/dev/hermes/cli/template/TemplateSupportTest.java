@@ -18,7 +18,14 @@ class TemplateSupportTest {
 
     private static void materialize(Path target) throws Exception {
         TemplateSupport.materializeTemplate(
-                "minimal", target, "MyGame", "dev.hermes.mygame", "0.1.0-SNAPSHOT", Set.of("desktop"), null);
+                "minimal",
+                target,
+                "MyGame",
+                "dev.hermes.mygame",
+                "0.1.0-SNAPSHOT",
+                Set.of("desktop"),
+                null,
+                null);
     }
 
     @Test
@@ -38,7 +45,26 @@ class TemplateSupportTest {
             assertFalse(
                     settings.contains("{ { DESKTOP_ENABLED } }"),
                     templateId + " settings.gradle has broken spaced token syntax");
+            assertTrue(
+                    settings.contains("{{GAME_MODULE}}"),
+                    templateId + " settings.gradle must use {{GAME_MODULE}} token");
         }
+    }
+
+    @Test
+    void materialize_customGameModuleRemapsPaths(@TempDir Path target) throws Exception {
+        TemplateSupport.materializeTemplate(
+                "minimal",
+                target,
+                "MyGame",
+                "dev.hermes.mygame",
+                "0.1.0-SNAPSHOT",
+                Set.of("desktop"),
+                null,
+                "my-game");
+
+        assertTrue(Files.isRegularFile(target.resolve("my-game/build.gradle")));
+        assertFalse(Files.exists(target.resolve("game")));
     }
 
     @Test
@@ -117,7 +143,14 @@ class TemplateSupportTest {
                 "ANDROID_SDK_ROOT or ANDROID_HOME required for this test");
 
         TemplateSupport.materializeTemplate(
-                "minimal", target, "MyGame", "dev.hermes.mygame", "0.1.0-SNAPSHOT", Set.of("android"), Path.of(sdk));
+                "minimal",
+                target,
+                "MyGame",
+                "dev.hermes.mygame",
+                "0.1.0-SNAPSHOT",
+                Set.of("android"),
+                Path.of(sdk),
+                null);
 
         String props = Files.readString(target.resolve("gradle.properties"), StandardCharsets.UTF_8);
         assertFalse(props.contains("hermes.android.sdk="), "SDK path belongs in local.properties only");

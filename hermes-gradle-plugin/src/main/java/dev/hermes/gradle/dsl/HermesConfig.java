@@ -12,6 +12,7 @@ public final class HermesConfig {
 
     public static final String SETTINGS_PLATFORMS_PROPERTY = "hermesSettingsPlatforms";
     public static final String ENGINE_VERSION_PROPERTY = "hermesEngineVersion";
+    public static final String GAME_MODULE_PROPERTY = "hermesGameModule";
 
     private final Project gameProject;
     private final HermesExtension game;

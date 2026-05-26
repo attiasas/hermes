@@ -44,15 +44,15 @@ hermes {
 
 ## Generated runtime file
 
-`:game:generateHermesRuntimeConfig` writes:
+`:dogfood-simulation:generateHermesRuntimeConfig` writes:
 
 ```
-game/build/generated/hermes-runtime/hermes-runtime.properties
+dogfood-simulation/build/generated/hermes-runtime/hermes-runtime.properties
 ```
 
-- **Desktop:** on `:game` classpath via `processResources`
+- **Desktop:** on `:dogfood-simulation` classpath via `processResources`
 - **HTML:** bundled by `TeaVMBuilder` from `hermes.runtime.config.dir`
-- **Android:** packaged via `:game` resources (launcher `preBuild` depends on generation)
+- **Android:** packaged via the game module's resources (launcher `preBuild` depends on generation)
 
 ### HTML asset layout
 
@@ -79,8 +79,8 @@ public void onCreate(HermesEngine engine) {
 ## JVM overrides
 
 ```bash
-./gradlew :game:hermesRunDesktop -Dhermes.log.minLevel=ERROR
-./gradlew :game:hermesRunHtml   -Dhermes.log.patterns='*Scene*'
+./gradlew :dogfood-simulation:hermesRunDesktop -Dhermes.log.minLevel=ERROR
+./gradlew :dogfood-simulation:hermesRunHtml   -Dhermes.log.patterns='*Scene*'
 ```
 
 ## Adding a new config key (engine developers)
