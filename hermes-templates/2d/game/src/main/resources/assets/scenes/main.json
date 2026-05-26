@@ -34,6 +34,32 @@
         "PulseMarker": {
           "amplitude": 0.15,
           "speed": 2.5
+        },
+        "Selectable": {
+          "radius": 48,
+          "layer": "WORLD"
+        }
+      }
+    },
+    {
+      "id": "marker",
+      "components": {
+        "Transform": {
+          "x": 180,
+          "y": 180,
+          "z": 2,
+          "scaleX": 0.35,
+          "scaleY": 0.35
+        },
+        "Sprite": {
+          "texture": "hermes-logo.png"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        },
+        "Selectable": {
+          "radius": 48,
+          "layer": "WORLD"
         }
       }
     }

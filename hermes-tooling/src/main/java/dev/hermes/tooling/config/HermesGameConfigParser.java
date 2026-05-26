@@ -15,7 +15,7 @@ import java.util.Set;
 
 public final class HermesGameConfigParser {
 
-    private static final Set<String> KNOWN_KEYS = Set.of("title", "scene", "renderPipeline");
+    private static final Set<String> KNOWN_KEYS = Set.of("title", "scene", "renderPipeline", "inputProfile");
     private static final Gson GSON = new Gson();
 
     private HermesGameConfigParser() {
@@ -48,6 +48,16 @@ public final class HermesGameConfigParser {
                         "hermes.json \"renderPipeline\" must be non-empty at " + file.getAbsolutePath());
             }
             config.setRenderPipeline(renderPipeline);
+            if (!root.has("inputProfile")) {
+                throw new HermesConfigException(
+                        "hermes.json must include \"inputProfile\" at " + file.getAbsolutePath());
+            }
+            String inputProfile = root.get("inputProfile").getAsString();
+            if (inputProfile.isBlank()) {
+                throw new HermesConfigException(
+                        "hermes.json \"inputProfile\" must be non-empty at " + file.getAbsolutePath());
+            }
+            config.setInputProfile(inputProfile);
             return config;
         } catch (JsonParseException e) {
             throw new HermesConfigException(

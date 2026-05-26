@@ -114,6 +114,32 @@ class TemplateSupportTest {
     }
 
     @Test
+    void materialize_minimalIncludesInputProfile(@TempDir Path target) throws Exception {
+        materialize(target);
+
+        assertTrue(
+                Files.isRegularFile(target.resolve("game/src/main/resources/assets/input/profile.json")),
+                "minimal template must ship input/profile.json");
+    }
+
+    @Test
+    void materialize_2dIncludesInputProfile(@TempDir Path target) throws Exception {
+        TemplateSupport.materializeTemplate(
+                "2d",
+                target,
+                "MyGame",
+                "dev.hermes.mygame",
+                "0.1.0-SNAPSHOT",
+                Set.of("desktop"),
+                null,
+                null);
+
+        assertTrue(
+                Files.isRegularFile(target.resolve("game/src/main/resources/assets/input/profile.json")),
+                "2d template must ship input/profile.json");
+    }
+
+    @Test
     void materialize_settingsGradleUsesMavenLocal(@TempDir Path target) throws Exception {
         materialize(target);
 

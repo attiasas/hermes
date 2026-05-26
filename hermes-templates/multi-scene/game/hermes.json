@@ -1,5 +1,6 @@
 {
   "title": "{{PROJECT_NAME}}",
   "scene": "scenes/main.json",
-  "renderPipeline": "render/pipeline.json"
+  "renderPipeline": "render/pipeline.json",
+  "inputProfile": "input/profile.json"
 }

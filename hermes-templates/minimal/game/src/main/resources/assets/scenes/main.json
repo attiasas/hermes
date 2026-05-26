@@ -30,6 +30,10 @@
         "PulseMarker": {
           "amplitude": 0.15,
           "speed": 2.5
+        },
+        "Selectable": {
+          "radius": 1.2,
+          "layer": "WORLD"
         }
       }
     }

@@ -22,7 +22,8 @@ class HermesGameConfigParserTest {
                 "{\n"
                         + "  \"title\": \"My Game\",\n"
                         + "  \"scene\": \"scenes/custom.json\",\n"
-                        + "  \"renderPipeline\": \"render/custom-pipeline.json\"\n"
+                        + "  \"renderPipeline\": \"render/custom-pipeline.json\",\n"
+                        + "  \"inputProfile\": \"input/custom-profile.json\"\n"
                         + "}\n",
                 StandardCharsets.UTF_8);
 
@@ -31,6 +32,21 @@ class HermesGameConfigParserTest {
         assertEquals("My Game", config.getTitle());
         assertEquals("scenes/custom.json", config.getScene());
         assertEquals("render/custom-pipeline.json", config.getRenderPipeline());
+        assertEquals("input/custom-profile.json", config.getInputProfile());
+    }
+
+    @Test
+    void parse_missingInputProfileThrows(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("hermes.json");
+        Files.writeString(
+                file,
+                "{\"renderPipeline\":\"render/pipeline.json\"}",
+                StandardCharsets.UTF_8);
+
+        HermesConfigException error =
+                assertThrows(HermesConfigException.class, () -> HermesGameConfigParser.parse(file.toFile()));
+
+        assertTrue(error.getMessage().contains("inputProfile"));
     }
 
     @Test
