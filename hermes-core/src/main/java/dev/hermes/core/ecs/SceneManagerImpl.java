@@ -3,6 +3,8 @@ package dev.hermes.core.ecs;
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneManager;
@@ -21,6 +23,8 @@ import java.util.Objects;
  * Scene manager delegating stack transitions to {@link SceneStack} and draining a request queue.
  */
 public final class SceneManagerImpl implements SceneManager {
+
+    private static final Logger log = Logs.get(SceneManagerImpl.class);
 
     private final ComponentRegistryImpl registry;
     private final SceneRegistryImpl sceneRegistry;
@@ -44,6 +48,7 @@ public final class SceneManagerImpl implements SceneManager {
 
     @Override
     public void request(SceneChangeRequest request) {
+        log.debug("Requesting scene change: " + request.kind() + " for scene: " + request.sceneId());
         pending.addLast(Objects.requireNonNull(request, "request"));
     }
 
@@ -51,6 +56,7 @@ public final class SceneManagerImpl implements SceneManager {
     public void processPending() {
         while (!pending.isEmpty()) {
             SceneChangeRequest request = pending.removeFirst();
+            log.debug("Processing scene change request: " + request.kind() + " for scene: " + request.sceneId());
             switch (request.kind()) {
                 case GO_TO:
                     stack.goTo(request.sceneId());

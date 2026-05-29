@@ -3,6 +3,8 @@ package dev.hermes.core.ecs;
 import com.badlogic.gdx.files.FileHandle;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.World;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.HermesAssetPaths;
 
@@ -12,6 +14,8 @@ import java.nio.charset.StandardCharsets;
  * Loads scene JSON from libGDX internal file handles into a world.
  */
 public final class SceneLoader {
+
+    private static final Logger log = Logs.get(SceneLoader.class);
 
     private SceneLoader() {
     }
@@ -33,6 +37,7 @@ public final class SceneLoader {
             throw new SceneLoadException("Scene '" + scenePath + "': file not found");
         }
         String json = handle.readString(StandardCharsets.UTF_8.name());
+        log.debug("Loading scene: " + scenePath + " with JSON: " + json);
         return SceneParser.loadIntoWorld(scenePath, json, world, registry);
     }
 

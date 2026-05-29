@@ -6,6 +6,8 @@ import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.config.RuntimeConfigService;
 import dev.hermes.api.input.InputService;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.core.config.RuntimeConfigServices;
 import dev.hermes.core.input.InputServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
@@ -20,6 +22,8 @@ import java.util.ServiceLoader;
  * Default engine implementation wiring scene manager, registry, and systems.
  */
 public final class HermesEngineImpl implements HermesEngine {
+
+    private static final Logger log = Logs.get(HermesEngineImpl.class);
 
     private final SceneManagerImpl sceneManager;
     private final ComponentRegistryImpl registry;
@@ -43,6 +47,7 @@ public final class HermesEngineImpl implements HermesEngine {
     private void loadServiceRegistrations() {
         for (dev.hermes.api.ecs.ComponentRegistration registration :
                 ServiceLoader.load(dev.hermes.api.ecs.ComponentRegistration.class)) {
+            log.debug("Loading service registration: " + registration.getClass().getName());
             registration.register(this);
         }
     }
@@ -74,6 +79,7 @@ public final class HermesEngineImpl implements HermesEngine {
 
     @Override
     public void addSystem(System system, SystemScope scope) {
+        log.debug("Adding system: " + system.getClass().getName() + " with scope: " + scope);
         systems.add(new SystemEntry(system, scope));
     }
 
