@@ -39,6 +39,31 @@ final class RenderGraphBackbufferSyncTest {
         graph.dispose();
     }
 
+    @Test
+    void render_syncsToBackbufferWhenLogicalSizeDiffers() throws Exception {
+        TestGdx.initHeadlessGl();
+
+        RetinaMockGraphics graphics = new RetinaMockGraphics(640, 480, 1280, 960);
+        Gdx.graphics = graphics;
+
+        String json =
+                "{\n"
+                        + "  \"version\": 1,\n"
+                        + "  \"passes\": [\n"
+                        + "    { \"id\": \"world3d\", \"type\": \"world3d\", \"target\": \"screen\", \"layers\": [\"WORLD\"] }\n"
+                        + "  ]\n"
+                        + "}\n";
+        RenderGraph graph = new RenderGraphBuilder().buildWithStubs(PipelineDocument.parse(json));
+        graph.resize(640, 480);
+
+        graph.render(null);
+
+        FramebufferPool pool = graph.framebufferPool();
+        assertEquals(1280, poolWindowWidth(pool));
+        assertEquals(960, poolWindowHeight(pool));
+        graph.dispose();
+    }
+
     private static int poolWindowWidth(FramebufferPool pool) throws Exception {
         Field field = FramebufferPool.class.getDeclaredField("windowWidth");
         field.setAccessible(true);
@@ -78,6 +103,40 @@ final class RenderGraphBackbufferSyncTest {
         @Override
         public int getBackBufferHeight() {
             return height;
+        }
+    }
+
+    private static final class RetinaMockGraphics extends MockGraphics {
+        private final int logicalW;
+        private final int logicalH;
+        private final int backbufferW;
+        private final int backbufferH;
+
+        RetinaMockGraphics(int logicalW, int logicalH, int backbufferW, int backbufferH) {
+            this.logicalW = logicalW;
+            this.logicalH = logicalH;
+            this.backbufferW = backbufferW;
+            this.backbufferH = backbufferH;
+        }
+
+        @Override
+        public int getWidth() {
+            return logicalW;
+        }
+
+        @Override
+        public int getHeight() {
+            return logicalH;
+        }
+
+        @Override
+        public int getBackBufferWidth() {
+            return backbufferW;
+        }
+
+        @Override
+        public int getBackBufferHeight() {
+            return backbufferH;
         }
     }
 }

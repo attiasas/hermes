@@ -1,7 +1,7 @@
 package dev.hermes.core.render;
 
-import com.badlogic.gdx.Gdx;
 import dev.hermes.api.ecs.World;
+import dev.hermes.core.viewport.BackbufferSize;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
 import dev.hermes.core.viewport.ViewportServiceImpl;
@@ -98,11 +98,8 @@ public final class RenderGraph {
     }
 
     private void syncBackbufferSize() {
-        int width = Gdx.graphics.getWidth();
-        int height = Gdx.graphics.getHeight();
-        if (width <= 0 || height <= 0) {
-            return;
-        }
+        int width = BackbufferSize.width();
+        int height = BackbufferSize.height();
         if (width != backbufferWidth || height != backbufferHeight) {
             resize(width, height);
         }

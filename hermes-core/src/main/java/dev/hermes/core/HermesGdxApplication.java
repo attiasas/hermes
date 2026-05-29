@@ -20,6 +20,7 @@ import dev.hermes.core.log.LoggingRuntime;
 import dev.hermes.core.config.RuntimeConfigServiceImpl;
 import dev.hermes.core.config.RuntimeConfigServices;
 import dev.hermes.core.render.RenderPipelineExecutor;
+import dev.hermes.core.viewport.BackbufferSize;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
 /**
@@ -80,12 +81,8 @@ public final class HermesGdxApplication implements ApplicationListener {
                 engine.scenes().processPending();
             }
 
-            int width = Gdx.graphics.getWidth();
-            int height = Gdx.graphics.getHeight();
-            if (width <= 0 || height <= 0) {
-                width = HermesLauncherSupport.windowWidth();
-                height = HermesLauncherSupport.windowHeight();
-            }
+            int width = BackbufferSize.width();
+            int height = BackbufferSize.height();
             renderPipeline.resize(width, height);
 
             application.resize(width, height);
@@ -100,19 +97,15 @@ public final class HermesGdxApplication implements ApplicationListener {
             return;
         }
         if (renderPipeline != null) {
-            renderPipeline.resize(width, height);
+            renderPipeline.resize(BackbufferSize.width(), BackbufferSize.height());
         }
-        application.resize(width, height);
+        application.resize(BackbufferSize.width(), BackbufferSize.height());
     }
 
     @Override
     public void render() {
-        int width = Gdx.graphics.getWidth();
-        int height = Gdx.graphics.getHeight();
-        if (width <= 0 || height <= 0) {
-            width = HermesLauncherSupport.windowWidth();
-            height = HermesLauncherSupport.windowHeight();
-        }
+        int width = BackbufferSize.width();
+        int height = BackbufferSize.height();
 
         if (fatalErrorScreen != null && fatalErrorScreen.isActive()) {
             fatalErrorScreen.render(width, height);

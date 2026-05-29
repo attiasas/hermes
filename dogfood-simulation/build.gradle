@@ -9,11 +9,11 @@ hermes {
     assetsDirectory = 'src/main/resources/assets'
     debug = true
 
-    logging {
+    // logging {
         // minLevel = ''
         // patternType = 'WILDCARD'
-        patterns = ['*SceneStack*']
-    }
+        // patterns = ['*SceneStack*']
+    // }
 
     platforms {
         desktop {
