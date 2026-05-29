@@ -18,6 +18,7 @@ Hermes uses four canonical coordinate spaces. All projection, `glViewport`, and 
 2. Gameplay picks → **WORLD** via `SceneViewport.screenToWorld` or `engine.viewport().screenToWorld(...)`.
 3. Never mix window dimensions into projection when drawing to an FBO — always use **SURFACE** size for that pass.
 4. Orthographic camera `Transform.x/y` = center of the visible world rect.
+5. Runtime sizing (`ViewportService.onWindowResize`, FBO pool, `glViewport`) always uses **physical backbuffer pixels** (`Gdx.graphics.getBackBufferWidth/Height` via `BackbufferSize`). Do not use `Gdx.graphics.getWidth/Height` for render sizing on desktop — on Retina they are logical points and cause quarter-frame rendering.
 
 ## Engine API
 
