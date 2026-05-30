@@ -6,8 +6,8 @@ Demonstrates **3D + 2D in one project**: a perspective **main** world and an ort
 scene registration, `SceneChangeRequest.push` / `pop`, stacked rendering, and a timer-driven overlay. See the Hermes
 engine docs: `docs/scene-management.md`.
 
-The **main** scene is config-only 3D (perspective camera + `models/cube.obj`). The **pause** overlay is 2D (orthographic
-camera + `Sprite`) and uses `render/ui-overlay.json` via scene JSON `renderPipeline` override. [
+The **main** scene is config-only 3D (perspective camera + `models/cube.obj`). The **pause** overlay is a widget tree (
+`assets/ui/pause-menu.json`) and uses `render/ui-overlay.json` via scene JSON `renderPipeline` override. [
 `Game.java`](game/src/main/java/{{packageDir}}/Game.java) opts into `SceneStackPolicy(true, true)` so the 3D world keeps
 updating and drawing under the UI overlay.
 

@@ -15,7 +15,7 @@ dogfood-simulation ──api──► hermes-api ◄── hermes-core (+ libGDX
 
 | Module                 | Role                                                                                                                                                                                               |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hermes-api`           | Public types: `HermesApplication`, ECS (`WorldManager`, `EntityStore`, `Component`, `System`), entity types (`EntityTypeRegistry`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, scene-facing components (`Transform`, `Sprite`, `Camera`, `Selectable`). No libGDX. |
+| `hermes-api`           | Public types: `HermesApplication`, ECS (`WorldManager`, `EntityStore`, `Component`, `System`), entity types (`EntityTypeRegistry`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, `UiService`, scene-facing components (`Transform`, `Sprite`, `Camera`, `Selectable`, `UiAttach`). No libGDX. |
 | `hermes-core`          | Engine implementation: `SceneManagerImpl`, scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath).                                         |
 | `hermes-launcher-*`    | Platform entrypoints (LWJGL3, TeaVM, Android). Depend on `hermes-core`. Included by the settings plugin when enabled.                                                                              |
 | `dogfood-simulation`   | Engine monorepo dogfood game. `api` → `hermes-api`, `runtimeOnly` → `hermes-core`.                                                                    |
@@ -210,6 +210,23 @@ Built-in **GLOBAL** systems in `BuiltinComponents` (no game Java for stock demos
 Coordinate conversion for picks and drags uses `ViewportService` only (same path as rendering). See [input.md](input.md)
 and [coordinate-spaces.md](coordinate-spaces.md).
 
+## UI (`UiService`)
+
+`HermesEngine.ui()` exposes `UiService` — the **only** 2D UI path. Authors declare screen-space UI with scene JSON `"ui"`
+(asset path or `SceneUiConfig` object) and world-attached overlays with the `UiAttach` component (`follow` = entity `id`).
+
+| Piece | Role |
+|-------|------|
+| `assets/ui/*.json` | Widget trees (`version: 1`, `designSize`, `root`) |
+| `UiRenderPass` | Pipeline `ui` pass; draws laid-out trees (no `RenderLayer.UI`, no `ui-camera`) |
+| `UiInputSystem` | GLOBAL; hit-tests top scene buttons → `InputService.pulseAction` |
+| `UiAttachSystem` | GLOBAL; projects `follow` targets to screen anchors |
+| Bindings | `setBinding` / `UiBindingProvider` for dynamic HUD (tier 2) |
+| SPI | `UiWidgetRegistration` for custom widget types (tier 4) |
+
+`RenderLayer` and `PickLayer` are **WORLD** only; menus and HUDs are not `Sprite` + `PickLayer.UI`. Author tiers and
+breaking changes from the legacy sprite UI path: [ui-format-v1.md](ui-format-v1.md).
+
 ## Related docs
 
 - [Scene management](scene-management.md)
@@ -217,6 +234,7 @@ and [coordinate-spaces.md](coordinate-spaces.md).
 - [Coordinate spaces & viewport service](coordinate-spaces.md)
 - [Render pipeline](render-pipeline.md)
 - [Scene format v1](scene-format-v1.md)
+- [UI format v1](ui-format-v1.md)
 - [Entity types](entity-types.md)
 - [Contributing](CONTRIBUTING.md)
 - [Docs index](README.md)

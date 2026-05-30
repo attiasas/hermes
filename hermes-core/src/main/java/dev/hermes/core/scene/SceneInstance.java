@@ -3,6 +3,7 @@ package dev.hermes.core.scene;
 import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneHandle;
+import dev.hermes.api.scene.SceneUiConfig;
 import dev.hermes.core.ecs.WorldManagerImpl;
 
 import java.util.Optional;
@@ -17,6 +18,7 @@ public final class SceneInstance implements SceneHandle {
     private final SceneDefinition definition;
     private final Optional<String> renderPipelineOverride;
     private final Optional<String> inputContextOverride;
+    private final Optional<SceneUiConfig> uiConfig;
     private boolean paused;
 
     SceneInstance(
@@ -25,12 +27,14 @@ public final class SceneInstance implements SceneHandle {
             SceneDefinition definition,
             Optional<String> renderPipelineOverride,
             Optional<String> inputContextOverride,
+            Optional<SceneUiConfig> uiConfig,
             boolean paused) {
         this.id = id;
         this.manager = manager;
         this.definition = definition;
         this.renderPipelineOverride = renderPipelineOverride == null ? Optional.empty() : renderPipelineOverride;
         this.inputContextOverride = inputContextOverride == null ? Optional.empty() : inputContextOverride;
+        this.uiConfig = uiConfig == null ? Optional.empty() : uiConfig;
         this.paused = paused;
     }
 
@@ -56,6 +60,10 @@ public final class SceneInstance implements SceneHandle {
     @Override
     public Optional<String> inputContext() {
         return inputContextOverride;
+    }
+
+    public Optional<SceneUiConfig> uiConfig() {
+        return uiConfig;
     }
 
     @Override

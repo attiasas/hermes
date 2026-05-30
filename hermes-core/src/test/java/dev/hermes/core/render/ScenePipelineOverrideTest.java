@@ -168,7 +168,6 @@ final class ScenePipelineOverrideTest {
                     }
                 });
 
-        assertEquals(1, manager.entities().entityCount());
-        assertTrue(manager.entities().findByName("logo") != null);
+        assertEquals(0, manager.entities().entityCount());
     }
 }

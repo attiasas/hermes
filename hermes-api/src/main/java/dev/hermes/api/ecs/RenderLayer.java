@@ -2,14 +2,11 @@ package dev.hermes.api.ecs;
 
 import dev.hermes.api.Component;
 
-/**
- * Selects world-space or UI overlay rendering for an entity.
- */
+/** Selects world-space rendering layer for an entity. */
 public final class RenderLayer implements Component {
 
     public enum Layer {
-        WORLD,
-        UI
+        WORLD
     }
 
     private Layer layer = Layer.WORLD;

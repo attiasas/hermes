@@ -1,4 +1,6 @@
 {
+  "inputContext": "gameplay",
+  "ui": "ui/hud.json",
   "entities": [
     {
       "id": "main-camera",
@@ -15,6 +17,16 @@
     {
       "type": "spin-cube",
       "id": "cube"
+    },
+    {
+      "id": "player-hp",
+      "components": {
+        "UiAttach": {
+          "document": "ui/hp-bar.json",
+          "follow": "cube",
+          "offsetY": 2.2
+        }
+      }
     }
   ]
 }

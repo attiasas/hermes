@@ -43,9 +43,6 @@
       "id": "ui",
       "type": "ui",
       "target": "screen",
-      "layers": [
-        "UI"
-      ],
       "depthTest": false
     }
   ]

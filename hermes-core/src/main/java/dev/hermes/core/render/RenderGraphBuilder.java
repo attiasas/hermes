@@ -4,10 +4,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.core.render.pass.SpritesPass;
-import dev.hermes.core.render.pass.UiPass;
+import dev.hermes.core.render.pass.UiRenderPass;
 import dev.hermes.core.render.pass.World3dPass;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import java.util.ArrayList;
@@ -24,18 +25,24 @@ public final class RenderGraphBuilder {
     private final ModelCache sharedModelCache = new ModelCache();
     private final RenderPassRegistry passRegistry;
     private final ViewportServiceImpl viewport;
+    private final UiServiceImpl ui;
 
     public RenderGraphBuilder() {
-        this(new RenderPassRegistry(), new ViewportServiceImpl());
+        this(new RenderPassRegistry(), new ViewportServiceImpl(), null);
     }
 
     public RenderGraphBuilder(RenderPassRegistry passRegistry) {
-        this(passRegistry, new ViewportServiceImpl());
+        this(passRegistry, new ViewportServiceImpl(), null);
     }
 
     RenderGraphBuilder(RenderPassRegistry passRegistry, ViewportServiceImpl viewport) {
+        this(passRegistry, viewport, null);
+    }
+
+    RenderGraphBuilder(RenderPassRegistry passRegistry, ViewportServiceImpl viewport, UiServiceImpl ui) {
         this.passRegistry = passRegistry == null ? new RenderPassRegistry() : passRegistry;
         this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
+        this.ui = ui;
     }
 
     public RenderGraph build(PipelineDocument document, SpriteBatch batch) {
@@ -83,6 +90,8 @@ public final class RenderGraphBuilder {
                 pass =
                         new CustomGraphPass(
                                 passDef.id(), passRegistry.require(passDef.handler()), viewport);
+            } else if (passDef.type() == PipelineDocument.PassType.UI) {
+                pass = new UiGraphPass(passDef.id(), new UiRenderPass(), passDef.depthTest());
             } else if (passDef.type() == PipelineDocument.PassType.POST
                     || passDef.type() == PipelineDocument.PassType.PARTICLES
                     || passDef.type() == PipelineDocument.PassType.COMPUTE) {
@@ -135,8 +144,7 @@ public final class RenderGraphBuilder {
                 return new SpritesGraphPass(
                         passDef.id(), new SpritesPass(batch, shaderRegistry), layers, passDef.depthTest());
             case UI:
-                return new UiGraphPass(
-                        passDef.id(), new UiPass(batch, passDef.camera()), layers, passDef.depthTest());
+                return new UiGraphPass(passDef.id(), new UiRenderPass(ui, batch), passDef.depthTest());
             case CUSTOM:
                 return new CustomGraphPass(
                         passDef.id(), passRegistry.require(passDef.handler()), viewport);

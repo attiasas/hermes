@@ -3,11 +3,19 @@
   "context": "gameplay",
   "actions": {
     "select": { "type": "button" },
-    "pause": { "type": "button" }
+    "pause": { "type": "button" },
+    "start_game": { "type": "button" },
+    "resume": { "type": "button" },
+    "quit": { "type": "button" }
   },
   "bindings": [
-    { "action": "select", "source": "pointer", "button": "LEFT", "when": "justPressed" },
-    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" }
+    { "action": "select", "source": "pointer", "button": "LEFT", "when": "justPressed", "context": "gameplay" },
+    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed", "context": "gameplay" },
+    { "action": "start_game", "source": "keyboard", "key": "ENTER", "when": "justPressed", "context": "menu" },
+    { "action": "start_game", "source": "keyboard", "key": "SPACE", "when": "justPressed", "context": "menu" },
+    { "action": "resume", "source": "keyboard", "key": "ENTER", "when": "justPressed", "context": "menu" },
+    { "action": "resume", "source": "keyboard", "key": "ESCAPE", "when": "justPressed", "context": "menu" },
+    { "action": "quit", "source": "keyboard", "key": "Q", "when": "justPressed", "context": "menu" }
   ],
   "gamepad": { "deadzone": 0.15 }
 }

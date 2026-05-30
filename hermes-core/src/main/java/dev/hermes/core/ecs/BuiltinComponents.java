@@ -12,10 +12,14 @@ import dev.hermes.api.ecs.Selectable;
 import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
+import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
 import dev.hermes.core.input.CameraSceneControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
+import dev.hermes.core.ui.UiAttachSystem;
+import dev.hermes.core.ui.UiInputSystem;
+import dev.hermes.core.ui.UiServiceImpl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +34,7 @@ public final class BuiltinComponents {
     static final String RENDER_LAYER = "RenderLayer";
     static final String SELECTABLE = "Selectable";
     static final String SELECTED = "Selected";
+    static final String UI_ATTACH = "UiAttach";
 
     private BuiltinComponents() {
     }
@@ -134,32 +139,52 @@ public final class BuiltinComponents {
                     return selectable;
                 });
         registry.register(SELECTED, Selected.class, (data, ctx) -> new Selected());
+        registry.register(
+                UI_ATTACH,
+                UiAttach.class,
+                (data, ctx) -> {
+                    UiAttach attach = new UiAttach();
+                    attach.setDocument(data.getString("document", ""));
+                    if (data.has("follow")) {
+                        attach.setFollow(data.getString("follow", ""));
+                    }
+                    attach.setOffsetX(data.getFloat("offsetX", 0f));
+                    attach.setOffsetY(data.getFloat("offsetY", 0f));
+                    attach.setOffsetZ(data.getFloat("offsetZ", 0f));
+                    attach.setVisible(data.getBoolean("visible", true));
+                    return attach;
+                });
     }
 
     public static void registerSystems(HermesEngine engine) {
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
+        if (engine instanceof HermesEngineImpl) {
+            HermesEngineImpl impl = (HermesEngineImpl) engine;
+            engine.addSystem(new UiInputSystem(impl), SystemScope.GLOBAL);
+            engine.addSystem(new UiAttachSystem((UiServiceImpl) impl.ui(), impl.viewport()), SystemScope.GLOBAL);
+        }
     }
 
     private static PickLayer parsePickLayer(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return PickLayer.WORLD;
         }
         String normalized = value.trim().toUpperCase();
-        if ("UI".equals(normalized)) {
-            return PickLayer.UI;
+        if (!"WORLD".equals(normalized)) {
+            throw new IllegalArgumentException("unknown Selectable.layer: " + value);
         }
         return PickLayer.WORLD;
     }
 
     private static RenderLayer.Layer parseRenderLayer(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return RenderLayer.Layer.WORLD;
         }
         String normalized = value.trim().toUpperCase();
-        if ("UI".equals(normalized)) {
-            return RenderLayer.Layer.UI;
+        if (!"WORLD".equals(normalized)) {
+            throw new IllegalArgumentException("unknown RenderLayer.layer: " + value);
         }
         return RenderLayer.Layer.WORLD;
     }

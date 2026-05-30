@@ -134,11 +134,15 @@ public final class SceneStack {
                 definition,
                 jsonMetadata.renderPipeline(),
                 jsonMetadata.inputContext(),
+                jsonMetadata.uiConfig(),
                 false);
     }
 
     private void enterScene(SceneInstance instance) {
         log.debug("Entering scene: " + instance.id());
+        if (engine != null) {
+            engine.ui().onSceneEnter(instance.id(), instance.uiConfig());
+        }
         SceneLifecycle lifecycle = instance.definition().lifecycle();
         if (lifecycle != null) {
             lifecycle.onEnter(sceneContext(instance));
@@ -147,6 +151,9 @@ public final class SceneStack {
 
     private void exitScene(SceneInstance instance) {
         log.debug("Exiting scene: " + instance.id());
+        if (engine != null) {
+            engine.ui().onSceneExit(instance.id());
+        }
         SceneLifecycle lifecycle = instance.definition().lifecycle();
         if (lifecycle != null) {
             lifecycle.onExit(sceneContext(instance));

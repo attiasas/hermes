@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "designSize": { "width": 800, "height": 600 },
+  "root": {
+    "type": "panel",
+    "id": "root",
+    "children": [
+      { "type": "label", "id": "hello", "text": "Hello" }
+    ]
+  }
+}

@@ -91,9 +91,13 @@ public final class RenderGraph {
     }
 
     public void render(EntityStore entities) {
+        render(entities, null);
+    }
+
+    public void render(EntityStore entities, String sceneId) {
         syncBackbufferSize();
         for (RenderGraphPass pass : passes) {
-            pass.render(entities, null, null);
+            pass.render(entities, null, null, sceneId);
         }
     }
 

@@ -28,4 +28,7 @@ public interface InputService {
     Optional<PickHit> pick(EntityStore entities, float screenX, float screenY);
 
     Optional<PickHit> pick(EntityStore entities, float screenX, float screenY, PickLayer layer);
+
+    /** Marks {@code action} as {@linkplain InputActions#justPressed(String) just pressed} for the current frame. */
+    void pulseAction(String action);
 }

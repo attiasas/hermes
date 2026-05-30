@@ -3,6 +3,7 @@ package dev.hermes.api.ecs;
 import dev.hermes.api.config.RuntimeConfigService;
 import dev.hermes.api.input.InputService;
 import dev.hermes.api.scene.SceneManager;
+import dev.hermes.api.ui.UiService;
 import dev.hermes.api.viewport.ViewportService;
 
 /**
@@ -25,4 +26,6 @@ public interface HermesEngine {
     void addSystem(System system, SystemScope scope);
 
     RuntimeConfigService runtimeConfig();
+
+    UiService ui();
 }

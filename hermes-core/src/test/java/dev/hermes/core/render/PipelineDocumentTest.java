@@ -25,7 +25,7 @@ final class PipelineDocumentTest {
                     + "  \"passes\": [\n"
                     + "    { \"id\": \"world3d\", \"type\": \"world3d\", \"target\": \"screen\", \"layers\": [\"WORLD\"] },\n"
                     + "    { \"id\": \"sprites\", \"type\": \"sprites\", \"target\": \"screen\", \"layers\": [\"WORLD\"] },\n"
-                    + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"layers\": [\"UI\"], \"depthTest\": false }\n"
+                    + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"depthTest\": false }\n"
                     + "  ]\n"
                     + "}\n";
 
@@ -93,24 +93,21 @@ final class PipelineDocumentTest {
     }
 
     @Test
-    void parse_uiPassOptionalCamera() {
+    void parse_uiPassWithoutLayersOrCamera() {
         String json =
                 "{\n"
                         + "  \"version\": 1,\n"
                         + "  \"passes\": [\n"
-                        + "    {\n"
-                        + "      \"id\": \"ui\",\n"
-                        + "      \"type\": \"ui\",\n"
-                        + "      \"target\": \"screen\",\n"
-                        + "      \"layers\": [\"UI\"],\n"
-                        + "      \"camera\": \"ui-camera\"\n"
-                        + "    }\n"
+                        + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"depthTest\": false }\n"
                         + "  ]\n"
                         + "}\n";
 
         PipelineDocument doc = PipelineDocument.parse(json);
+        PipelineDocument.PassDef ui = doc.passes().get(0);
 
-        assertEquals("ui-camera", doc.passes().get(0).camera());
+        assertEquals(PipelineDocument.PassType.UI, ui.type());
+        assertEquals(false, ui.depthTest());
+        assertEquals(null, ui.camera());
     }
 
     @Test

@@ -31,7 +31,7 @@ loads the profile at startup; a missing file fails fast. Schema details: [input-
 | `devices()` | Raw keyboard, pointer, and gamepad snapshots for the current frame (`InputDevices`). |
 | `viewport(entities)` | Delegates to `engine.viewport().forWorld(entities)`. |
 | `pick(entities, screenX, screenY)` | Screen-space hit test against `Selectable` entities (default `PickLayer.WORLD`). |
-| `pick(entities, screenX, screenY, layer)` | Same, filtered by `PickLayer` (`WORLD`, `UI`, `ANY`). |
+| `pick(entities, screenX, screenY, layer)` | Same, filtered by `PickLayer` (`WORLD` only). |
 
 ### Actions vs devices
 
@@ -115,16 +115,18 @@ if (input.actions().justPressed("select")) {
 Or use `input.pick(entities, p.screenX(), p.screenY())` when you only care about hits on `Selectable` entities; `PickHit`
 includes `worldX`, `worldY`, `worldZ`.
 
-### UI vs WORLD pick layer
+### Pick layer
 
-`Selectable.layer` filters picks (`PickLayer.WORLD`, `UI`, `ANY`). Pair with `RenderLayer`:
+`Selectable.layer` must be `"WORLD"`. Screen-space UI uses widget hit-testing (`UiInputSystem`), not `pick(...)`.
 
-| `RenderLayer.layer` | Typical `Selectable.layer` | Use |
-|---------------------|----------------------------|-----|
-| `"WORLD"` | `"WORLD"` | Scene sprites/meshes (default demos). |
-| `"UI"` | `"UI"` | Overlay buttons; pass `PickLayer.UI` to `pick(...)`. |
+### UI buttons and actions
 
-Entities on `RenderLayer.UI` with `Selectable.layer: "UI"` are tested only when picking with `PickLayer.UI` or `ANY`.
+Menu and HUD buttons live in `assets/ui/*.json` with an `"action"` string per button. `UiInputSystem` hit-tests the **active**
+scene tree (top of stack) and calls `input.pulseAction(action)` on click. Map the same action names in `input/profile.json`
+for keyboard, gamepad, or pointer so gameplay systems can use `input.actions().wasActionPressed("start_game")`.
+
+Example: pause overlay scene sets `"ui": "ui/pause-menu.json"` and `"inputContext": "menu"` while gameplay uses
+`"inputContext": "gameplay"` on the main scene. Full widget and binding rules: [ui-format-v1.md](ui-format-v1.md).
 
 ## Scene context override
 
@@ -134,8 +136,9 @@ without `context` (or with `"*"`) apply in every context.
 
 ## Related docs
 
+- [UI format v1](ui-format-v1.md) — widget trees, bindings, breaking changes
 - [Input profile format v1](input-format-v1.md)
-- [Scene format v1](scene-format-v1.md) — `Selectable`, `Selected`, `inputContext`
+- [Scene format v1](scene-format-v1.md) — `Selectable`, `Selected`, `inputContext`, `"ui"`, `UiAttach`
 - [Coordinate spaces](coordinate-spaces.md)
 - [Scene management](scene-management.md)
 - [Architecture](ARCHITECTURE.md)

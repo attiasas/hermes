@@ -46,8 +46,8 @@ Passes that target an unknown framebuffer id fail at graph build time.
 | `type`    | Description                                                                               |
 |-----------|-------------------------------------------------------------------------------------------|
 | `world3d` | Meshes with materials; perspective/ortho from active `Camera`.                            |
-| `sprites` | `Sprite` entities by `RenderLayer`.                                                       |
-| `ui`      | UI layer sprites; `depthTest` usually `false`.                                            |
+| `sprites` | `Sprite` entities on `RenderLayer.WORLD`.                                                  |
+| `ui`      | Scene widget trees via `UiRenderPass` / `UiService`; `depthTest` usually `false`.         |
 | `custom`  | Code-registered pass; requires `handler` matching `HermesApplication.configureRendering`. |
 
 ### Custom passes
@@ -97,7 +97,7 @@ Example:
 "passes": [
   { "id": "world3d", "type": "world3d", "target": "sceneColor", "layers": ["WORLD"] },
   { "id": "sprites", "type": "sprites", "target": "screen", "layers": ["WORLD"] },
-  { "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "depthTest": false }
+  { "id": "ui", "type": "ui", "target": "screen", "depthTest": false }
 ]
 ```
 
@@ -122,22 +122,20 @@ the window size (see [coordinate-spaces.md](coordinate-spaces.md)).
 A scene may set `"renderPipeline": "render/ui-overlay.json"` to use a different graph (for example a UI-only pause
 menu). Resolution order: scene JSON override → `SceneDefinition.renderPipeline` → project default from `hermes.json`.
 
-## UI pass camera
+## UI pass
 
-UI passes may pin the scene camera by entity id:
+The `ui` pass draws widget trees from the scene `"ui"` field via `UiRenderPass` (no `layers` or `camera` fields). Use
+`depthTest: false` when compositing over a 3D scene.
 
 ```json
-{ "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "camera": "ui-camera", "depthTest": false }
+{ "id": "ui", "type": "ui", "target": "screen", "depthTest": false }
 ```
 
-The entity `ui-camera` must have `Transform` + `Camera` (usually orthographic). When omitted, the pass uses the active
-scene camera.
-
-## HUD framebuffer (future UI system)
+## HUD framebuffer (future)
 
 A UI pass may target a dedicated framebuffer (for example `"target": "hud"`) declared under `framebuffers`. A later
-composite pass can blit `hud` to `screen` for engine-managed HUD layers. Declare `hud` with `depth: false` for pure 2D
-overlays.
+composite pass could blit `hud` to `screen` for engine-managed HUD layers. v1 draws UI directly to `screen` (or the pass
+`target`). See [ui-format-v1.md](ui-format-v1.md).
 
 ## Future passes (not implemented yet)
 

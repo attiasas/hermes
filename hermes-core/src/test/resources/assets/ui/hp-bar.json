@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "designSize": { "width": 100, "height": 20 },
+  "root": {
+    "type": "panel",
+    "id": "root",
+    "layout": { "anchor": "bottomCenter", "width": 100, "height": 20 }
+  }
+}

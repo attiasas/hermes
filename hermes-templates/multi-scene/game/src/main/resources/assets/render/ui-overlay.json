@@ -11,11 +11,7 @@
       "id": "ui",
       "type": "ui",
       "target": "screen",
-      "layers": [
-        "UI"
-      ],
-      "depthTest": false,
-      "camera": "ui-camera"
+      "depthTest": false
     }
   ]
 }

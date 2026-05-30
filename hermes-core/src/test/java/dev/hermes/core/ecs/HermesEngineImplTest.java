@@ -41,14 +41,14 @@ final class HermesEngineImplTest {
         engine.addSystem(active, SystemScope.ACTIVE_SCENE);
 
         List<HermesEngineImpl.SystemEntry> entries = new ArrayList<>(engine.systems());
-        assertEquals(5, entries.size());
-        assertEquals(SystemScope.GLOBAL, entries.get(0).scope());
-        assertEquals(SystemScope.GLOBAL, entries.get(1).scope());
-        assertEquals(SystemScope.GLOBAL, entries.get(2).scope());
-        assertSame(global, entries.get(3).system());
-        assertEquals(SystemScope.GLOBAL, entries.get(3).scope());
-        assertSame(active, entries.get(4).system());
-        assertEquals(SystemScope.ACTIVE_SCENE, entries.get(4).scope());
+        assertEquals(7, entries.size());
+        for (int i = 0; i < 5; i++) {
+            assertEquals(SystemScope.GLOBAL, entries.get(i).scope());
+        }
+        assertSame(global, entries.get(5).system());
+        assertEquals(SystemScope.GLOBAL, entries.get(5).scope());
+        assertSame(active, entries.get(6).system());
+        assertEquals(SystemScope.ACTIVE_SCENE, entries.get(6).scope());
     }
 
     @Test
@@ -62,8 +62,8 @@ final class HermesEngineImplTest {
 
         engine.addSystem(system);
 
-        assertEquals(4, engine.systems().size());
-        HermesEngineImpl.SystemEntry entry = engine.systems().get(3);
+        assertEquals(6, engine.systems().size());
+        HermesEngineImpl.SystemEntry entry = engine.systems().get(5);
         assertSame(system, entry.system());
         assertEquals(SystemScope.GLOBAL, entry.scope());
     }

@@ -121,9 +121,6 @@ final class WorldPicker {
     }
 
     private static boolean matchesLayer(Selectable selectable, PickLayer filter) {
-        if (filter == PickLayer.ANY) {
-            return true;
-        }
         return selectable.layer() == filter;
     }
 

@@ -14,6 +14,7 @@ load time with `SceneParseException`.
 
 ```json
 {
+  "ui": "ui/hud.json",
   "inputContext": "gameplay",
   "entities": [
     {
@@ -32,6 +33,7 @@ load time with `SceneParseException`.
 
 | Field                   | Required | Description                                                                                                                                                                                                                       |
 |-------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ui`                    | No       | Screen-space UI document: asset path string (e.g. `"ui/menu.json"`) or object with `document`, optional `fitMode` (`fit`, `stretch`, `fill`), optional `designAspect`. See [ui-format-v1.md](ui-format-v1.md).                    |
 | `inputContext`          | No       | Overrides the input profile default context while this scene is active (top of stack). Non-empty string. See [input-format-v1.md](input-format-v1.md).                                                                            |
 | `entities`              | No       | Array of entity objects. Omitted or empty means an empty scene.                                                                                                                                                                   |
 | `entities[]`            | —        | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`.                                                                                                                                 |
@@ -49,9 +51,10 @@ load time with `SceneParseException`.
 | `Sprite`      | `texture` (string)                              | 2D texture path relative to the assets root. **Requires `Material` on the same entity.**                                          |
 | `Mesh`        | `model` (string), `texture` (optional string)   | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
 | `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`.                                               |
-| `RenderLayer` | `layer` (string)                                | `"WORLD"` (default) or `"UI"` — world-space vs overlay draw order.                                                                |
+| `RenderLayer` | `layer` (string)                                | `"WORLD"` (default). Screen-space UI uses the scene `"ui"` field (widget trees), not `RenderLayer`.                              |
 | `Selectable`  | See below                                       | Marks entity as screen-pickable; pair with `Transform`. Used by built-in selection and drag systems.                              |
 | `Selected`    | —                                               | Runtime marker for the currently selected entity (usually set by `SelectionSystem`, not authored in JSON).                      |
+| `UiAttach`    | See below                                       | World-attached UI overlay (`document`, `follow` entity id). No `Sprite` or `RenderLayer` required.                               |
 | `Camera`      | See below                                       | View/projection settings; pair with `Transform` on the same entity.                                                               |
 
 ### Transform properties
@@ -132,7 +135,7 @@ Example with tint:
 
 | Property | Default   | Description                                                             |
 |----------|-----------|-------------------------------------------------------------------------|
-| `layer`  | `"WORLD"` | `"WORLD"` for scene geometry/sprites, `"UI"` for screen-space overlays. |
+| `layer`  | `"WORLD"` | World-space draw order for sprites and meshes.                            |
 
 ### Selectable properties
 
@@ -143,7 +146,7 @@ See [input.md](input.md).
 |-----------|-----------|------------------------------------------------------------------------------------------------|
 | `enabled` | `true`    | When `false`, entity is skipped by picking.                                                    |
 | `radius`  | `16`      | Pick radius in world units (circle in XY for ortho; sphere for perspective).                   |
-| `layer`   | `"WORLD"` | `"WORLD"`, `"UI"`, or `"ANY"` — must align with `pick(..., PickLayer)` filter.                |
+| `layer`   | `"WORLD"` | Must be `"WORLD"`; gameplay picking uses `PickLayer.WORLD` only.                             |
 
 ```json
 "Selectable": { "radius": 48, "layer": "WORLD" }
@@ -153,6 +156,64 @@ See [input.md](input.md).
 
 Empty marker component. `SelectionSystem` adds it to the picked entity and clears any previous `Selected`. Games may read
 `manager.entities().entitiesWith(Selected.class)` for highlighting or custom logic. Not typically placed in scene JSON.
+
+### Scene UI (`ui` field)
+
+Full-screen HUDs, menus, and pause overlays use a top-level `"ui"` field — not `Sprite` entities or a `ui-camera`.
+
+Shorthand (defaults `fitMode: fit`, aspect from document `designSize`):
+
+```json
+{
+  "ui": "ui/main-menu.json",
+  "inputContext": "menu",
+  "entities": []
+}
+```
+
+Object form:
+
+```json
+{
+  "ui": {
+    "document": "ui/main-menu.json",
+    "fitMode": "fit",
+    "designAspect": 1.777
+  },
+  "inputContext": "menu",
+  "entities": []
+}
+```
+
+Widget JSON, bindings, and author tiers: [ui-format-v1.md](ui-format-v1.md). The render pipeline `ui` pass draws the active scene tree (see [render-pipeline.md](render-pipeline.md)).
+
+### UiAttach properties
+
+World-attached overlays (HP bars, nameplates) use a marker entity with `UiAttach` only — position comes from `follow` + offsets.
+
+| Property   | Default | Description                                                          |
+|------------|---------|----------------------------------------------------------------------|
+| `document` | —       | UI asset path under `assets/` (required).                            |
+| `follow`   | —       | Target entity `id` in this scene (`findByName`).                     |
+| `offsetX`  | `0`     | World offset before screen projection.                               |
+| `offsetY`  | `0`     | World offset before screen projection.                               |
+| `offsetZ`  | `0`     | World offset before screen projection.                               |
+| `visible`  | `true`  | When `false`, attach is not updated or drawn.                          |
+
+```json
+{
+  "id": "player-hp",
+  "components": {
+    "UiAttach": {
+      "document": "ui/hp-bar.json",
+      "follow": "player",
+      "offsetY": 2.2
+    }
+  }
+}
+```
+
+Pair dynamic values with `engine.ui().setBinding(...)` (tier 2). Do not use `RenderLayer` or `Selectable.layer: "UI"` for HUD chrome.
 
 ### Camera properties
 

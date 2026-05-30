@@ -46,14 +46,14 @@ final class TargetBindingGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(EntityStore entities, RenderSurface surface, BoundCamera ignored) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera ignored, String sceneId) {
         pool.beginPass(target);
         try {
             RenderSurface passSurface = viewport.surfaceForPass(target, pool, entities);
             ActiveCamera active = resolveCamera(entities, passSurface);
             BoundCamera bound = viewport.binder().bind(active, passSurface);
             bound.applyGlViewport();
-            delegate.render(entities, passSurface, bound);
+            delegate.render(entities, passSurface, bound, sceneId);
         } finally {
             pool.endPass(target);
         }

@@ -7,6 +7,7 @@ import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.scene.SceneInstance;
+import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.BackbufferSize;
 import dev.hermes.core.viewport.GlViewport;
 import dev.hermes.core.viewport.ViewportServiceImpl;
@@ -28,13 +29,22 @@ public final class RenderPipelineExecutor {
             String projectDefaultPipelinePath,
             RenderPassRegistry passRegistry,
             ViewportServiceImpl viewport) {
+        this(batch, projectDefaultPipelinePath, passRegistry, viewport, null);
+    }
+
+    public RenderPipelineExecutor(
+            SpriteBatch batch,
+            String projectDefaultPipelinePath,
+            RenderPassRegistry passRegistry,
+            ViewportServiceImpl viewport,
+            UiServiceImpl ui) {
         this.projectDefaultPipelinePath =
                 Objects.requireNonNull(projectDefaultPipelinePath, "projectDefaultPipelinePath");
         if (this.projectDefaultPipelinePath.isBlank()) {
             throw new IllegalArgumentException("project default render pipeline path is required");
         }
         this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
-        this.cache = new PipelineCache(batch, passRegistry, this.viewport);
+        this.cache = new PipelineCache(batch, passRegistry, this.viewport, ui);
     }
 
     public ViewportServiceImpl viewport() {
@@ -65,7 +75,7 @@ public final class RenderPipelineExecutor {
             }
             EntityStore entities = scene.manager().entities();
             if (entities != null) {
-                graph.render(entities);
+                graph.render(entities, scene.id());
             }
         }
     }

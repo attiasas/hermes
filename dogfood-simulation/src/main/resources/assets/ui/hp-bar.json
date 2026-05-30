@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "designSize": { "width": 120, "height": 16 },
+  "root": {
+    "type": "panel",
+    "id": "root",
+    "layout": { "anchor": "bottomCenter", "width": 120, "height": 16 },
+    "style": { "color": [0.1, 0.1, 0.1, 0.75] },
+    "children": [
+      {
+        "type": "progressBar",
+        "id": "hp-fill",
+        "binding": "entity.hp",
+        "maxBinding": "entity.hpMax",
+        "layout": { "anchor": "stretch", "paddingLeft": 2, "paddingTop": 2, "paddingRight": 2, "paddingBottom": 2 },
+        "style": { "color": [0.2, 0.85, 0.35, 1] }
+      }
+    ]
+  }
+}

@@ -25,7 +25,7 @@ final class StubRenderGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound, String sceneId) {
     }
 
     @Override
