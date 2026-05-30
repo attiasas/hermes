@@ -183,10 +183,42 @@ final class HermesDoctorSupportTest {
     }
 
     @Test
+    void checkHtmlCustomShaders_okWhenPipelineUsesDefaultUnlit(@TempDir Path project) throws IOException {
+        writeHtmlEnabled(project);
+        Files.createDirectories(project.resolve("game/src/main/resources/assets/render"));
+        Files.writeString(
+                project.resolve("game/hermes.json"),
+                "{"
+                        + "\"title\":\"Test\","
+                        + "\"scene\":\"scenes/main.json\","
+                        + "\"renderPipeline\":\"render/pipeline.json\","
+                        + "\"inputProfile\":\"input/profile.json\""
+                        + "}",
+                StandardCharsets.UTF_8);
+        Files.writeString(
+                project.resolve("game/src/main/resources/assets/render/pipeline.json"),
+                "{"
+                        + "\"version\":1,"
+                        + "\"shaders\":{"
+                        + "\"default/unlit\":{"
+                        + "\"vertex\":\"shaders/default.vert\","
+                        + "\"fragment\":\"shaders/default-unlit.frag\""
+                        + "}},"
+                        + "\"passes\":[]"
+                        + "}",
+                StandardCharsets.UTF_8);
+
+        CheckResult result = HermesDoctorSupport.checkHtmlCustomShaders(project);
+
+        assertEquals(Status.OK, result.status());
+    }
+
+    @Test
     void findCustomShaderFiles_ignoresDefaultShaders(@TempDir Path shadersDir) throws IOException {
         Files.createDirectories(shadersDir);
         Files.writeString(shadersDir.resolve("default.vert"), "", StandardCharsets.UTF_8);
         Files.writeString(shadersDir.resolve("default.frag"), "", StandardCharsets.UTF_8);
+        Files.writeString(shadersDir.resolve("default-unlit.frag"), "", StandardCharsets.UTF_8);
         Files.writeString(shadersDir.resolve("toon.frag"), "", StandardCharsets.UTF_8);
 
         var custom = HermesDoctorSupport.findCustomShaderFiles(shadersDir);

@@ -34,10 +34,10 @@ public final class HermesDoctorSupport {
             Pattern.compile("^\\s*import\\s+com\\.badlogicgames\\.gdx\\b.*");
 
     private static final Set<String> BUILTIN_SHADER_FILES =
-            Set.of("default.vert", "default.frag");
+            Set.of("default.vert", "default.frag", "default-unlit.frag");
 
     private static final Set<String> BUILTIN_SHADER_PATHS =
-            Set.of("shaders/default.vert", "shaders/default.frag");
+            Set.of("shaders/default.vert", "shaders/default.frag", "shaders/default-unlit.frag");
 
     private static final Gson GSON = new Gson();
 
@@ -216,8 +216,8 @@ public final class HermesDoctorSupport {
 
     /**
      * Fails when the HTML platform is enabled and a referenced render pipeline JSON declares
-     * non-builtin shader paths (only {@code shaders/default.vert} and {@code shaders/default.frag}
-     * are allowed for TeaVM v1).
+     * non-builtin shader paths (only {@code shaders/default.vert}, {@code shaders/default.frag},
+     * and {@code shaders/default-unlit.frag} are allowed for TeaVM v1).
      */
     public static CheckResult checkHtmlCustomShaders(Path projectRoot) {
         if (projectRoot == null || !Files.isDirectory(projectRoot)) {
@@ -246,8 +246,9 @@ public final class HermesDoctorSupport {
                 "HTML platform is enabled but referenced pipelines declare custom GLSL: "
                         + String.join(", ", nonBuiltin),
                 "Disable HTML in settings.gradle (hermes { platforms { html { enabled = false } } }), "
-                        + "or use only shaders/default.vert and shaders/default.frag in every referenced "
-                        + "render pipeline (TeaVM supports builtin shaders only in v1).");
+                        + "or use only shaders/default.vert, shaders/default.frag, and "
+                        + "shaders/default-unlit.frag in every referenced render pipeline "
+                        + "(TeaVM supports builtin shaders only in v1).");
     }
 
     static List<String> findNonBuiltinShaderPathsInReferencedPipelines(
