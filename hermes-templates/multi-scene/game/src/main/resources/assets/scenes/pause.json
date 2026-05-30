@@ -1,4 +1,6 @@
 {
   "renderPipeline": "render/ui-overlay.json",
+  "inputContext": "menu",
+  "ui": "ui/pause-menu.json",
   "entities": []
 }

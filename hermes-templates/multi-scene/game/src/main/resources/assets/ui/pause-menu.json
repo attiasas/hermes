@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "designSize": { "width": 1280, "height": 720 },
+  "root": {
+    "type": "panel",
+    "id": "root",
+    "layout": { "anchor": "stretch" },
+    "style": { "color": [0, 0, 0, 0.45] },
+    "children": [
+      {
+        "type": "label",
+        "id": "pause-title",
+        "text": "Paused",
+        "layout": { "anchor": "topCenter", "offsetY": -72, "width": 400, "height": 64 },
+        "style": { "color": [1, 1, 1, 1] }
+      },
+      {
+        "type": "image",
+        "id": "pause-badge",
+        "texture": "hermes-logo.png",
+        "layout": { "anchor": "center", "width": 280, "height": 280 }
+      }
+    ]
+  }
+}
