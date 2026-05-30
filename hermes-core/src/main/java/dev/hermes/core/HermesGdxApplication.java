@@ -134,6 +134,14 @@ public final class HermesGdxApplication implements ApplicationListener {
                     updateGlobalSystem(entry, engine.scenes().updateScenes(), delta, hasActiveScene, stackPolicy);
                 }
             }
+
+            engine.audio()
+                    .tick(
+                            delta,
+                            hasActiveScene ? engine.scenes().activeManager() : null,
+                            width,
+                            height);
+
             if (hasActiveScene) {
                 WorldManager activeManager = engine.scenes().activeManager();
                 for (HermesEngineImpl.SystemEntry entry : engine.systems()) {

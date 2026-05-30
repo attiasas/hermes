@@ -119,6 +119,9 @@ public final class AudioServiceImpl implements AudioService {
 
     @Override
     public void tick(float delta, WorldManager activeManager, float surfaceWidth, float surfaceHeight) {
+        if (activeManager != null) {
+            AudioListenerUpdater.update(backend, activeManager, surfaceWidth, surfaceHeight);
+        }
         bgmController.tick(delta);
     }
 
