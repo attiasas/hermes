@@ -43,6 +43,7 @@ load time with `SceneParseException`.
 | `entities[].components` | No       | Map of component type name → property object. Deep-merged on top of the type template when `"type"`/`"kind"` is set and registered.                                                                                               |
 | `renderPipeline`        | No       | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 | `lighting`              | No       | Scene-wide lighting defaults (version 1). See [World lighting](world-lighting.md) and [Lighting block](#lighting-block) below. |
+| `audio`                 | No       | Scene background music and fade settings. See [Audio block](#audio-block) and [audio.md](audio.md). |
 
 ## Built-in component types
 
@@ -61,6 +62,9 @@ load time with `SceneParseException`.
 | `DirectionalLight` | See [Light components](#light-components)  | Sun/moon; direction from entity **−Z** after rotation, or explicit `direction`. Pair with `Transform` for animated sun.        |
 | `PointLight`  | See [Light components](#light-components)       | Local lamp; position from `Transform`. Requires pipeline `maxPoint` budget.                                                      |
 | `SpotLight`   | See [Light components](#light-components)       | Cone light; position and aim from `Transform` (**−Z** or `direction` override). Requires pipeline `maxSpot` budget.              |
+| `AmbientSource` | See [Audio components](#audio-components)     | 3D positional looping ambient SFX. Requires `Transform`. See [audio.md](audio.md).                                              |
+| `SoundEmitter` | See [Audio components](#audio-components)    | One-shot or looped SFX with `spawn` / `interval` / `manual` triggers.                                                           |
+| `FootstepEmitter` | See [Audio components](#audio-components) | Footstep clips driven by entity movement. Requires `Transform`.                                                                 |
 
 ### Transform properties
 
@@ -329,6 +333,90 @@ float array, alpha ignored).
 
 Point and spot lights require matching `maxPoint` / `maxSpot` budgets on the render pipeline `world3d` pass — see
 [render-pipeline.md](render-pipeline.md).
+
+## Audio block
+
+Optional top-level `"audio"` object drives background music when the scene enters the stack. Full guide: [audio.md](audio.md).
+
+```json
+{
+  "audio": {
+    "bgm": "overworld",
+    "fadeInSeconds": 1.5,
+    "fadeOutSeconds": 1.0,
+    "pauseBgmOnPause": false
+  },
+  "entities": []
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `bgm` | — | Playlist id → `audio/bgm/{bgm}.json` |
+| `bgmPlaylist` | — | Explicit playlist asset path (overrides `bgm`) |
+| `fadeInSeconds` | `1.0` | BGM crossfade in on scene enter |
+| `fadeOutSeconds` | `1.0` | BGM fade out on scene exit |
+| `pauseBgmOnPause` | `false` | Pause BGM when this scene is paused on the stack |
+
+Playlist JSON lives under `assets/audio/bgm/`. Clip ids and action sounds come from `audio/profile.json` (see [audio.md](audio.md)).
+
+### Audio components
+
+**AmbientSource** — 3D positional loop; requires `Transform`.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `clip` | required | Asset path or profile clip id |
+| `clipIsId` | `false` | Resolve `clip` via profile |
+| `bus` | `"ambient"` | `"sfx"` or `"ambient"` |
+| `volume` | `1` | Base volume 0..1 |
+| `loop` | `true` | Loop playback |
+| `minDistance` | `1` | Full volume inside |
+| `maxDistance` | `50` | Silent beyond |
+| `refDistance` | `1` | Reference distance |
+
+```json
+"AmbientSource": {
+  "clip": "fire_loop",
+  "clipIsId": true,
+  "minDistance": 2,
+  "maxDistance": 25,
+  "volume": 0.8
+}
+```
+
+**SoundEmitter** — one-shot or looped SFX.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `clip` | required | Asset path or profile clip id |
+| `clipIsId` | `false` | |
+| `bus` | `"sfx"` | `"sfx"` or `"ambient"` |
+| `volume` | `1` | |
+| `pitch` | `1` | |
+| `loop` | `false` | |
+| `playOn` | `"manual"` | `"spawn"`, `"interval"`, or `"manual"` |
+| `intervalSeconds` | `0` | For `"interval"` |
+
+**FootstepEmitter** — footstep clips from movement; requires `Transform`.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `clips` | required | Array of paths or clip ids |
+| `clipIsId` | `false` | |
+| `intervalSeconds` | `0.35` | Min time between steps |
+| `minSpeed` | `0.5` | World units/sec to emit |
+| `bus` | `"sfx"` | |
+| `volume` | `0.6` | |
+
+```json
+"FootstepEmitter": {
+  "clips": ["footstep"],
+  "clipIsId": true,
+  "intervalSeconds": 0.4,
+  "minSpeed": 1.0
+}
+```
 
 ## Custom components
 

@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "mode": "single",
+  "tracks": ["music/main-menu.wav"],
+  "crossfadeSeconds": 1.5
+}

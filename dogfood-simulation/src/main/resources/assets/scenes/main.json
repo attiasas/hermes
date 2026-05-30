@@ -16,7 +16,22 @@
     },
     {
       "type": "spin-cube",
-      "id": "cube"
+      "id": "cube",
+      "components": {
+        "FootstepEmitter": {
+          "clips": ["footstep"],
+          "clipIsId": true,
+          "intervalSeconds": 0.4,
+          "minSpeed": 0.3
+        }
+      }
+    },
+    {
+      "type": "campfire",
+      "id": "fire-pit",
+      "components": {
+        "Transform": { "x": 2, "y": 0, "z": -2 }
+      }
     },
     {
       "id": "player-hp",

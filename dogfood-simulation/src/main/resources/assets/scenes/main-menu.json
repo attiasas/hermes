@@ -2,5 +2,10 @@
   "renderPipeline": "render/ui-overlay.json",
   "inputContext": "menu",
   "ui": "ui/main-menu.json",
+  "audio": {
+    "bgm": "main-menu",
+    "fadeInSeconds": 1.0,
+    "fadeOutSeconds": 1.0
+  },
   "entities": []
 }
