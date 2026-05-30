@@ -1,7 +1,7 @@
 package dev.hermes.core.viewport;
 
 import com.badlogic.gdx.math.Vector3;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.math.CoordinateSpace;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.math.ScreenRay;

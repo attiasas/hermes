@@ -1,6 +1,5 @@
 package dev.hermes.api.viewport;
 
-import dev.hermes.api.ecs.World;
 import dev.hermes.api.math.CoordinateSpace;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.math.ScreenRay;

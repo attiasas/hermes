@@ -1,6 +1,6 @@
 package dev.hermes.api.render;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.viewport.SceneViewport;
 
@@ -17,7 +17,7 @@ public interface RenderContext {
 
     void viewportRect(Rect4 out);
 
-    SceneViewport viewport(World world);
+    SceneViewport viewport(EntityStore entities);
 
-    SceneViewport viewport(World world, String cameraEntityName);
+    SceneViewport viewport(EntityStore entities, String cameraEntityName);
 }

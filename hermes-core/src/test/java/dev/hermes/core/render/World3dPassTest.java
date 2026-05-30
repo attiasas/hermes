@@ -12,7 +12,7 @@ import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneParseException;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.EntityStoreImpl;
 import dev.hermes.core.render.pass.World3dPass;
 
 import java.nio.charset.StandardCharsets;
@@ -23,13 +23,13 @@ import org.junit.jupiter.api.Test;
 
 final class World3dPassTest {
 
-    private WorldImpl world;
+    private EntityStoreImpl world;
     private ComponentRegistryImpl registry;
 
     @BeforeEach
     void setUp() {
         TestGdx.initClasspathFiles();
-        world = new WorldImpl();
+        world = new EntityStoreImpl();
         registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
     }

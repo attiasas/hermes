@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.mock.graphics.MockGraphics;
 import dev.hermes.api.render.RenderPassRegistry;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.scene.SceneHandle;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.core.render.RenderPipelineExecutor;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
@@ -64,8 +64,8 @@ final class RenderPipelineViewportResetTest {
                     }
 
                     @Override
-                    public World world() {
-                        return new WorldImpl();
+                    public dev.hermes.api.ecs.WorldManager manager() {
+                        return new WorldManagerImpl();
                     }
 
                     @Override

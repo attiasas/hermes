@@ -1,6 +1,6 @@
 package dev.hermes.core.render;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.render.RenderContext;
 import dev.hermes.api.viewport.SceneViewport;
@@ -45,15 +45,15 @@ final class RenderContextImpl implements RenderContext {
     }
 
     @Override
-    public SceneViewport viewport(World world) {
+    public SceneViewport viewport(EntityStore entities) {
         return new SceneViewportImpl(bound);
     }
 
     @Override
-    public SceneViewport viewport(World world, String cameraEntityName) {
+    public SceneViewport viewport(EntityStore entities, String cameraEntityName) {
         ActiveCamera active =
                 CameraResolver.resolveNamed(
-                        world,
+                        entities,
                         cameraEntityName,
                         surface.targetId(),
                         surface.pixelWidth(),

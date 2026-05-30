@@ -5,9 +5,9 @@ package dev.hermes.api.ecs;
  */
 public interface System {
 
-    default void update(World world, float deltaSeconds) {
+    default void update(WorldManager manager, float deltaSeconds) {
     }
 
-    default void render(World world) {
+    default void render(WorldManager manager) {
     }
 }

@@ -1,25 +1,25 @@
 package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.ComponentRegistry;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.scene.SceneLoadContext;
 
 /**
- * Core {@link SceneLoadContext} backed by a world and registry.
+ * Core {@link SceneLoadContext} backed by a world manager and registry.
  */
 final class SceneLoadContextImpl implements SceneLoadContext {
 
-    private final World world;
+    private final WorldManager manager;
     private final ComponentRegistry registry;
 
-    SceneLoadContextImpl(World world, ComponentRegistry registry) {
-        this.world = world;
+    SceneLoadContextImpl(WorldManager manager, ComponentRegistry registry) {
+        this.manager = manager;
         this.registry = registry;
     }
 
     @Override
-    public World world() {
-        return world;
+    public WorldManager manager() {
+        return manager;
     }
 
     @Override

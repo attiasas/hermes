@@ -2,9 +2,10 @@ package dev.hermes.core.input;
 
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.input.InputButton;
 import dev.hermes.api.input.InputService;
 import dev.hermes.api.input.PickLayer;
@@ -27,11 +28,12 @@ public final class CameraSceneControlSystem implements System {
     }
 
     @Override
-    public void update(World world, float deltaSeconds) {
+    public void update(WorldManager manager, float deltaSeconds) {
+        EntityStore entities = manager.entities();
         PointerSnapshot ptr = input.devices().pointer();
         Camera.Projection mode =
-                CameraResolver.activeCameraEntity(world)
-                        .map(e -> world.getComponent(e.id(), Camera.class).projection())
+                CameraResolver.activeCameraEntity(entities)
+                        .map(e -> entities.getComponent(e.id(), Camera.class).projection())
                         .orElse(Camera.Projection.ORTHOGRAPHIC);
         if (mode != Camera.Projection.PERSPECTIVE) {
             orbiting = false;
@@ -39,7 +41,7 @@ public final class CameraSceneControlSystem implements System {
         }
         if (ptr.justPressed(InputButton.LEFT)) {
             boolean hit =
-                    input.pick(world, ptr.screenX(), ptr.screenY(), PickLayer.WORLD).isPresent();
+                    input.pick(entities, ptr.screenX(), ptr.screenY(), PickLayer.WORLD).isPresent();
             if (!hit) {
                 orbiting = true;
                 lastScreenX = ptr.screenX();
@@ -59,16 +61,16 @@ public final class CameraSceneControlSystem implements System {
         float dy = ptr.screenY() - lastScreenY;
         lastScreenX = ptr.screenX();
         lastScreenY = ptr.screenY();
-        orbitActiveCamera(world, dx, dy);
+        orbitActiveCamera(entities, dx, dy);
     }
 
-    private void orbitActiveCamera(World world, float dx, float dy) {
-        Entity cameraEntity = CameraResolver.activeCameraEntity(world).orElse(null);
+    private void orbitActiveCamera(EntityStore entities, float dx, float dy) {
+        Entity cameraEntity = CameraResolver.activeCameraEntity(entities).orElse(null);
         if (cameraEntity == null) {
             return;
         }
-        Transform transform = world.getComponent(cameraEntity.id(), Transform.class);
-        Camera camera = world.getComponent(cameraEntity.id(), Camera.class);
+        Transform transform = entities.getComponent(cameraEntity.id(), Transform.class);
+        Camera camera = entities.getComponent(cameraEntity.id(), Camera.class);
         if (transform == null || camera == null) {
             return;
         }

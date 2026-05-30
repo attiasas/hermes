@@ -1,6 +1,6 @@
 package dev.hermes.core.input;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.input.GamepadSnapshot;
 import dev.hermes.api.input.InputActions;
 import dev.hermes.api.input.InputButton;
@@ -63,18 +63,18 @@ public final class InputServiceImpl implements InputService {
     }
 
     @Override
-    public SceneViewport viewport(World world) {
-        return engine.viewport().forWorld(world);
+    public SceneViewport viewport(EntityStore entities) {
+        return engine.viewport().forWorld(entities);
     }
 
     @Override
-    public Optional<PickHit> pick(World world, float screenX, float screenY) {
-        return pick(world, screenX, screenY, PickLayer.WORLD);
+    public Optional<PickHit> pick(EntityStore entities, float screenX, float screenY) {
+        return pick(entities, screenX, screenY, PickLayer.WORLD);
     }
 
     @Override
-    public Optional<PickHit> pick(World world, float screenX, float screenY, PickLayer layer) {
-        return worldPicker.pick(world, screenX, screenY, layer);
+    public Optional<PickHit> pick(EntityStore entities, float screenX, float screenY, PickLayer layer) {
+        return worldPicker.pick(entities, screenX, screenY, layer);
     }
 
     private String resolveContext() {

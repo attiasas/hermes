@@ -3,7 +3,7 @@ package dev.hermes.core.scene;
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.HermesEngine;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.api.scene.SceneContext;
@@ -13,7 +13,7 @@ import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -101,12 +101,12 @@ public final class SceneStack {
 
     private SceneInstance loadScene(SceneDefinition definition) {
         log.debug("Loading scene: " + definition.id());
-        WorldImpl world = new WorldImpl();
+        WorldManagerImpl manager = new WorldManagerImpl();
         SceneLoadContext ctx =
                 new SceneLoadContext() {
                     @Override
-                    public World world() {
-                        return world;
+                    public WorldManager manager() {
+                        return manager;
                     }
 
                     @Override
@@ -122,7 +122,7 @@ public final class SceneStack {
         }
         return new SceneInstance(
                 definition.id(),
-                world,
+                manager,
                 definition,
                 jsonMetadata.renderPipeline(),
                 jsonMetadata.inputContext(),
@@ -143,7 +143,7 @@ public final class SceneStack {
         if (lifecycle != null) {
             lifecycle.onExit(sceneContext(instance));
         }
-        instance.world().clear();
+        instance.manager().entities().clear();
     }
 
     private void pauseScene(SceneInstance instance) {
@@ -180,8 +180,8 @@ public final class SceneStack {
             }
 
             @Override
-            public World world() {
-                return instance.world();
+            public WorldManager manager() {
+                return instance.manager();
             }
 
             @Override

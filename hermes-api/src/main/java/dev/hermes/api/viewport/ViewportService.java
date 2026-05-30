@@ -1,6 +1,6 @@
 package dev.hermes.api.viewport;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.math.ScreenRay;
 import dev.hermes.api.math.Vec2;
@@ -18,22 +18,22 @@ public interface ViewportService {
     int windowHeight();
 
     /** Backbuffer surface for the current window size and world's active camera fit policy. */
-    RenderSurfaceDesc backbufferSurface(World world);
+    RenderSurfaceDesc backbufferSurface(EntityStore entities);
 
     /** Viewport for the window backbuffer + active (or pass-matched) camera. */
-    SceneViewport forWorld(World world);
+    SceneViewport forWorld(EntityStore entities);
 
-    SceneViewport forWorld(World world, String cameraEntityName);
+    SceneViewport forWorld(EntityStore entities, String cameraEntityName);
 
     /** Viewport for an explicit render target (FBO id or {@code "screen"}). */
-    SceneViewport forSurface(World world, RenderSurfaceDesc surface);
+    SceneViewport forSurface(EntityStore entities, RenderSurfaceDesc surface);
 
     /** Map window pointer into surface pixels (accounts for letterbox rect). */
     void mapScreenToSurface(float screenX, float screenY, RenderSurfaceDesc surface, Vec2 out);
 
-    void screenToWorld(World world, float screenX, float screenY, float worldZ, Vec3 out);
+    void screenToWorld(EntityStore entities, float screenX, float screenY, float worldZ, Vec3 out);
 
-    void worldToScreen(World world, float worldX, float worldY, float worldZ, Vec2 out);
+    void worldToScreen(EntityStore entities, float worldX, float worldY, float worldZ, Vec2 out);
 
-    ScreenRay screenRay(World world, float screenX, float screenY);
+    ScreenRay screenRay(EntityStore entities, float screenX, float screenY);
 }

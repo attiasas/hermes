@@ -3,7 +3,8 @@ package dev.hermes.sample;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.ecs.WorldManager;
 
 /**
  * Moves entities with {@link SpinMarker} in a circle around their configured center.
@@ -11,10 +12,11 @@ import dev.hermes.api.ecs.World;
 public final class SpinMarkerSystem implements System {
 
     @Override
-    public void update(World world, float deltaSeconds) {
-        for (Entity entity : world.entitiesWith(SpinMarker.class)) {
-            SpinMarker spin = world.getComponent(entity.id(), SpinMarker.class);
-            Transform transform = world.getComponent(entity.id(), Transform.class);
+    public void update(WorldManager manager, float deltaSeconds) {
+        EntityStore entities = manager.entities();
+        for (Entity entity : entities.entitiesWith(SpinMarker.class)) {
+            SpinMarker spin = entities.getComponent(entity.id(), SpinMarker.class);
+            Transform transform = entities.getComponent(entity.id(), Transform.class);
             if (spin == null || transform == null) {
                 continue;
             }

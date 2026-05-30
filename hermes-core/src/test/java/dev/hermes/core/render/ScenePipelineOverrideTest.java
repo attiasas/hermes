@@ -13,7 +13,8 @@ import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.EntityStoreImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.core.scene.AssetSceneSource;
 import dev.hermes.core.scene.SceneStack;
 
@@ -46,7 +47,7 @@ final class ScenePipelineOverrideTest {
 
     @Test
     void sceneLoader_readsRenderPipelineFromSceneJson() {
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         SceneLoadMetadata metadata =
                 SceneLoader.loadFromString(
                         "scenes/with-pipeline.json",
@@ -126,7 +127,7 @@ final class ScenePipelineOverrideTest {
                     }
 
                     @Override
-                    public dev.hermes.api.ecs.World world() {
+                    public dev.hermes.api.ecs.WorldManager manager() {
                         return null;
                     }
 
@@ -152,13 +153,13 @@ final class ScenePipelineOverrideTest {
 
     @Test
     void assetSceneSource_populateStillLoadsEntities() {
-        WorldImpl world = new WorldImpl();
+        WorldManagerImpl manager = new WorldManagerImpl();
         AssetSceneSource source = new AssetSceneSource("scenes/with-pipeline.json");
         source.populate(
                 new SceneLoadContext() {
                     @Override
-                    public dev.hermes.api.ecs.World world() {
-                        return world;
+                    public dev.hermes.api.ecs.WorldManager manager() {
+                        return manager;
                     }
 
                     @Override
@@ -167,7 +168,7 @@ final class ScenePipelineOverrideTest {
                     }
                 });
 
-        assertEquals(1, world.entityCount());
-        assertTrue(world.findByName("logo") != null);
+        assertEquals(1, manager.entities().entityCount());
+        assertTrue(manager.entities().findByName("logo") != null);
     }
 }

@@ -14,18 +14,18 @@ import dev.hermes.api.ecs.Transform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-final class WorldImplTest {
+final class EntityStoreImplTest {
 
-    private WorldImpl world;
+    private EntityStoreImpl world;
 
     @BeforeEach
     void setUp() {
-        world = new WorldImpl();
+        world = new EntityStoreImpl();
     }
 
     @Test
-    void createEntityAndAddComponents() {
-        Entity entity = world.createEntity("player");
+    void createAndAddComponents() {
+        Entity entity = world.create("player");
         world.addComponent(entity.id(), new Transform(10f, 20f));
         world.addComponent(entity.id(), new Sprite("logo.png"));
 
@@ -39,7 +39,7 @@ final class WorldImplTest {
 
     @Test
     void removeEntityAndComponent() {
-        Entity entity = world.createEntity("temp");
+        Entity entity = world.create("temp");
         world.addComponent(entity.id(), new Transform());
         world.removeComponent(entity.id(), Transform.class);
         assertFalse(world.hasComponent(entity.id(), Transform.class));
@@ -50,17 +50,17 @@ final class WorldImplTest {
     }
 
     @Test
-    void createEntity_duplicateNameThrows() {
-        world.createEntity("player");
+    void create_duplicateNameThrows() {
+        world.create("player");
         IllegalArgumentException error =
-                assertThrows(IllegalArgumentException.class, () -> world.createEntity("player"));
+                assertThrows(IllegalArgumentException.class, () -> world.create("player"));
         assertTrue(error.getMessage().contains("Duplicate entity name"));
     }
 
     @Test
     void entitiesWithFiltersByComponentType() {
-        Entity a = world.createEntity("a");
-        Entity b = world.createEntity("b");
+        Entity a = world.create("a");
+        Entity b = world.create("b");
         world.addComponent(a.id(), new Sprite("a.png"));
         world.addComponent(b.id(), new Transform());
 
@@ -70,9 +70,9 @@ final class WorldImplTest {
 
     @Test
     void clearRemovesAllEntitiesAndComponents() {
-        Entity a = world.createEntity("a", EntityKind.of("character"));
+        Entity a = world.create("a", EntityKind.of("character"));
         world.addComponent(a.id(), new Transform());
-        Entity b = world.createEntity("b");
+        Entity b = world.create("b");
         world.addComponent(b.id(), new Sprite("x.png"));
 
         world.clear();
@@ -82,22 +82,22 @@ final class WorldImplTest {
         assertNull(world.findByName("b"));
         assertFalse(world.hasComponent(a.id(), Transform.class));
 
-        Entity c = world.createEntity("c");
+        Entity c = world.create("c");
         assertEquals(1, world.entityCount());
     }
 
     @Test
-    void createEntityWithoutKindUsesUnset() {
-        Entity entity = world.createEntity("generic");
+    void createWithoutKindUsesUnset() {
+        Entity entity = world.create("generic");
         assertEquals(EntityKind.UNSET, entity.kind());
     }
 
     @Test
     void entitiesWithKindFiltersByKind() {
-        world.createEntity("player", EntityKind.of("character"));
-        world.createEntity("npc", EntityKind.of("character"));
-        world.createEntity("wall", EntityKind.of("static"));
-        world.createEntity("generic");
+        world.create("player", EntityKind.of("character"));
+        world.create("npc", EntityKind.of("character"));
+        world.create("wall", EntityKind.of("static"));
+        world.create("generic");
 
         assertEquals(2, world.entitiesWithKind(EntityKind.of("character")).size());
         assertEquals(1, world.entitiesWithKind(EntityKind.of("static")).size());

@@ -40,13 +40,13 @@ final class SceneStackTest {
     void goToReplacesStackAndOnlyActiveSceneHasEntities() {
         stack.goTo("a");
         assertEquals(1, stack.depth());
-        assertNotNull(stack.active().world().findByName("marker-a"));
+        assertNotNull(stack.active().manager().entities().findByName("marker-a"));
 
         stack.goTo("b");
         assertEquals(1, stack.depth());
         assertEquals("b", stack.active().id());
-        assertNull(stack.active().world().findByName("marker-a"));
-        assertNotNull(stack.active().world().findByName("marker-b"));
+        assertNull(stack.active().manager().entities().findByName("marker-a"));
+        assertNotNull(stack.active().manager().entities().findByName("marker-b"));
     }
 
     @Test
@@ -60,8 +60,8 @@ final class SceneStackTest {
         assertTrue(sceneA.paused());
         assertFalse(stack.active().paused());
         assertEquals("b", stack.active().id());
-        assertNotNull(sceneA.world().findByName("marker-a"));
-        assertNotNull(stack.active().world().findByName("marker-b"));
+        assertNotNull(sceneA.manager().entities().findByName("marker-a"));
+        assertNotNull(stack.active().manager().entities().findByName("marker-b"));
     }
 
     @Test
@@ -75,8 +75,8 @@ final class SceneStackTest {
         assertEquals(1, stack.depth());
         assertEquals("a", stack.active().id());
         assertFalse(stack.active().paused());
-        assertNotNull(stack.active().world().findByName("marker-a"));
-        assertEquals(0, sceneB.world().entityCount());
+        assertNotNull(stack.active().manager().entities().findByName("marker-a"));
+        assertEquals(0, sceneB.manager().entities().entityCount());
     }
 
     @Test
@@ -115,7 +115,7 @@ final class SceneStackTest {
     }
 
     private static SceneSource markerSource(String markerName) {
-        return (SceneLoadContext ctx) -> ctx.world().createEntity(markerName);
+        return (SceneLoadContext ctx) -> ctx.manager().entities().create(markerName);
     }
 
     private static final class RecordingLifecycle implements SceneLifecycle {

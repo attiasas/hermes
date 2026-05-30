@@ -4,7 +4,7 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.MaterialUniform;
 import dev.hermes.api.ecs.Mesh;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.render.RenderContext;
 import dev.hermes.api.render.RenderPass;
 
@@ -26,10 +26,10 @@ public final class WaterPass implements RenderPass {
     }
 
     @Override
-    public void render(World world, RenderContext context) {
+    public void render(EntityStore entities, RenderContext context) {
         time += 0.016f;
-        for (Entity entity : world.entitiesWith(Mesh.class)) {
-            Material material = world.getComponent(entity.id(), Material.class);
+        for (Entity entity : entities.entitiesWith(Mesh.class)) {
+            Material material = entities.getComponent(entity.id(), Material.class);
             if (material == null || !WATER_SHADER.equals(material.shader())) {
                 continue;
             }

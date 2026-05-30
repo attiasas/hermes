@@ -21,7 +21,7 @@ import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoader;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.EntityStoreImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,7 +32,7 @@ final class WorldPickerTest {
 
     private ViewportServiceImpl viewport;
     private WorldPicker picker;
-    private WorldImpl world;
+    private EntityStoreImpl world;
 
     @BeforeAll
     static void initGdx() {
@@ -46,12 +46,12 @@ final class WorldPickerTest {
         viewport = new ViewportServiceImpl();
         viewport.onWindowResize(640, 480);
         picker = new WorldPicker(viewport);
-        world = new WorldImpl();
+        world = new EntityStoreImpl();
     }
 
     @Test
     void screenWorldRoundtrip_matchesOriginalWorldPoint() {
-        Entity cam = world.createEntity("cam");
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setFitMode(ViewportFitMode.STRETCH);
         world.addComponent(cam.id(), camera);
@@ -75,13 +75,13 @@ final class WorldPickerTest {
 
     @Test
     void orthoPick_hitsEntityAtScreenCoords() {
-        Entity cam = world.createEntity("cam");
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setFitMode(ViewportFitMode.STRETCH);
         world.addComponent(cam.id(), camera);
         world.addComponent(cam.id(), new Transform(320f, 240f, 0f));
 
-        Entity target = world.createEntity("target");
+        Entity target = world.create("target");
         world.addComponent(target.id(), new Transform(100f, 200f, 0f));
         Selectable selectable = new Selectable();
         selectable.setRadius(50f);
@@ -100,13 +100,13 @@ final class WorldPickerTest {
 
     @Test
     void orthoPick_missesOutsideRadius() {
-        Entity cam = world.createEntity("cam");
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setFitMode(ViewportFitMode.STRETCH);
         world.addComponent(cam.id(), camera);
         world.addComponent(cam.id(), new Transform(320f, 240f, 0f));
 
-        Entity target = world.createEntity("target");
+        Entity target = world.create("target");
         world.addComponent(target.id(), new Transform(100f, 200f, 0f));
         Selectable selectable = new Selectable();
         selectable.setRadius(10f);
@@ -120,19 +120,19 @@ final class WorldPickerTest {
 
     @Test
     void orthoPick_closestEntityWins() {
-        Entity cam = world.createEntity("cam");
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setFitMode(ViewportFitMode.STRETCH);
         world.addComponent(cam.id(), camera);
         world.addComponent(cam.id(), new Transform(320f, 240f, 0f));
 
-        Entity near = world.createEntity("near");
+        Entity near = world.create("near");
         world.addComponent(near.id(), new Transform(150f, 240f, 0f));
         Selectable nearSel = new Selectable();
         nearSel.setRadius(80f);
         world.addComponent(near.id(), nearSel);
 
-        Entity far = world.createEntity("far");
+        Entity far = world.create("far");
         world.addComponent(far.id(), new Transform(200f, 240f, 0f));
         Selectable farSel = new Selectable();
         farSel.setRadius(80f);
@@ -148,7 +148,7 @@ final class WorldPickerTest {
 
     @Test
     void perspectivePick_hitsSphereAlongCameraForward() {
-        Entity cam = world.createEntity("cam");
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setProjection(Camera.Projection.PERSPECTIVE);
         camera.setFitMode(ViewportFitMode.STRETCH);
@@ -156,7 +156,7 @@ final class WorldPickerTest {
         world.addComponent(cam.id(), camera);
         world.addComponent(cam.id(), new Transform(0f, 0f, 5f));
 
-        Entity target = world.createEntity("cube");
+        Entity target = world.create("cube");
         world.addComponent(target.id(), new Transform(0f, 0f, 0f));
         Selectable selectable = new Selectable();
         selectable.setRadius(1.5f);
@@ -176,7 +176,7 @@ final class WorldPickerTest {
     void pickTestScene_closestEntityWins() {
         ComponentRegistryImpl registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
-        world = new WorldImpl();
+        world = new EntityStoreImpl();
         SceneLoader.load("scenes/pick-test.json", world, registry);
 
         Entity near = world.findByName("near");

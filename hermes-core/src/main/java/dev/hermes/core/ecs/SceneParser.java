@@ -4,7 +4,7 @@ import dev.hermes.api.Component;
 import dev.hermes.api.Entity;
 import dev.hermes.api.EntityId;
 import dev.hermes.api.ecs.EntityKind;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,11 +17,11 @@ final class SceneParser {
     private SceneParser() {
     }
 
-    static SceneLoadMetadata loadIntoWorld(
-            String scenePath, String json, World world, ComponentRegistryImpl registry) {
+    static SceneLoadMetadata loadIntoEntities(
+            String scenePath, String json, EntityStore entities, ComponentRegistryImpl registry) {
         SceneDocument document = SceneDocument.parse(scenePath, json);
         for (SceneDocument.EntitySpec entitySpec : document.entities()) {
-            Entity entity = world.createEntity(entitySpec.id(), EntityKind.of(entitySpec.kind()));
+            Entity entity = entities.create(entitySpec.id(), EntityKind.of(entitySpec.kind()));
             EntityId entityId = entity.id();
             List<SceneDocument.ComponentSpec> components = entitySpec.components();
             for (SceneDocument.ComponentSpec componentSpec : components) {
@@ -31,7 +31,7 @@ final class SceneParser {
                                 entitySpec.id(),
                                 componentSpec.typeName(),
                                 new JsonComponentData(componentSpec.properties()));
-                world.addComponent(entityId, component);
+                entities.addComponent(entityId, component);
             }
             validateDrawableMaterial(scenePath, entitySpec.id(), components);
         }

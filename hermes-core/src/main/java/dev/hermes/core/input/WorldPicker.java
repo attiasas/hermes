@@ -4,7 +4,7 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Selectable;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.input.PickHit;
 import dev.hermes.api.input.PickLayer;
 import dev.hermes.api.math.ScreenRay;
@@ -29,38 +29,38 @@ final class WorldPicker {
         this.viewport = viewport;
     }
 
-    Optional<PickHit> pick(World world, float screenX, float screenY, PickLayer layer) {
-        RenderSurfaceDesc surface = viewport.backbufferSurface(world);
+    Optional<PickHit> pick(EntityStore entities, float screenX, float screenY, PickLayer layer) {
+        RenderSurfaceDesc surface = viewport.backbufferSurface(entities);
         Vec2 onSurface = new Vec2();
         viewport.mapScreenToSurface(screenX, screenY, surface, onSurface);
-        SceneViewport vp = viewport.forSurface(world, surface);
+        SceneViewport vp = viewport.forSurface(entities, surface);
 
-        if (isOrthographic(world, surface)) {
+        if (isOrthographic(entities, surface)) {
             Vec3 worldPt = new Vec3();
             vp.screenToWorld(onSurface.x, onSurface.y, ORTHO_PLANE_Z, worldPt);
-            return pickOrtho(worldPt, world, layer);
+            return pickOrtho(worldPt, entities, layer);
         }
         ScreenRay ray = vp.screenRay(onSurface.x, onSurface.y);
-        return pickPerspective(ray, world, layer);
+        return pickPerspective(ray, entities, layer);
     }
 
-    private static boolean isOrthographic(World world, RenderSurfaceDesc surface) {
+    private static boolean isOrthographic(EntityStore entities, RenderSurfaceDesc surface) {
         ActiveCamera active =
                 CameraResolver.resolveForPass(
-                        world, surface.targetId(), surface.pixelWidth(), surface.pixelHeight());
+                        entities, surface.targetId(), surface.pixelWidth(), surface.pixelHeight());
         return active.projection() == Camera.Projection.ORTHOGRAPHIC;
     }
 
-    private static Optional<PickHit> pickOrtho(Vec3 worldPt, World world, PickLayer filter) {
+    private static Optional<PickHit> pickOrtho(Vec3 worldPt, EntityStore entities, PickLayer filter) {
         PickHit best = null;
         float bestDist = Float.MAX_VALUE;
 
-        for (Entity entity : world.entitiesWith(Selectable.class)) {
-            Selectable selectable = world.getComponent(entity.id(), Selectable.class);
+        for (Entity entity : entities.entitiesWith(Selectable.class)) {
+            Selectable selectable = entities.getComponent(entity.id(), Selectable.class);
             if (selectable == null || !selectable.enabled() || !matchesLayer(selectable, filter)) {
                 continue;
             }
-            Transform transform = world.getComponent(entity.id(), Transform.class);
+            Transform transform = entities.getComponent(entity.id(), Transform.class);
             if (transform == null) {
                 continue;
             }
@@ -82,16 +82,16 @@ final class WorldPicker {
         return Optional.ofNullable(best);
     }
 
-    private static Optional<PickHit> pickPerspective(ScreenRay ray, World world, PickLayer filter) {
+    private static Optional<PickHit> pickPerspective(ScreenRay ray, EntityStore entities, PickLayer filter) {
         PickHit best = null;
         float bestT = Float.MAX_VALUE;
 
-        for (Entity entity : world.entitiesWith(Selectable.class)) {
-            Selectable selectable = world.getComponent(entity.id(), Selectable.class);
+        for (Entity entity : entities.entitiesWith(Selectable.class)) {
+            Selectable selectable = entities.getComponent(entity.id(), Selectable.class);
             if (selectable == null || !selectable.enabled() || !matchesLayer(selectable, filter)) {
                 continue;
             }
-            Transform transform = world.getComponent(entity.id(), Transform.class);
+            Transform transform = entities.getComponent(entity.id(), Transform.class);
             if (transform == null) {
                 continue;
             }

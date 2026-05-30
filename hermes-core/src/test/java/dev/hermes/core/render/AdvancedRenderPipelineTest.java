@@ -2,7 +2,7 @@ package dev.hermes.core.render;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.render.RenderContext;
 import dev.hermes.api.render.RenderPass;
 import dev.hermes.api.render.RenderPassRegistry;
@@ -10,7 +10,7 @@ import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoader;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
@@ -29,13 +29,13 @@ final class AdvancedRenderPipelineTest {
     void advancedRenderPipeline_rendersWithoutThrowing() {
         ComponentRegistryImpl registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
-        WorldImpl world = new WorldImpl();
+        WorldManagerImpl manager = new WorldManagerImpl();
         SceneLoader.load(
                 "demos/advanced-render.json",
                 new SceneLoadContext() {
                     @Override
-                    public dev.hermes.api.ecs.World world() {
-                        return world;
+                    public dev.hermes.api.ecs.WorldManager manager() {
+                        return manager;
                     }
 
                     @Override
@@ -52,7 +52,7 @@ final class AdvancedRenderPipelineTest {
                     public void resize(int width, int height) {}
 
                     @Override
-                    public void render(World world, RenderContext context) {}
+                    public void render(EntityStore entities, RenderContext context) {}
 
                     @Override
                     public void dispose() {}
@@ -61,7 +61,7 @@ final class AdvancedRenderPipelineTest {
         cache.resize(640, 480);
         RenderGraph graph = cache.get("render/advanced-render-pipeline.json");
 
-        assertDoesNotThrow(() -> graph.render(world));
+        assertDoesNotThrow(() -> graph.render(manager.entities()));
         graph.dispose();
         cache.dispose();
     }
