@@ -4,10 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
+import dev.hermes.api.EntityId;
+import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.Mesh;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 final class MeshMaterialParserTest {
 
@@ -40,7 +44,8 @@ final class MeshMaterialParserTest {
                         "test.json",
                         "entity",
                         BuiltinComponents.MESH,
-                        new JsonComponentData(new JsonReader().parse(json)));
+                        new JsonComponentData(new JsonReader().parse(json)),
+                        emptyContext());
     }
 
     private Material deserializeMaterial(String json) {
@@ -49,6 +54,11 @@ final class MeshMaterialParserTest {
                         "test.json",
                         "entity",
                         BuiltinComponents.MATERIAL,
-                        new JsonComponentData(new JsonReader().parse(json)));
+                        new JsonComponentData(new JsonReader().parse(json)),
+                        emptyContext());
+    }
+
+    private static ComponentContextImpl emptyContext() {
+        return new ComponentContextImpl(new EntityId(1), EntityKind.UNSET, "entity", Map.of());
     }
 }

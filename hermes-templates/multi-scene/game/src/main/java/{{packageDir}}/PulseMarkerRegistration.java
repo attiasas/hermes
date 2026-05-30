@@ -17,7 +17,7 @@ public final class PulseMarkerRegistration implements ComponentRegistration {
                 .register(
                         "PulseMarker",
                         PulseMarker.class,
-                        data -> {
+                        (data, ctx) -> {
                             PulseMarker pulse = new PulseMarker();
                             pulse.setAmplitude(data.getFloat("amplitude", 0.1f));
                             pulse.setSpeed(data.getFloat("speed", 2f));

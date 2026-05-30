@@ -36,7 +36,7 @@ public final class SampleHermesGame implements HermesApplication {
                 .register(
                         "BounceMarker",
                         BounceMarker.class,
-                        data -> {
+                        (data, ctx) -> {
                             BounceMarker bounce = new BounceMarker();
                             bounce.setAmplitude(data.getFloat("amplitude", 20f));
                             bounce.setSpeed(data.getFloat("speed", 2f));

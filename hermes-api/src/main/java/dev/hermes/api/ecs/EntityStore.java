@@ -15,6 +15,10 @@ public interface EntityStore {
 
     Entity create(String name, EntityKind kind);
 
+    Entity spawn(String kind);
+
+    Entity spawn(String kind, String name);
+
     void removeEntity(EntityId id);
 
     Entity findByName(String name);

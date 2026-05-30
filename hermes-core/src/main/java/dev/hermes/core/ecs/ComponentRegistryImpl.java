@@ -1,6 +1,7 @@
 package dev.hermes.core.ecs;
 
 import dev.hermes.api.Component;
+import dev.hermes.api.ecs.ComponentContext;
 import dev.hermes.api.ecs.ComponentDeserializer;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.log.Logger;
@@ -33,14 +34,15 @@ public final class ComponentRegistryImpl implements ComponentRegistry {
         return registrations.containsKey(typeName);
     }
 
-    Component deserialize(String scenePath, String entityName, String typeName, ComponentData data) {
+    Component deserialize(
+            String scenePath, String entityName, String typeName, ComponentData data, ComponentContext context) {
         Registration registration = registrations.get(typeName);
         if (registration == null) {
             throw new SceneLoadException(
                     formatUnknownComponent(scenePath, entityName, typeName));
         }
         log.debug("Deserializing component: " + typeName + " for entity: " + entityName + " in scene: " + scenePath);
-        return registration.deserializer().deserialize(data);
+        return registration.deserializer().deserialize(data, context);
     }
 
     private static String formatUnknownComponent(String scenePath, String entityName, String typeName) {

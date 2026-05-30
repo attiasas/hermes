@@ -17,7 +17,7 @@ final class EntityFactoryTest {
     void spawnFromRegisteredType_appliesTemplateComponents() {
         EntityTypeRegistryImpl types = EntityTypeTestFixtures.registryWithSpinCube();
         ComponentRegistryImpl components = EntityTypeTestFixtures.testRegistryWithMeshMaterialTransform();
-        EntityStoreImpl store = new EntityStoreImpl();
+        EntityStoreImpl store = new EntityStoreImpl(new EntityFactory(types, components));
         EntityFactory factory = new EntityFactory(types, components);
 
         Entity entity = factory.create("test/path", store, "c1", "spin-cube", Map.of());

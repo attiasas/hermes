@@ -17,9 +17,18 @@ import java.util.Map;
 public final class EntityStoreImpl implements EntityStore {
 
     private long nextId = 1;
+    private final EntityFactory factory;
     private final Map<EntityId, EntityImpl> entities = new LinkedHashMap<>();
     private final Map<EntityId, Map<Class<? extends Component>, Component>> components = new HashMap<>();
     private final Map<String, EntityId> names = new HashMap<>();
+
+    public EntityStoreImpl() {
+        this(null);
+    }
+
+    EntityStoreImpl(EntityFactory factory) {
+        this.factory = factory;
+    }
 
     @Override
     public Entity create(String name) {
@@ -39,6 +48,19 @@ public final class EntityStoreImpl implements EntityStore {
             names.put(name, id);
         }
         return entity;
+    }
+
+    @Override
+    public Entity spawn(String kind) {
+        return spawn(kind, "");
+    }
+
+    @Override
+    public Entity spawn(String kind, String name) {
+        if (factory == null) {
+            throw new IllegalStateException("EntityStore is not configured for spawn");
+        }
+        return factory.create("spawn", this, name, kind, Map.of());
     }
 
     @Override

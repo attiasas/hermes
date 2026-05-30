@@ -10,6 +10,7 @@ import dev.hermes.api.scene.SceneContext;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneLifecycle;
 import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
@@ -102,7 +103,9 @@ public final class SceneStack {
 
     private SceneInstance loadScene(SceneDefinition definition) {
         log.debug("Loading scene: " + definition.id());
-        WorldManagerImpl manager = new WorldManagerImpl();
+        EntityTypeRegistryImpl types =
+                engine == null ? new EntityTypeRegistryImpl() : (EntityTypeRegistryImpl) engine.entityTypes();
+        WorldManagerImpl manager = new WorldManagerImpl(types, (ComponentRegistryImpl) componentRegistry);
         SceneLoadContext ctx =
                 new SceneLoadContext() {
                     @Override

@@ -7,6 +7,7 @@ import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.ecs.EntityTypeRegistry;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /** Creates entities by merging type templates with instance component overrides. */
@@ -36,10 +37,14 @@ final class EntityFactory {
         EntityKind entityKind =
                 normalizedKind.isEmpty() ? EntityKind.UNSET : EntityKind.of(normalizedKind);
         Entity entity = store.create(name, entityKind);
+        Map<Class<? extends Component>, Component> built = new HashMap<>();
+        ComponentContextImpl context =
+                new ComponentContextImpl(entity.id(), entityKind, name, built);
         for (JsonValue entry : merged) {
             Component component =
                     registry.deserialize(
-                            sourcePath, name, entry.name, new JsonComponentData(entry));
+                            sourcePath, name, entry.name, new JsonComponentData(entry), context);
+            built.put(component.getClass(), component);
             store.addComponent(entity.id(), component);
         }
         validateDrawableMaterial(sourcePath, name, merged);

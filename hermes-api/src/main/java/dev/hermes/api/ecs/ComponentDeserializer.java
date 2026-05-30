@@ -8,5 +8,5 @@ import dev.hermes.api.Component;
 @FunctionalInterface
 public interface ComponentDeserializer {
 
-    Component deserialize(ComponentData data);
+    Component deserialize(ComponentData data, ComponentContext context);
 }
