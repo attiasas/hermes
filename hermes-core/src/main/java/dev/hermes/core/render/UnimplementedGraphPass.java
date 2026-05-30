@@ -1,6 +1,6 @@
 package dev.hermes.core.render;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.core.viewport.BoundCamera;
 import dev.hermes.core.viewport.RenderSurface;
 
@@ -33,7 +33,7 @@ final class UnimplementedGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world, RenderSurface surface, BoundCamera bound) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound) {
         String key = type.name() + ":" + id;
         if (LOGGED.add(key)) {
             System.err.println(

@@ -2,10 +2,11 @@ package dev.hermes.core.input;
 
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.input.InputButton;
 import dev.hermes.api.input.InputService;
 import dev.hermes.api.input.PointerSnapshot;
@@ -28,16 +29,17 @@ public final class EntityDragSystem implements System {
     }
 
     @Override
-    public void update(World world, float deltaSeconds) {
+    public void update(WorldManager manager, float deltaSeconds) {
+        EntityStore entities = manager.entities();
         PointerSnapshot ptr = input.devices().pointer();
         Camera.Projection mode =
-                CameraResolver.activeCameraEntity(world)
-                        .map(e -> world.getComponent(e.id(), Camera.class).projection())
+                CameraResolver.activeCameraEntity(entities)
+                        .map(e -> entities.getComponent(e.id(), Camera.class).projection())
                         .orElse(Camera.Projection.ORTHOGRAPHIC);
         if (mode != Camera.Projection.ORTHOGRAPHIC) {
             return;
         }
-        Entity selected = findSelected(world);
+        Entity selected = findSelected(entities);
         if (selected == null) {
             return;
         }
@@ -45,7 +47,7 @@ public final class EntityDragSystem implements System {
             anchored = false;
             return;
         }
-        Transform transform = world.getComponent(selected.id(), Transform.class);
+        Transform transform = entities.getComponent(selected.id(), Transform.class);
         if (transform == null) {
             return;
         }
@@ -62,16 +64,16 @@ public final class EntityDragSystem implements System {
         float planeZ = transform.z();
         Vec3 previous = new Vec3();
         Vec3 current = new Vec3();
-        viewport.screenToWorld(world, lastScreenX, lastScreenY, planeZ, previous);
-        viewport.screenToWorld(world, screenX, screenY, planeZ, current);
+        viewport.screenToWorld(entities, lastScreenX, lastScreenY, planeZ, previous);
+        viewport.screenToWorld(entities, screenX, screenY, planeZ, current);
         transform.setX(transform.x() + (current.x - previous.x));
         transform.setY(transform.y() + (current.y - previous.y));
         lastScreenX = screenX;
         lastScreenY = screenY;
     }
 
-    private static Entity findSelected(World world) {
-        for (Entity entity : world.entitiesWith(Selected.class)) {
+    private static Entity findSelected(EntityStore entities) {
+        for (Entity entity : entities.entitiesWith(Selected.class)) {
             return entity;
         }
         return null;

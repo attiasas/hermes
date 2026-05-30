@@ -12,7 +12,7 @@ import dev.hermes.core.ecs.CameraResolver;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.SceneLoader;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 final class CameraSceneControlSystemTest {
 
     private HermesEngineImpl engine;
-    private WorldImpl world;
+    private WorldManagerImpl manager;
     private CameraSceneControlSystem cameraControl;
     private InputServiceImpl input;
 
@@ -36,23 +36,23 @@ final class CameraSceneControlSystemTest {
         engine = new HermesEngineImpl();
         engine.viewport().onWindowResize(640, 480);
         input = (InputServiceImpl) engine.input();
-        world = new WorldImpl();
+        manager = new WorldManagerImpl();
         ComponentRegistryImpl registry = (ComponentRegistryImpl) engine.registry();
-        SceneLoader.load("scenes/perspective-orbit-test.json", world, registry);
+        SceneLoader.load("scenes/perspective-orbit-test.json", manager.entities(), registry);
         cameraControl = new CameraSceneControlSystem(input);
     }
 
     @Test
     void emptyClickDrag_orbitsPerspectiveCamera() {
-        Entity cam = CameraResolver.activeCameraEntity(world).orElseThrow();
-        float rotationYBefore = world.getComponent(cam.id(), Transform.class).rotationY();
+        Entity cam = CameraResolver.activeCameraEntity(manager.entities()).orElseThrow();
+        float rotationYBefore = manager.entities().getComponent(cam.id(), Transform.class).rotationY();
 
         input.pollFrame(InputFrame.pointerJustPressed(320, 240, InputButton.LEFT));
-        cameraControl.update(world, 0f);
+        cameraControl.update(manager, 0f);
         input.pollFrame(InputFrame.pointerDrag(340, 240, InputButton.LEFT));
-        cameraControl.update(world, 0f);
+        cameraControl.update(manager, 0f);
 
-        float rotationYAfter = world.getComponent(cam.id(), Transform.class).rotationY();
+        float rotationYAfter = manager.entities().getComponent(cam.id(), Transform.class).rotationY();
         assertNotEquals(rotationYBefore, rotationYAfter, 0.01f);
     }
 

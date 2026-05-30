@@ -1,6 +1,6 @@
 package dev.hermes.api.scene;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 
 import java.util.List;
 
@@ -13,7 +13,7 @@ public interface SceneManager {
 
     void processPending();
 
-    World activeWorld();
+    WorldManager activeManager();
 
     SceneHandle active();
 

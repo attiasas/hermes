@@ -1,68 +1,35 @@
 package dev.hermes.core.ecs;
 
-import dev.hermes.api.Component;
-import dev.hermes.api.Entity;
-import dev.hermes.api.EntityId;
-import dev.hermes.api.ecs.EntityKind;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import com.badlogic.gdx.utils.JsonValue;
 
 /**
- * Loads a scene document into a world using a component registry.
+ * Loads a scene document into an entity store using an entity factory.
  */
 final class SceneParser {
 
     private SceneParser() {
     }
 
-    static SceneLoadMetadata loadIntoWorld(
-            String scenePath, String json, World world, ComponentRegistryImpl registry) {
+    static SceneLoadMetadata loadIntoEntities(
+            String scenePath, String json, EntityStore entities, EntityFactory factory) {
         SceneDocument document = SceneDocument.parse(scenePath, json);
         for (SceneDocument.EntitySpec entitySpec : document.entities()) {
-            Entity entity = world.createEntity(entitySpec.id(), EntityKind.of(entitySpec.kind()));
-            EntityId entityId = entity.id();
-            List<SceneDocument.ComponentSpec> components = entitySpec.components();
-            for (SceneDocument.ComponentSpec componentSpec : components) {
-                Component component =
-                        registry.deserialize(
-                                scenePath,
-                                entitySpec.id(),
-                                componentSpec.typeName(),
-                                new JsonComponentData(componentSpec.properties()));
-                world.addComponent(entityId, component);
+            Map<String, JsonValue> instanceComponents = new LinkedHashMap<>();
+            for (SceneDocument.ComponentSpec componentSpec : entitySpec.components()) {
+                instanceComponents.put(componentSpec.typeName(), componentSpec.properties());
             }
-            validateDrawableMaterial(scenePath, entitySpec.id(), components);
+            factory.create(
+                    scenePath,
+                    entities,
+                    entitySpec.id(),
+                    entitySpec.kind(),
+                    instanceComponents);
         }
         return new SceneLoadMetadata(document.renderPipeline(), document.inputContext());
-    }
-
-    private static void validateDrawableMaterial(
-            String scenePath, String entityId, List<SceneDocument.ComponentSpec> components) {
-        boolean hasDrawable = false;
-        boolean hasMaterial = false;
-        String drawableType = null;
-        for (SceneDocument.ComponentSpec spec : components) {
-            if (BuiltinComponents.SPRITE.equals(spec.typeName())
-                    || BuiltinComponents.MESH.equals(spec.typeName())) {
-                hasDrawable = true;
-                drawableType = spec.typeName();
-            }
-            if (BuiltinComponents.MATERIAL.equals(spec.typeName())) {
-                hasMaterial = true;
-            }
-        }
-        if (hasDrawable && !hasMaterial) {
-            String entityLabel = entityId == null || entityId.isBlank() ? "<unnamed>" : "'" + entityId + "'";
-            throw new SceneParseException(
-                    "Scene '"
-                            + scenePath
-                            + "': entity "
-                            + entityLabel
-                            + ": "
-                            + drawableType
-                            + " requires a Material component");
-        }
     }
 }

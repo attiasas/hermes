@@ -1,6 +1,6 @@
 package dev.hermes.core.render;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.render.RenderPass;
 import dev.hermes.core.viewport.BoundCamera;
 import dev.hermes.core.viewport.RenderSurface;
@@ -29,9 +29,9 @@ final class CustomGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world, RenderSurface surface, BoundCamera bound) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound) {
         RenderContextImpl context = new RenderContextImpl(surface, bound, viewport);
-        delegate.render(world, context);
+        delegate.render(entities, context);
     }
 
     @Override

@@ -3,7 +3,8 @@ package dev.hermes.sample;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.ecs.WorldManager;
 
 /**
  * Adds a vertical bounce offset to entities with {@link BounceMarker}.
@@ -11,10 +12,11 @@ import dev.hermes.api.ecs.World;
 public final class BounceMarkerSystem implements System {
 
     @Override
-    public void update(World world, float deltaSeconds) {
-        for (Entity entity : world.entitiesWith(BounceMarker.class)) {
-            BounceMarker bounce = world.getComponent(entity.id(), BounceMarker.class);
-            Transform transform = world.getComponent(entity.id(), Transform.class);
+    public void update(WorldManager manager, float deltaSeconds) {
+        EntityStore entities = manager.entities();
+        for (Entity entity : entities.entitiesWith(BounceMarker.class)) {
+            BounceMarker bounce = entities.getComponent(entity.id(), BounceMarker.class);
+            Transform transform = entities.getComponent(entity.id(), Transform.class);
             if (bounce == null || transform == null) {
                 continue;
             }

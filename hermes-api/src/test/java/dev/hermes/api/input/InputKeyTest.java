@@ -1,21 +1,21 @@
 package dev.hermes.api.input;
 
-import com.badlogic.gdx.Input.Keys;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InputKeyTest {
 
     @Test
-    void space_matchesLibGdx() {
-        assertEquals(Keys.SPACE, InputKey.SPACE);
+    void byName_escape_isCaseInsensitive() {
+        assertEquals(InputKey.ESCAPE, InputKey.byName("escape"));
+        assertEquals(InputKey.ESCAPE, InputKey.byName("ESCAPE"));
+        assertEquals(InputKey.SPACE, InputKey.byName("space"));
     }
 
     @Test
-    void byName_escape_isCaseInsensitive() {
-        assertEquals(Keys.ESCAPE, InputKey.byName("escape"));
-        assertEquals(Keys.ESCAPE, InputKey.byName("ESCAPE"));
-        assertEquals(Keys.SPACE, InputKey.byName("space"));
+    void byName_unknownKey_throws() {
+        assertThrows(IllegalArgumentException.class, () -> InputKey.byName("not-a-key"));
     }
 }

@@ -12,7 +12,7 @@ import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.SceneLoader;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 final class EntityDragSystemTest {
 
     private HermesEngineImpl engine;
-    private WorldImpl world;
+    private WorldManagerImpl manager;
     private EntityDragSystem dragSystem;
     private InputServiceImpl input;
 
@@ -36,23 +36,23 @@ final class EntityDragSystemTest {
         engine = new HermesEngineImpl();
         engine.viewport().onWindowResize(640, 480);
         input = (InputServiceImpl) engine.input();
-        world = new WorldImpl();
+        manager = new WorldManagerImpl();
         ComponentRegistryImpl registry = (ComponentRegistryImpl) engine.registry();
-        SceneLoader.load("scenes/ortho-drag-test.json", world, registry);
+        SceneLoader.load("scenes/ortho-drag-test.json", manager.entities(), registry);
         dragSystem = new EntityDragSystem(engine.viewport(), input);
     }
 
     @Test
     void dragMovesSelectedEntityInOrthoWorld() {
-        Entity logo = world.findByName("logo");
-        world.addComponent(logo.id(), new Selected());
+        Entity logo = manager.entities().findByName("logo");
+        manager.entities().addComponent(logo.id(), new Selected());
 
         input.pollFrame(InputFrame.pointerPressed(100, 100, InputButton.LEFT));
-        dragSystem.update(world, 0f);
+        dragSystem.update(manager, 0f);
         input.pollFrame(InputFrame.pointerDrag(120, 100, InputButton.LEFT));
-        dragSystem.update(world, 0f);
+        dragSystem.update(manager, 0f);
 
-        Transform t = world.getComponent(logo.id(), Transform.class);
+        Transform t = manager.entities().getComponent(logo.id(), Transform.class);
         assertEquals(120f, t.x(), 0.5f);
     }
 

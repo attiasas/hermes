@@ -1,6 +1,6 @@
 package dev.hermes.core.render;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.CameraResolver;
 import dev.hermes.core.viewport.BoundCamera;
@@ -46,30 +46,30 @@ final class TargetBindingGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(World world, RenderSurface surface, BoundCamera ignored) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera ignored) {
         pool.beginPass(target);
         try {
-            RenderSurface passSurface = viewport.surfaceForPass(target, pool, world);
-            ActiveCamera active = resolveCamera(world, passSurface);
+            RenderSurface passSurface = viewport.surfaceForPass(target, pool, entities);
+            ActiveCamera active = resolveCamera(entities, passSurface);
             BoundCamera bound = viewport.binder().bind(active, passSurface);
             bound.applyGlViewport();
-            delegate.render(world, passSurface, bound);
+            delegate.render(entities, passSurface, bound);
         } finally {
             pool.endPass(target);
         }
     }
 
-    private ActiveCamera resolveCamera(World world, RenderSurface passSurface) {
+    private ActiveCamera resolveCamera(EntityStore entities, RenderSurface passSurface) {
         if (cameraEntityName != null && !cameraEntityName.isBlank()) {
             return CameraResolver.resolveNamed(
-                    world,
+                    entities,
                     cameraEntityName,
                     target,
                     passSurface.pixelWidth(),
                     passSurface.pixelHeight());
         }
         return CameraResolver.resolveForPass(
-                world, target, passSurface.pixelWidth(), passSurface.pixelHeight());
+                entities, target, passSurface.pixelWidth(), passSurface.pixelHeight());
     }
 
     @Override

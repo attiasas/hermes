@@ -2,7 +2,7 @@ package dev.hermes.core.ecs;
 
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.HermesEngine;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.api.scene.SceneChangeRequest;
@@ -74,9 +74,9 @@ public final class SceneManagerImpl implements SceneManager {
     }
 
     @Override
-    public World activeWorld() {
+    public WorldManager activeManager() {
         SceneInstance active = stack.active();
-        return active != null ? active.world() : null;
+        return active != null ? active.manager() : null;
     }
 
     @Override

@@ -3,17 +3,19 @@ package dev.hermes.core.scene;
 import dev.hermes.api.HermesSession;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.HermesEngine;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.api.scene.SceneContext;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneLifecycle;
 import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.ecs.ComponentRegistryImpl;
+import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -101,12 +103,14 @@ public final class SceneStack {
 
     private SceneInstance loadScene(SceneDefinition definition) {
         log.debug("Loading scene: " + definition.id());
-        WorldImpl world = new WorldImpl();
+        EntityTypeRegistryImpl types =
+                engine == null ? new EntityTypeRegistryImpl() : (EntityTypeRegistryImpl) engine.entityTypes();
+        WorldManagerImpl manager = new WorldManagerImpl(types, (ComponentRegistryImpl) componentRegistry);
         SceneLoadContext ctx =
                 new SceneLoadContext() {
                     @Override
-                    public World world() {
-                        return world;
+                    public WorldManager manager() {
+                        return manager;
                     }
 
                     @Override
@@ -116,13 +120,17 @@ public final class SceneStack {
                 };
         SceneLoadMetadata jsonMetadata = SceneLoadMetadata.empty();
         if (definition.source() instanceof AssetSceneSource) {
-            jsonMetadata = SceneLoader.load(((AssetSceneSource) definition.source()).assetPath(), ctx);
+            jsonMetadata =
+                    SceneLoader.load(
+                            ((AssetSceneSource) definition.source()).assetPath(),
+                            ctx,
+                            engine == null ? new EntityTypeRegistryImpl() : engine.entityTypes());
         } else {
             definition.source().populate(ctx);
         }
         return new SceneInstance(
                 definition.id(),
-                world,
+                manager,
                 definition,
                 jsonMetadata.renderPipeline(),
                 jsonMetadata.inputContext(),
@@ -143,7 +151,7 @@ public final class SceneStack {
         if (lifecycle != null) {
             lifecycle.onExit(sceneContext(instance));
         }
-        instance.world().clear();
+        instance.manager().entities().clear();
     }
 
     private void pauseScene(SceneInstance instance) {
@@ -180,8 +188,8 @@ public final class SceneStack {
             }
 
             @Override
-            public World world() {
-                return instance.world();
+            public WorldManager manager() {
+                return instance.manager();
             }
 
             @Override

@@ -1,7 +1,7 @@
 package dev.hermes.api.input;
 
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.ecs.HermesEngine;
-import dev.hermes.api.ecs.World;
 import dev.hermes.api.viewport.SceneViewport;
 
 import java.util.Optional;
@@ -19,13 +19,13 @@ public interface InputService {
     InputDevices devices();
 
     /**
-     * Convenience delegate to {@link HermesEngine#viewport()}{@code .forWorld(world)}.
+     * Convenience delegate to {@link HermesEngine#viewport()}{@code .forWorld(entities)}.
      * Prefer {@code engine.viewport()} when both services are available.
      */
-    SceneViewport viewport(World world);
+    SceneViewport viewport(EntityStore entities);
 
     /** Screen coords (window). Uses backbuffer surface + active camera via ViewportService. */
-    Optional<PickHit> pick(World world, float screenX, float screenY);
+    Optional<PickHit> pick(EntityStore entities, float screenX, float screenY);
 
-    Optional<PickHit> pick(World world, float screenX, float screenY, PickLayer layer);
+    Optional<PickHit> pick(EntityStore entities, float screenX, float screenY, PickLayer layer);
 }

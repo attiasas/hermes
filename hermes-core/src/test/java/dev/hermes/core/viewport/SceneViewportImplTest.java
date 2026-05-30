@@ -10,7 +10,7 @@ import dev.hermes.api.math.Rect4;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.CameraResolver;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.EntityStoreImpl;
 import dev.hermes.api.Entity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,8 @@ final class SceneViewportImplTest {
 
     @Test
     void binderWiresSurfaceAndCamera() {
-        WorldImpl world = new WorldImpl();
-        Entity cam = world.createEntity("cam");
+        EntityStoreImpl world = new EntityStoreImpl();
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setFitMode(ViewportFitMode.STRETCH);
         world.addComponent(cam.id(), camera);

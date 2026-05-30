@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.core.TestGdx;
 
 import java.util.ArrayList;
@@ -27,13 +27,13 @@ final class HermesEngineImplTest {
         System global =
                 new System() {
                     @Override
-                    public void update(World world, float deltaSeconds) {
+                    public void update(WorldManager manager, float deltaSeconds) {
                     }
                 };
         System active =
                 new System() {
                     @Override
-                    public void update(World world, float deltaSeconds) {
+                    public void update(WorldManager manager, float deltaSeconds) {
                     }
                 };
 
@@ -56,7 +56,7 @@ final class HermesEngineImplTest {
         HermesEngineImpl engine = new HermesEngineImpl();
         System system = new System() {
             @Override
-            public void update(World world, float deltaSeconds) {
+            public void update(WorldManager manager, float deltaSeconds) {
             }
         };
 

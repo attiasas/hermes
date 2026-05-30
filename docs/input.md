@@ -29,9 +29,9 @@ loads the profile at startup; a missing file fails fast. Schema details: [input-
 | `poll(deltaSeconds)` | Called once per frame by the launcher before systems run. |
 | `actions()` | Remapped buttons/axes from the active profile context (`InputActions`). |
 | `devices()` | Raw keyboard, pointer, and gamepad snapshots for the current frame (`InputDevices`). |
-| `viewport(world)` | Delegates to `engine.viewport().forWorld(world)`. |
-| `pick(world, screenX, screenY)` | Screen-space hit test against `Selectable` entities (default `PickLayer.WORLD`). |
-| `pick(world, screenX, screenY, layer)` | Same, filtered by `PickLayer` (`WORLD`, `UI`, `ANY`). |
+| `viewport(entities)` | Delegates to `engine.viewport().forWorld(entities)`. |
+| `pick(entities, screenX, screenY)` | Screen-space hit test against `Selectable` entities (default `PickLayer.WORLD`). |
+| `pick(entities, screenX, screenY, layer)` | Same, filtered by `PickLayer` (`WORLD`, `UI`, `ANY`). |
 
 ### Actions vs devices
 
@@ -103,16 +103,16 @@ Custom movement when the built-in drag system is not enough:
 
 ```java
 InputService input = engine.input();
-World world = engine.scenes().activeWorld();
+EntityStore entities = engine.scenes().activeManager().entities();
 if (input.actions().justPressed("select")) {
   PointerSnapshot p = input.devices().pointer();
   Vec3 target = new Vec3();
-  engine.viewport().screenToWorld(world, p.screenX(), p.screenY(), 0f, target);
+  engine.viewport().screenToWorld(entities, p.screenX(), p.screenY(), 0f, target);
   // Steer entity toward target.x / target.y (or use PickHit from pick())
 }
 ```
 
-Or use `input.pick(world, p.screenX(), p.screenY())` when you only care about hits on `Selectable` entities; `PickHit`
+Or use `input.pick(entities, p.screenX(), p.screenY())` when you only care about hits on `Selectable` entities; `PickHit`
 includes `worldX`, `worldY`, `worldZ`.
 
 ### UI vs WORLD pick layer

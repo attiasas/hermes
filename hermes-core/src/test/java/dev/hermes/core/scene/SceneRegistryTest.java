@@ -37,13 +37,13 @@ final class SceneRegistryTest {
         engine.scenes().request(SceneChangeRequest.goTo("main"));
         engine.scenes().processPending();
 
-        Entity logo = engine.scenes().activeWorld().findByName("logo");
+        Entity logo = engine.scenes().activeManager().entities().findByName("logo");
         assertNotNull(logo);
-        assertEquals(140f, engine.scenes().activeWorld().getComponent(logo.id(), Transform.class).x());
-        assertEquals(210f, engine.scenes().activeWorld().getComponent(logo.id(), Transform.class).y());
+        assertEquals(140f, engine.scenes().activeManager().entities().getComponent(logo.id(), Transform.class).x());
+        assertEquals(210f, engine.scenes().activeManager().entities().getComponent(logo.id(), Transform.class).y());
         assertEquals(
                 "hermes-logo.png",
-                engine.scenes().activeWorld().getComponent(logo.id(), Sprite.class).texture());
+                engine.scenes().activeManager().entities().getComponent(logo.id(), Sprite.class).texture());
     }
 
     @Test

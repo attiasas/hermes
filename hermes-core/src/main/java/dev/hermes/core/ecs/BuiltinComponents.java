@@ -38,7 +38,7 @@ public final class BuiltinComponents {
         registry.register(
                 TRANSFORM,
                 Transform.class,
-                data -> {
+                (data, ctx) -> {
                     Transform transform = new Transform();
                     transform.setX(data.getFloat("x", 0f));
                     transform.setY(data.getFloat("y", 0f));
@@ -54,7 +54,7 @@ public final class BuiltinComponents {
         registry.register(
                 SPRITE,
                 Sprite.class,
-                data -> {
+                (data, ctx) -> {
                     Sprite sprite = new Sprite();
                     sprite.setTexture(data.getString("texture", ""));
                     return sprite;
@@ -62,7 +62,7 @@ public final class BuiltinComponents {
         registry.register(
                 CAMERA,
                 Camera.class,
-                data -> {
+                (data, ctx) -> {
                     Camera camera = new Camera();
                     camera.setProjection(parseProjection(data.getString("projection", "orthographic")));
                     camera.setActive(data.getBoolean("active", true));
@@ -91,7 +91,7 @@ public final class BuiltinComponents {
         registry.register(
                 MESH,
                 Mesh.class,
-                data -> {
+                (data, ctx) -> {
                     Mesh mesh = new Mesh();
                     mesh.setModel(data.getString("model", ""));
                     if (data.has("texture")) {
@@ -102,7 +102,7 @@ public final class BuiltinComponents {
         registry.register(
                 MATERIAL,
                 Material.class,
-                data -> {
+                (data, ctx) -> {
                     Material material = new Material();
                     material.setShader(data.getString("shader", "default/unlit"));
                     if (data instanceof JsonComponentData) {
@@ -118,7 +118,7 @@ public final class BuiltinComponents {
         registry.register(
                 RENDER_LAYER,
                 RenderLayer.class,
-                data -> {
+                (data, ctx) -> {
                     RenderLayer renderLayer = new RenderLayer();
                     renderLayer.setLayer(parseRenderLayer(data.getString("layer", "WORLD")));
                     return renderLayer;
@@ -126,14 +126,14 @@ public final class BuiltinComponents {
         registry.register(
                 SELECTABLE,
                 Selectable.class,
-                data -> {
+                (data, ctx) -> {
                     Selectable selectable = new Selectable();
                     selectable.setEnabled(data.getBoolean("enabled", true));
                     selectable.setRadius(data.getFloat("radius", 16f));
                     selectable.setLayer(parsePickLayer(data.getString("layer", "WORLD")));
                     return selectable;
                 });
-        registry.register(SELECTED, Selected.class, data -> new Selected());
+        registry.register(SELECTED, Selected.class, (data, ctx) -> new Selected());
     }
 
     public static void registerSystems(HermesEngine engine) {

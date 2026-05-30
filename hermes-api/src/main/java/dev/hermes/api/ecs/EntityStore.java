@@ -7,15 +7,17 @@ import dev.hermes.api.EntityId;
 import java.util.Collection;
 
 /**
- * ECS world holding entities and their components.
+ * ECS entity store holding entities and their components.
  */
-public interface World {
+public interface EntityStore {
 
-    Entity createEntity(String name);
+    Entity create(String name);
 
-    Entity createEntity(String name, EntityKind kind);
+    Entity create(String name, EntityKind kind);
 
-    void clear();
+    Entity spawn(String kind);
+
+    Entity spawn(String kind, String name);
 
     void removeEntity(EntityId id);
 
@@ -38,4 +40,6 @@ public interface World {
     Collection<Entity> entitiesWithKind(EntityKind kind);
 
     int entityCount();
+
+    void clear();
 }

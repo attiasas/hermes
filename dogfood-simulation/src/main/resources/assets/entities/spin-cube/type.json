@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "components": {
+    "Transform": { "x": 0, "y": 0, "z": 0 },
+    "Mesh": { "model": "models/cube.obj", "texture": "hermes-logo.png" },
+    "Material": { "shader": "default/unlit" },
+    "SpinMarker": {
+      "speed": 1.2,
+      "centerX": { "$ref": "Transform.x" },
+      "centerY": { "$ref": "Transform.y" },
+      "radius": 1.5
+    },
+    "BounceMarker": { "amplitude": 0.2, "speed": 3 },
+    "Selectable": { "radius": 1.2, "layer": "WORLD" }
+  }
+}

@@ -5,7 +5,8 @@ package
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.ecs.WorldManager;
 
 /**
  * Updates scale on entities with {@link PulseMarker}.
@@ -13,10 +14,11 @@ import dev.hermes.api.ecs.World;
 public final class PulseMarkerSystem implements System {
 
     @Override
-    public void update(World world, float deltaSeconds) {
-        for (Entity entity : world.entitiesWith(PulseMarker.class)) {
-            PulseMarker pulse = world.getComponent(entity.id(), PulseMarker.class);
-            Transform transform = world.getComponent(entity.id(), Transform.class);
+    public void update(WorldManager manager, float deltaSeconds) {
+        EntityStore entities = manager.entities();
+        for (Entity entity : entities.entitiesWith(PulseMarker.class)) {
+            PulseMarker pulse = entities.getComponent(entity.id(), PulseMarker.class);
+            Transform transform = entities.getComponent(entity.id(), Transform.class);
             if (pulse == null || transform == null) {
                 continue;
             }

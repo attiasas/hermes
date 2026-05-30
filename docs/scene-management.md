@@ -15,8 +15,8 @@ The dogfood sample ([`dogfood-simulation/`](../dogfood-simulation/)) registers a
 `SceneNavigationSystem`](../dogfood-simulation/src/main/java/dev/hermes/sample/SceneNavigationSystem.java) to push/pop it on a timer.
 The multi-scene CLI template demonstrates the same pattern.
 
-**Rendering:** global systems run once per frame; each **visible** scene in the stack gets `System.render(world)` called
-in stack order. **Updates** for `SystemScope.ACTIVE_SCENE` systems run only against the active (top) scene’s world.
+**Rendering:** global systems run once per frame; each **visible** scene in the stack gets `System.render(manager)` called
+in stack order. **Updates** for `SystemScope.ACTIVE_SCENE` systems run only against the active (top) scene’s `WorldManager`.
 
 **Lifecycle:** registered scenes may attach a `SceneLifecycle` (`onEnter`, `onExit`, `onPause`, `onResume`). Push/pop
 and go-to invoke the matching hooks.
@@ -79,12 +79,12 @@ engine.addSystem(renderSystem);                              // GLOBAL (default)
 engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
 ```
 
-| Scope          | `update`                                             | Typical use                                         |
-|----------------|------------------------------------------------------|-----------------------------------------------------|
-| `GLOBAL`       | Every frame, active world passed in                  | Input routing, scene navigation, debug HUD          |
-| `ACTIVE_SCENE` | Only when a scene is active; uses that scene’s world | Gameplay logic tied to the top scene (movement, AI) |
+| Scope          | `update`                                                    | Typical use                                         |
+|----------------|-------------------------------------------------------------|-----------------------------------------------------|
+| `GLOBAL`       | Every frame, active scene’s `WorldManager` passed in        | Input routing, scene navigation, debug HUD          |
+| `ACTIVE_SCENE` | Only when a scene is active; uses that scene’s manager      | Gameplay logic tied to the top scene (movement, AI) |
 
-Global systems still receive `render(world)` for each visible scene from the launcher loop.
+Global systems still receive `render(manager)` for each visible scene from the launcher loop.
 
 ## Built-in pointer demos
 
@@ -105,10 +105,13 @@ registers three GLOBAL input systems in `BuiltinComponents`:
 
 Run dogfood: `./gradlew :dogfood-simulation:hermesRunDesktop`. Details: [input.md](input.md).
 
-## Entity kinds and saves (future)
+## Entity types
 
-Scene JSON may set an optional [`kind`](scene-format-v1.md) on entities (e.g. `"character"`, `"prop"`). Kinds are
-metadata for queries (`World.entitiesWithKind`) and future persistence — they do not change loading behavior today.
+Scene JSON may set [`type`](scene-format-v1.md) or [`kind`](scene-format-v1.md) to load reusable templates from
+`assets/entities/<kind>/type.json`. Registered kinds merge template components with scene overrides; unregistered kinds
+are stored as tags only. Query by kind with `manager.entities().entitiesWithKind(EntityKind.of("…"))`.
+
+See [entity-types.md](entity-types.md) for merge rules, `$ref`, and `spawn()`.
 
 **Future scene types:** scripted/procedural sources (implement `SceneSource` without JSON), additive loading, and entity
 save snapshots keyed by scene id + entity name/kind. Update [scene-format-v1.md](scene-format-v1.md) when entity JSON
@@ -118,4 +121,5 @@ rules change.
 
 - [Input system](input.md) — profiles, picking, built-in selection and drag
 - [Scene format v1](scene-format-v1.md) — JSON entity/component schema (`Material`, `Mesh`, `RenderLayer`, `Selectable`)
+- [Entity types](entity-types.md) — reusable `type.json` templates, merge, `$ref`, spawn
 - [Architecture](ARCHITECTURE.md) — module boundaries and launcher bootstrap order

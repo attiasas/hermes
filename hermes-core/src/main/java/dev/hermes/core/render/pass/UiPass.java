@@ -9,7 +9,7 @@ import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.core.HermesAssetPaths;
 import dev.hermes.core.viewport.BoundCamera;
 
@@ -40,25 +40,25 @@ public final class UiPass {
     public void resize(int width, int height) {
     }
 
-    public void render(World world, Set<RenderLayer.Layer> layers, BoundCamera bound) {
-        List<Entity> drawables = collectDrawableEntities(world, layers);
+    public void render(EntityStore entities, Set<RenderLayer.Layer> layers, BoundCamera bound) {
+        List<Entity> drawables = collectDrawableEntities(entities, layers);
         if (drawables.isEmpty()) {
             return;
         }
         drawables.sort(
-                Comparator.comparingDouble(e -> world.getComponent(e.id(), Transform.class).z()));
+                Comparator.comparingDouble(e -> entities.getComponent(e.id(), Transform.class).z()));
 
         batch.setProjectionMatrix(bound.combined());
         batch.begin();
         for (Entity entity : drawables) {
-            drawSprite(world, entity);
+            drawSprite(entities, entity);
         }
         batch.end();
     }
 
-    private void drawSprite(World world, Entity entity) {
-        Transform transform = world.getComponent(entity.id(), Transform.class);
-        Sprite sprite = world.getComponent(entity.id(), Sprite.class);
+    private void drawSprite(EntityStore entities, Entity entity) {
+        Transform transform = entities.getComponent(entity.id(), Transform.class);
+        Sprite sprite = entities.getComponent(entity.id(), Sprite.class);
         if (transform == null || sprite == null) {
             return;
         }
@@ -90,18 +90,18 @@ public final class UiPass {
                 transform.rotationZ());
     }
 
-    private static List<Entity> collectDrawableEntities(World world, Set<RenderLayer.Layer> layers) {
+    private static List<Entity> collectDrawableEntities(EntityStore entities, Set<RenderLayer.Layer> layers) {
         Set<RenderLayer.Layer> allowed =
                 layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.UI) : layers;
         List<Entity> result = new ArrayList<>();
-        for (Entity entity : world.entitiesWith(Sprite.class)) {
-            if (world.hasComponent(entity.id(), Camera.class)) {
+        for (Entity entity : entities.entitiesWith(Sprite.class)) {
+            if (entities.hasComponent(entity.id(), Camera.class)) {
                 continue;
             }
-            if (!world.hasComponent(entity.id(), Transform.class)) {
+            if (!entities.hasComponent(entity.id(), Transform.class)) {
                 continue;
             }
-            RenderLayer renderLayer = world.getComponent(entity.id(), RenderLayer.class);
+            RenderLayer renderLayer = entities.getComponent(entity.id(), RenderLayer.class);
             RenderLayer.Layer layer =
                     renderLayer == null ? RenderLayer.Layer.WORLD : renderLayer.layer();
             if (!allowed.contains(layer)) {

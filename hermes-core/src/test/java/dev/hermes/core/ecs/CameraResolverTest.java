@@ -20,15 +20,15 @@ final class CameraResolverTest {
 
     @Test
     void usesFirstActiveCamera() {
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
 
-        Entity inactive = world.createEntity("cam-inactive");
+        Entity inactive = world.create("cam-inactive");
         Camera inactiveCamera = new Camera();
         inactiveCamera.setActive(false);
         world.addComponent(inactive.id(), inactiveCamera);
         world.addComponent(inactive.id(), new Transform(0f, 0f));
 
-        Entity activeEntity = world.createEntity("cam-active");
+        Entity activeEntity = world.create("cam-active");
         Camera activeCamera = new Camera();
         activeCamera.setActive(true);
         activeCamera.setZoom(2f);
@@ -47,8 +47,8 @@ final class CameraResolverTest {
 
     @Test
     void fallsBackToFirstCameraWhenNoneActive() {
-        WorldImpl world = new WorldImpl();
-        Entity cam = world.createEntity("cam");
+        EntityStoreImpl world = new EntityStoreImpl();
+        Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setActive(false);
         camera.setProjection(Camera.Projection.PERSPECTIVE);
@@ -65,7 +65,7 @@ final class CameraResolverTest {
 
     @Test
     void activeCameraEntity_returnsFirstActiveWithTransform() {
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         ComponentRegistryImpl registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
         SceneLoader.load("scenes/camera-pick-test.json", world, registry);
@@ -78,7 +78,7 @@ final class CameraResolverTest {
 
     @Test
     void defaultCameraWhenNoCameraEntities() {
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         ActiveCamera active = CameraResolver.resolve(world, 640f, 480f);
 
         assertEquals(Camera.Projection.ORTHOGRAPHIC, active.projection());

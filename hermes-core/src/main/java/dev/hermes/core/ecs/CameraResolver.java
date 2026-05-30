@@ -3,7 +3,7 @@ package dev.hermes.core.ecs;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 
 import java.util.Optional;
 
@@ -21,8 +21,8 @@ public final class CameraResolver {
      * {@link Camera#renderTarget()} matches the pass target.
      */
     public static ActiveCamera resolveForPass(
-            World world, String passTargetId, float surfaceWidth, float surfaceHeight) {
-        if (world == null) {
+            EntityStore entities, String passTargetId, float surfaceWidth, float surfaceHeight) {
+        if (entities == null) {
             return defaultCamera(surfaceWidth, surfaceHeight);
         }
         Entity renderTargetEntity = null;
@@ -34,8 +34,8 @@ public final class CameraResolver {
         int activeCount = 0;
         boolean matchTarget = passTargetId != null && !passTargetId.isBlank() && !"screen".equals(passTargetId);
 
-        for (Entity entity : world.entitiesWith(Camera.class)) {
-            Camera camera = world.getComponent(entity.id(), Camera.class);
+        for (Entity entity : entities.entitiesWith(Camera.class)) {
+            Camera camera = entities.getComponent(entity.id(), Camera.class);
             if (camera == null) {
                 continue;
             }
@@ -76,7 +76,7 @@ public final class CameraResolver {
             return defaultCamera(surfaceWidth, surfaceHeight);
         }
 
-        Transform transform = world.getComponent(chosen.id(), Transform.class);
+        Transform transform = entities.getComponent(chosen.id(), Transform.class);
         if (transform == null) {
             throw new IllegalStateException(
                     "Camera entity '"
@@ -92,20 +92,20 @@ public final class CameraResolver {
         return fromComponents(transform, chosenCamera, viewportWidth, viewportHeight);
     }
 
-    public static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
-        return resolveForPass(world, "screen", windowWidth, windowHeight);
+    public static ActiveCamera resolve(EntityStore entities, float windowWidth, float windowHeight) {
+        return resolveForPass(entities, "screen", windowWidth, windowHeight);
     }
 
     /** First active camera entity with Transform, same choice as {@link #resolveForPass}. */
-    public static Optional<Entity> activeCameraEntity(World world) {
-        if (world == null) {
+    public static Optional<Entity> activeCameraEntity(EntityStore entities) {
+        if (entities == null) {
             return Optional.empty();
         }
         Entity active = null;
         Entity fallback = null;
-        for (Entity entity : world.entitiesWith(Camera.class)) {
-            Camera camera = world.getComponent(entity.id(), Camera.class);
-            if (camera == null || world.getComponent(entity.id(), Transform.class) == null) {
+        for (Entity entity : entities.entitiesWith(Camera.class)) {
+            Camera camera = entities.getComponent(entity.id(), Camera.class);
+            if (camera == null || entities.getComponent(entity.id(), Transform.class) == null) {
                 continue;
             }
             if (fallback == null) {
@@ -124,22 +124,22 @@ public final class CameraResolver {
      * Resolves the camera on a named entity; falls back to {@link #resolveForPass} when not found.
      */
     public static ActiveCamera resolveNamed(
-            World world,
+            EntityStore entities,
             String entityName,
             String passTargetId,
             float surfaceWidth,
             float surfaceHeight) {
         if (entityName == null || entityName.isBlank()) {
-            return resolveForPass(world, passTargetId, surfaceWidth, surfaceHeight);
+            return resolveForPass(entities, passTargetId, surfaceWidth, surfaceHeight);
         }
-        Entity entity = world.findByName(entityName);
+        Entity entity = entities.findByName(entityName);
         if (entity == null) {
             System.err.println(
                     "Warning: UI pass camera entity '" + entityName + "' not found; using active camera.");
-            return resolveForPass(world, passTargetId, surfaceWidth, surfaceHeight);
+            return resolveForPass(entities, passTargetId, surfaceWidth, surfaceHeight);
         }
-        Camera camera = world.getComponent(entity.id(), Camera.class);
-        Transform transform = world.getComponent(entity.id(), Transform.class);
+        Camera camera = entities.getComponent(entity.id(), Camera.class);
+        Transform transform = entities.getComponent(entity.id(), Transform.class);
         if (camera == null || transform == null) {
             throw new IllegalStateException(
                     "Camera entity '"

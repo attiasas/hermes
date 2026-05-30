@@ -1,6 +1,6 @@
 package dev.hermes.core.render;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.core.viewport.BackbufferSize;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
@@ -90,10 +90,10 @@ public final class RenderGraph {
         }
     }
 
-    public void render(World world) {
+    public void render(EntityStore entities) {
         syncBackbufferSize();
         for (RenderGraphPass pass : passes) {
-            pass.render(world, null, null);
+            pass.render(entities, null, null);
         }
     }
 

@@ -1,7 +1,8 @@
 package dev.hermes.sample;
 
 import dev.hermes.api.ecs.System;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneManager;
 
@@ -21,7 +22,8 @@ public final class AdvancedRenderDemoSystem implements System {
     }
 
     @Override
-    public void update(World world, float deltaSeconds) {
+    public void update(WorldManager manager, float deltaSeconds) {
+        EntityStore entities = manager.entities();
         if (scenes.stackDepth() > 1) {
             return;
         }

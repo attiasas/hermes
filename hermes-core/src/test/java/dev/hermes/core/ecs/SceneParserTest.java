@@ -17,12 +17,12 @@ import org.junit.jupiter.api.Test;
 
 final class SceneParserTest {
 
-    private WorldImpl world;
+    private EntityStoreImpl world;
     private ComponentRegistryImpl registry;
 
     @BeforeEach
     void setUp() {
-        world = new WorldImpl();
+        world = new EntityStoreImpl();
         registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
     }

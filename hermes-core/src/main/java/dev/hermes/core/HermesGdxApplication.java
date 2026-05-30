@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.HermesApplication;
 import dev.hermes.api.ecs.SystemScope;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.api.render.HermesRenderConfigurator;
@@ -76,6 +76,8 @@ public final class HermesGdxApplication implements ApplicationListener {
 
             application.onCreate(engine);
 
+            engine.entityTypes().scanAssets();
+
             if (scenePath != null && !scenePath.isBlank()) {
                 engine.scenes().request(SceneChangeRequest.goTo("main"));
                 engine.scenes().processPending();
@@ -126,10 +128,10 @@ public final class HermesGdxApplication implements ApplicationListener {
                 }
             }
             if (hasActiveScene) {
-                World activeWorld = engine.scenes().activeWorld();
+                WorldManager activeManager = engine.scenes().activeManager();
                 for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
                     if (entry.scope() == SystemScope.ACTIVE_SCENE) {
-                        entry.system().update(activeWorld, delta);
+                        entry.system().update(activeManager, delta);
                     }
                 }
             }
@@ -172,15 +174,15 @@ public final class HermesGdxApplication implements ApplicationListener {
         }
         if (stackPolicy.updateStackedScenes()) {
             for (SceneHandle scene : scenes) {
-                if (scene.world() != null) {
-                    entry.system().update(scene.world(), delta);
+                if (scene.manager() != null) {
+                    entry.system().update(scene.manager(), delta);
                 }
             }
             return;
         }
         SceneHandle active = scenes.get(scenes.size() - 1);
-        if (active.world() != null) {
-            entry.system().update(active.world(), delta);
+        if (active.manager() != null) {
+            entry.system().update(active.manager(), delta);
         }
     }
 

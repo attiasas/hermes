@@ -3,7 +3,7 @@ package dev.hermes.core.render;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.core.scene.SceneInstance;
@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Loads JSON render pipelines and executes the resolved graph for each visible scene world.
+ * Loads JSON render pipelines and executes the resolved graph for each visible scene entities.
  */
 public final class RenderPipelineExecutor {
 
@@ -63,9 +63,9 @@ public final class RenderPipelineExecutor {
                 Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
                 cleared = true;
             }
-            World world = scene.world();
-            if (world != null) {
-                graph.render(world);
+            EntityStore entities = scene.manager().entities();
+            if (entities != null) {
+                graph.render(entities);
             }
         }
     }

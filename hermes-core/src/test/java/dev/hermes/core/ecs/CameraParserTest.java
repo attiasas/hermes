@@ -33,7 +33,7 @@ final class CameraParserTest {
                         + "  ]\n"
                         + "}\n";
 
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         SceneLoader.loadFromString("scenes/test.json", json, world, registry);
 
         Camera camera = world.getComponent(world.findByName("cam").id(), Camera.class);
@@ -57,7 +57,7 @@ final class CameraParserTest {
                         + "  ]\n"
                         + "}\n";
 
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         SceneLoader.loadFromString("scenes/test.json", json, world, registry);
 
         Camera camera = world.getComponent(world.findByName("cam").id(), Camera.class);
@@ -85,7 +85,7 @@ final class CameraParserTest {
                         + "  ]\n"
                         + "}\n";
 
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         SceneLoader.loadFromString("scenes/test.json", json, world, registry);
 
         Camera camera = world.getComponent(world.findByName("cam").id(), Camera.class);
@@ -116,7 +116,7 @@ final class CameraParserTest {
                         + "  ]\n"
                         + "}\n";
 
-        WorldImpl world = new WorldImpl();
+        EntityStoreImpl world = new EntityStoreImpl();
         SceneLoader.loadFromString("scenes/test.json", json, world, registry);
 
         Camera c = world.getComponent(world.findByName("cam").id(), Camera.class);

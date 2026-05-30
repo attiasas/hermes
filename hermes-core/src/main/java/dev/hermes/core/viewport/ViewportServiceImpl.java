@@ -1,6 +1,6 @@
 package dev.hermes.core.viewport;
 
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.math.ScreenRay;
 import dev.hermes.api.math.Vec2;
@@ -31,10 +31,10 @@ public final class ViewportServiceImpl implements ViewportService {
         windowHeight = Math.max(1, h);
     }
 
-    public RenderSurface surfaceForPass(String targetId, FramebufferPool pool, World world) {
+    public RenderSurface surfaceForPass(String targetId, FramebufferPool pool, EntityStore entities) {
         int pw = pool.targetWidth(targetId);
         int ph = pool.targetHeight(targetId);
-        ActiveCamera active = CameraResolver.resolveForPass(world, targetId, pw, ph);
+        ActiveCamera active = CameraResolver.resolveForPass(entities, targetId, pw, ph);
         Rect4 rect = new Rect4();
         ViewportLayout.compute(pw, ph, active.designAspect(), active.fitMode(), rect);
         if ("screen".equals(targetId)) {
@@ -54,23 +54,23 @@ public final class ViewportServiceImpl implements ViewportService {
     }
 
     @Override
-    public RenderSurfaceDesc backbufferSurface(World world) {
-        ActiveCamera active = CameraResolver.resolveForPass(world, "screen", windowWidth, windowHeight);
+    public RenderSurfaceDesc backbufferSurface(EntityStore entities) {
+        ActiveCamera active = CameraResolver.resolveForPass(entities, "screen", windowWidth, windowHeight);
         Rect4 rect = new Rect4();
         ViewportLayout.compute(windowWidth, windowHeight, active.designAspect(), active.fitMode(), rect);
         return toDesc(RenderSurface.screen(windowWidth, windowHeight, rect));
     }
 
     @Override
-    public SceneViewport forWorld(World world) {
-        return forSurface(world, backbufferSurface(world));
+    public SceneViewport forWorld(EntityStore entities) {
+        return forSurface(entities, backbufferSurface(entities));
     }
 
     @Override
-    public SceneViewport forWorld(World world, String cameraEntityName) {
+    public SceneViewport forWorld(EntityStore entities, String cameraEntityName) {
         ActiveCamera active =
                 CameraResolver.resolveNamed(
-                        world, cameraEntityName, "screen", windowWidth, windowHeight);
+                        entities, cameraEntityName, "screen", windowWidth, windowHeight);
         Rect4 rect = new Rect4();
         ViewportLayout.compute(windowWidth, windowHeight, active.designAspect(), active.fitMode(), rect);
         RenderSurface surface = RenderSurface.screen(windowWidth, windowHeight, rect);
@@ -78,10 +78,10 @@ public final class ViewportServiceImpl implements ViewportService {
     }
 
     @Override
-    public SceneViewport forSurface(World world, RenderSurfaceDesc surfaceDesc) {
+    public SceneViewport forSurface(EntityStore entities, RenderSurfaceDesc surfaceDesc) {
         ActiveCamera active =
                 CameraResolver.resolveForPass(
-                        world,
+                        entities,
                         surfaceDesc.targetId(),
                         surfaceDesc.pixelWidth(),
                         surfaceDesc.pixelHeight());
@@ -102,22 +102,22 @@ public final class ViewportServiceImpl implements ViewportService {
     }
 
     @Override
-    public void screenToWorld(World world, float screenX, float screenY, float worldZ, Vec3 out) {
+    public void screenToWorld(EntityStore entities, float screenX, float screenY, float worldZ, Vec3 out) {
         Vec2 mapped = new Vec2();
-        mapScreenToSurface(screenX, screenY, backbufferSurface(world), mapped);
-        forWorld(world).screenToWorld(mapped.x, mapped.y, worldZ, out);
+        mapScreenToSurface(screenX, screenY, backbufferSurface(entities), mapped);
+        forWorld(entities).screenToWorld(mapped.x, mapped.y, worldZ, out);
     }
 
     @Override
-    public void worldToScreen(World world, float worldX, float worldY, float worldZ, Vec2 out) {
-        forWorld(world).worldToScreen(worldX, worldY, worldZ, out);
+    public void worldToScreen(EntityStore entities, float worldX, float worldY, float worldZ, Vec2 out) {
+        forWorld(entities).worldToScreen(worldX, worldY, worldZ, out);
     }
 
     @Override
-    public ScreenRay screenRay(World world, float screenX, float screenY) {
+    public ScreenRay screenRay(EntityStore entities, float screenX, float screenY) {
         Vec2 mapped = new Vec2();
-        mapScreenToSurface(screenX, screenY, backbufferSurface(world), mapped);
-        return forWorld(world).screenRay(mapped.x, mapped.y);
+        mapScreenToSurface(screenX, screenY, backbufferSurface(entities), mapped);
+        return forWorld(entities).screenRay(mapped.x, mapped.y);
     }
 
     private static RenderSurfaceDesc toDesc(RenderSurface surface) {

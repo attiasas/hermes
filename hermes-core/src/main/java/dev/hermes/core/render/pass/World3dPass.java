@@ -18,7 +18,7 @@ import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
-import dev.hermes.api.ecs.World;
+import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ModelCache;
@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Renders mesh entities in world space with the active scene camera.
+ * Renders mesh entities in entities space with the active scene camera.
  */
 public final class World3dPass {
 
@@ -71,27 +71,27 @@ public final class World3dPass {
     public void resize(int width, int height) {
     }
 
-    public void render(World world) {
-        throw new UnsupportedOperationException("Use render(World, layers, BoundCamera)");
+    public void render(EntityStore entities) {
+        throw new UnsupportedOperationException("Use render(EntityStore, layers, BoundCamera)");
     }
 
-    public void render(World world, Set<RenderLayer.Layer> layers, BoundCamera bound) {
-        List<Entity> drawables = collectDrawables(world, layers);
+    public void render(EntityStore entities, Set<RenderLayer.Layer> layers, BoundCamera bound) {
+        List<Entity> drawables = collectDrawables(entities, layers);
         if (drawables.isEmpty()) {
             return;
         }
 
         modelBatch.begin(bound.gdxCamera());
         for (Entity entity : drawables) {
-            drawMesh(world, entity);
+            drawMesh(entities, entity);
         }
         modelBatch.end();
     }
 
-    private void drawMesh(World world, Entity entity) {
-        Transform transform = world.getComponent(entity.id(), Transform.class);
-        Mesh mesh = world.getComponent(entity.id(), Mesh.class);
-        Material material = world.getComponent(entity.id(), Material.class);
+    private void drawMesh(EntityStore entities, Entity entity) {
+        Transform transform = entities.getComponent(entity.id(), Transform.class);
+        Mesh mesh = entities.getComponent(entity.id(), Mesh.class);
+        Material material = entities.getComponent(entity.id(), Material.class);
         if (transform == null || mesh == null || material == null) {
             return;
         }
@@ -162,25 +162,25 @@ public final class World3dPass {
     /**
      * Returns mesh entities that have transform and material (excludes camera entities).
      */
-    public static List<Entity> collectDrawables(World world) {
-        return collectDrawables(world, EnumSet.of(RenderLayer.Layer.WORLD));
+    public static List<Entity> collectDrawables(EntityStore entities) {
+        return collectDrawables(entities, EnumSet.of(RenderLayer.Layer.WORLD));
     }
 
-    public static List<Entity> collectDrawables(World world, Set<RenderLayer.Layer> layers) {
+    public static List<Entity> collectDrawables(EntityStore entities, Set<RenderLayer.Layer> layers) {
         Set<RenderLayer.Layer> allowed =
                 layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.WORLD) : layers;
         List<Entity> result = new ArrayList<>();
-        for (Entity entity : world.entitiesWith(Mesh.class)) {
-            if (world.hasComponent(entity.id(), Camera.class)) {
+        for (Entity entity : entities.entitiesWith(Mesh.class)) {
+            if (entities.hasComponent(entity.id(), Camera.class)) {
                 continue;
             }
-            if (!world.hasComponent(entity.id(), Transform.class)) {
+            if (!entities.hasComponent(entity.id(), Transform.class)) {
                 continue;
             }
-            if (!world.hasComponent(entity.id(), Material.class)) {
+            if (!entities.hasComponent(entity.id(), Material.class)) {
                 continue;
             }
-            RenderLayer renderLayer = world.getComponent(entity.id(), RenderLayer.class);
+            RenderLayer renderLayer = entities.getComponent(entity.id(), RenderLayer.class);
             RenderLayer.Layer layer =
                     renderLayer == null ? RenderLayer.Layer.WORLD : renderLayer.layer();
             if (!allowed.contains(layer)) {

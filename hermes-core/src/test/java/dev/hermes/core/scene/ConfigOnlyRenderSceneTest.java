@@ -10,7 +10,7 @@ import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoader;
-import dev.hermes.core.ecs.WorldImpl;
+import dev.hermes.core.ecs.EntityStoreImpl;
 
 import java.nio.charset.StandardCharsets;
 
@@ -22,13 +22,13 @@ import org.junit.jupiter.api.Test;
  */
 final class ConfigOnlyRenderSceneTest {
 
-    private WorldImpl world;
+    private EntityStoreImpl world;
     private ComponentRegistryImpl registry;
 
     @BeforeEach
     void setUp() {
         TestGdx.initClasspathFiles();
-        world = new WorldImpl();
+        world = new EntityStoreImpl();
         registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
     }
