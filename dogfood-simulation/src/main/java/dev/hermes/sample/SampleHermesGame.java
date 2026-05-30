@@ -2,6 +2,7 @@ package dev.hermes.sample;
 
 import dev.hermes.api.HermesApplication;
 import dev.hermes.api.HermesSession;
+import dev.hermes.api.audio.AudioMixer;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.log.Logger;
@@ -75,8 +76,13 @@ public final class SampleHermesGame implements HermesApplication {
     }
 
     /**
-     * Stub session for cross-scene state; replace when save/audio services land.
+     * Stub session for cross-scene state; replace when save services land.
      */
     private static final class SampleHermesSession implements HermesSession {
+
+        @Override
+        public AudioMixer mixer() {
+            return AudioMixer.NOOP;
+        }
     }
 }
