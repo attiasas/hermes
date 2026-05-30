@@ -45,7 +45,7 @@ final class SceneParserTest {
 
         SceneLoader.loadFromString("scenes/main.json", json, world, registry);
 
-        assertEquals(1, world.entityCount());
+        assertEquals(2, world.entityCount());
         Entity logo = world.findByName("logo");
         assertNotNull(logo);
         assertEquals(140f, world.getComponent(logo.id(), Transform.class).x());

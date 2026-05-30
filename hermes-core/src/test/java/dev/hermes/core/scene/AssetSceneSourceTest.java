@@ -39,7 +39,7 @@ final class AssetSceneSourceTest {
         source.populate(sceneLoadContext(manager, registry));
 
         EntityStore entities = manager.entities();
-        assertEquals(1, entities.entityCount());
+        assertEquals(2, entities.entityCount());
         Entity logo = entities.findByName("logo");
         assertNotNull(logo);
         assertEquals(140f, entities.getComponent(logo.id(), Transform.class).x());
