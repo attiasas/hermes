@@ -1,5 +1,6 @@
 package dev.hermes.core.audio;
 
+import dev.hermes.api.audio.AudioBus;
 import dev.hermes.api.audio.AudioMixer;
 import dev.hermes.api.audio.AudioService;
 import dev.hermes.api.audio.BgmController;
@@ -9,15 +10,22 @@ import dev.hermes.api.audio.SoundHandle;
 import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.scene.SceneAudioConfig;
 
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
+import dev.hermes.core.HermesAssetPaths;
+
 import java.util.Optional;
 
 /** Default {@link AudioService} using libGDX sound playback behind {@link SoundBackend}. */
 public final class AudioServiceImpl implements AudioService {
 
+    private static final Logger log = Logs.get(AudioServiceImpl.class);
+
     private final SoundBackend backend;
     private final SoundCache soundCache;
     private AudioMixer mixer;
     private AudioProfile profile;
+    private boolean missingProfileLogged;
 
     public AudioServiceImpl(SoundBackend backend, AudioMixer mixer, SoundCache soundCache) {
         this.backend = backend;
@@ -79,7 +87,26 @@ public final class AudioServiceImpl implements AudioService {
     }
 
     @Override
-    public void loadProfile(String profilePath) {}
+    public void loadProfile(String profilePath) {
+        if (profilePath == null || profilePath.isBlank()) {
+            return;
+        }
+        if (!HermesAssetPaths.internal(profilePath).exists()) {
+            if (!missingProfileLogged) {
+                log.warn("Audio profile not found: " + profilePath);
+                missingProfileLogged = true;
+            }
+            return;
+        }
+        profile = AudioProfileLoader.load(profilePath);
+        applyProfileBusVolumes();
+    }
+
+    private void applyProfileBusVolumes() {
+        for (AudioBus bus : AudioBus.values()) {
+            mixer.setVolume(bus, profile.busVolume(bus));
+        }
+    }
 
     @Override
     public void tick(float delta, WorldManager activeManager, float surfaceWidth, float surfaceHeight) {}
