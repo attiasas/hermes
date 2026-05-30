@@ -17,6 +17,11 @@ public final class InputKey {
     public static final int F1 = 131;
     public static final int ESCAPE = 111;
 
+    public static final int UP = 19;
+    public static final int DOWN = 20;
+    public static final int LEFT = 21;
+    public static final int RIGHT = 22;
+
     private static final Map<String, Integer> BY_NAME = new HashMap<>();
 
     static {
@@ -27,6 +32,10 @@ public final class InputKey {
         register("SPACE", SPACE);
         register("F1", F1);
         register("ESCAPE", ESCAPE);
+        register("UP", UP);
+        register("DOWN", DOWN);
+        register("LEFT", LEFT);
+        register("RIGHT", RIGHT);
     }
 
     private InputKey() {
