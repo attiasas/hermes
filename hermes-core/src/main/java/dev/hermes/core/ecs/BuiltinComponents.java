@@ -1,7 +1,12 @@
 package dev.hermes.core.ecs;
 
+import dev.hermes.api.ecs.AmbientLight;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.ComponentData;
 import dev.hermes.api.ecs.ComponentRegistry;
+import dev.hermes.api.ecs.DirectionalLight;
+import dev.hermes.api.ecs.PointLight;
+import dev.hermes.api.ecs.SpotLight;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.Material;
@@ -17,6 +22,7 @@ import dev.hermes.api.input.PickLayer;
 import dev.hermes.core.input.CameraSceneControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
+import dev.hermes.core.lighting.BuiltinLightingSystem;
 import dev.hermes.core.ui.UiAttachSystem;
 import dev.hermes.core.ui.UiInputSystem;
 import dev.hermes.core.ui.UiServiceImpl;
@@ -35,6 +41,10 @@ public final class BuiltinComponents {
     static final String SELECTABLE = "Selectable";
     static final String SELECTED = "Selected";
     static final String UI_ATTACH = "UiAttach";
+    static final String AMBIENT_LIGHT = "AmbientLight";
+    static final String DIRECTIONAL_LIGHT = "DirectionalLight";
+    static final String POINT_LIGHT = "PointLight";
+    static final String SPOT_LIGHT = "SpotLight";
 
     private BuiltinComponents() {
     }
@@ -154,9 +164,56 @@ public final class BuiltinComponents {
                     attach.setVisible(data.getBoolean("visible", true));
                     return attach;
                 });
+        registry.register(
+                AMBIENT_LIGHT,
+                AmbientLight.class,
+                (data, ctx) -> {
+                    AmbientLight light = new AmbientLight();
+                    light.setEnabled(data.getBoolean("enabled", true));
+                    light.setIntensity(data.getFloat("intensity", 1f));
+                    applyColor(data, light::setColor);
+                    return light;
+                });
+        registry.register(
+                DIRECTIONAL_LIGHT,
+                DirectionalLight.class,
+                (data, ctx) -> {
+                    DirectionalLight light = new DirectionalLight();
+                    light.setEnabled(data.getBoolean("enabled", true));
+                    light.setIntensity(data.getFloat("intensity", 1f));
+                    applyColor(data, light::setColor);
+                    applyDirection(data, light::setDirection);
+                    return light;
+                });
+        registry.register(
+                POINT_LIGHT,
+                PointLight.class,
+                (data, ctx) -> {
+                    PointLight light = new PointLight();
+                    light.setEnabled(data.getBoolean("enabled", true));
+                    light.setIntensity(data.getFloat("intensity", 1f));
+                    light.setRange(data.getFloat("range", 10f));
+                    applyColor(data, light::setColor);
+                    return light;
+                });
+        registry.register(
+                SPOT_LIGHT,
+                SpotLight.class,
+                (data, ctx) -> {
+                    SpotLight light = new SpotLight();
+                    light.setEnabled(data.getBoolean("enabled", true));
+                    light.setIntensity(data.getFloat("intensity", 1f));
+                    light.setRange(data.getFloat("range", 10f));
+                    light.setCutoffAngle(data.getFloat("cutoffAngle", 45f));
+                    light.setExponent(data.getFloat("exponent", 1f));
+                    applyColor(data, light::setColor);
+                    applyDirection(data, light::setDirection);
+                    return light;
+                });
     }
 
     public static void registerSystems(HermesEngine engine) {
+        engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
@@ -164,6 +221,46 @@ public final class BuiltinComponents {
             HermesEngineImpl impl = (HermesEngineImpl) engine;
             engine.addSystem(new UiInputSystem(impl), SystemScope.GLOBAL);
             engine.addSystem(new UiAttachSystem((UiServiceImpl) impl.ui(), impl.viewport()), SystemScope.GLOBAL);
+        }
+    }
+
+    @FunctionalInterface
+    private interface ColorSetter {
+        void setColor(float r, float g, float b, float a);
+    }
+
+    @FunctionalInterface
+    private interface DirectionSetter {
+        void setDirection(float x, float y, float z);
+    }
+
+    private static void applyColor(ComponentData data, ColorSetter setter) {
+        if (!(data instanceof JsonComponentData)) {
+            return;
+        }
+        JsonComponentData json = (JsonComponentData) data;
+        if (!json.has("color")) {
+            return;
+        }
+        float[] color = json.getFloatArray("color");
+        if (color.length == 3) {
+            setter.setColor(color[0], color[1], color[2], 1f);
+        } else if (color.length == 4) {
+            setter.setColor(color[0], color[1], color[2], color[3]);
+        }
+    }
+
+    private static void applyDirection(ComponentData data, DirectionSetter setter) {
+        if (!(data instanceof JsonComponentData)) {
+            return;
+        }
+        JsonComponentData json = (JsonComponentData) data;
+        if (!json.has("direction")) {
+            return;
+        }
+        float[] direction = json.getFloatArray("direction");
+        if (direction.length >= 3) {
+            setter.setDirection(direction[0], direction[1], direction[2]);
         }
     }
 

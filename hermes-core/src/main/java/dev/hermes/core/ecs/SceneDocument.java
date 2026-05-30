@@ -4,6 +4,7 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
 import dev.hermes.api.scene.SceneUiConfig;
+import dev.hermes.core.lighting.SceneLightingBlock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,13 +19,19 @@ final class SceneDocument {
     private final String renderPipeline;
     private final String inputContext;
     private final SceneUiConfig uiConfig;
+    private final Optional<SceneLightingBlock> lighting;
 
     private SceneDocument(
-            List<EntitySpec> entities, String renderPipeline, String inputContext, SceneUiConfig uiConfig) {
+            List<EntitySpec> entities,
+            String renderPipeline,
+            String inputContext,
+            SceneUiConfig uiConfig,
+            Optional<SceneLightingBlock> lighting) {
         this.entities = entities;
         this.renderPipeline = renderPipeline;
         this.inputContext = inputContext;
         this.uiConfig = uiConfig;
+        this.lighting = lighting;
     }
 
     static SceneDocument parse(String scenePath, String json) {
@@ -78,7 +85,11 @@ final class SceneDocument {
             if (root.has("ui")) {
                 uiConfig = parseUiConfig(scenePath, root.get("ui"));
             }
-            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig);
+            Optional<SceneLightingBlock> lighting = Optional.empty();
+            if (root.has("lighting")) {
+                lighting = Optional.of(parseLighting(scenePath, root.get("lighting")));
+            }
+            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig, lighting);
         } catch (SceneParseException e) {
             throw e;
         } catch (Exception e) {
@@ -100,6 +111,152 @@ final class SceneDocument {
 
     Optional<SceneUiConfig> uiConfig() {
         return Optional.ofNullable(uiConfig);
+    }
+
+    Optional<SceneLightingBlock> lighting() {
+        return lighting;
+    }
+
+    private static SceneLightingBlock parseLighting(String scenePath, JsonValue lightingValue) {
+        if (lightingValue == null || !lightingValue.isObject()) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"lighting\" must be an object.");
+        }
+        int version = lightingValue.getInt("version", -1);
+        if (version != 1) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"lighting.version\" must be 1.");
+        }
+        Optional<SceneLightingBlock.AmbientEntry> ambient = Optional.empty();
+        if (lightingValue.has("ambient")) {
+            ambient = Optional.of(parseAmbient(scenePath, lightingValue.get("ambient")));
+        }
+        Optional<SceneLightingBlock.DirectionalEntry> directional = Optional.empty();
+        if (lightingValue.has("directional")) {
+            directional = Optional.of(parseDirectional(scenePath, lightingValue.get("directional")));
+        }
+        List<SceneLightingBlock.PointLightEntry> pointLights =
+                parsePointLightArray(scenePath, lightingValue.get("point"));
+        List<SceneLightingBlock.SpotLightEntry> spotLights =
+                parseSpotLightArray(scenePath, lightingValue.get("spot"));
+        return new SceneLightingBlock(ambient, directional, pointLights, spotLights);
+    }
+
+    private static SceneLightingBlock.AmbientEntry parseAmbient(String scenePath, JsonValue value) {
+        if (value == null || !value.isObject()) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"lighting.ambient\" must be an object.");
+        }
+        float[] color = parseColor(scenePath, "lighting.ambient", value.get("color"));
+        float intensity = value.getFloat("intensity", 1f);
+        return new SceneLightingBlock.AmbientEntry(color, intensity);
+    }
+
+    private static SceneLightingBlock.DirectionalEntry parseDirectional(String scenePath, JsonValue value) {
+        if (value == null || !value.isObject()) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"lighting.directional\" must be an object.");
+        }
+        float[] color = parseColor(scenePath, "lighting.directional", value.get("color"));
+        float intensity = value.getFloat("intensity", 1f);
+        float[] direction = parseDirection(scenePath, "lighting.directional", value.get("direction"));
+        return new SceneLightingBlock.DirectionalEntry(color, intensity, direction);
+    }
+
+    private static List<SceneLightingBlock.PointLightEntry> parsePointLightArray(
+            String scenePath, JsonValue arrayValue) {
+        if (arrayValue == null) {
+            return List.of();
+        }
+        if (!arrayValue.isArray()) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"lighting.point\" must be an array.");
+        }
+        List<SceneLightingBlock.PointLightEntry> entries = new ArrayList<>();
+        for (int i = 0; i < arrayValue.size; i++) {
+            JsonValue entry = arrayValue.get(i);
+            if (entry == null || !entry.isObject()) {
+                throw new SceneParseException(
+                        "Scene '" + scenePath + "': \"lighting.point[" + i + "]\" must be an object.");
+            }
+            float[] position = parsePosition(scenePath, "lighting.point[" + i + "]", entry.get("position"));
+            float[] color = parseColor(scenePath, "lighting.point[" + i + "]", entry.get("color"));
+            float intensity = entry.getFloat("intensity", 1f);
+            float range = entry.getFloat("range", 10f);
+            entries.add(new SceneLightingBlock.PointLightEntry(position, color, intensity, range));
+        }
+        return entries;
+    }
+
+    private static List<SceneLightingBlock.SpotLightEntry> parseSpotLightArray(
+            String scenePath, JsonValue arrayValue) {
+        if (arrayValue == null) {
+            return List.of();
+        }
+        if (!arrayValue.isArray()) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"lighting.spot\" must be an array.");
+        }
+        List<SceneLightingBlock.SpotLightEntry> entries = new ArrayList<>();
+        for (int i = 0; i < arrayValue.size; i++) {
+            JsonValue entry = arrayValue.get(i);
+            if (entry == null || !entry.isObject()) {
+                throw new SceneParseException(
+                        "Scene '" + scenePath + "': \"lighting.spot[" + i + "]\" must be an object.");
+            }
+            float[] position = parsePosition(scenePath, "lighting.spot[" + i + "]", entry.get("position"));
+            float[] color = parseColor(scenePath, "lighting.spot[" + i + "]", entry.get("color"));
+            float intensity = entry.getFloat("intensity", 1f);
+            float range = entry.getFloat("range", 10f);
+            float[] direction = parseDirection(scenePath, "lighting.spot[" + i + "]", entry.get("direction"));
+            float cutoffAngle = entry.getFloat("cutoffAngle", 45f);
+            float exponent = entry.getFloat("exponent", 1f);
+            entries.add(
+                    new SceneLightingBlock.SpotLightEntry(
+                            position, color, intensity, range, direction, cutoffAngle, exponent));
+        }
+        return entries;
+    }
+
+    private static float[] parseColor(String scenePath, String fieldPath, JsonValue value) {
+        float[] color = toFloatArray(value);
+        if (color.length != 3 && color.length != 4) {
+            throw new SceneParseException(
+                    "Scene '" + scenePath + "': \"" + fieldPath + ".color\" must be a 3- or 4-element array.");
+        }
+        return color;
+    }
+
+    private static float[] parsePosition(String scenePath, String fieldPath, JsonValue value) {
+        float[] position = toFloatArray(value);
+        if (position.length < 3) {
+            throw new SceneParseException(
+                    "Scene '" + scenePath + "': \"" + fieldPath + ".position\" must be a 3-element array.");
+        }
+        return position;
+    }
+
+    private static float[] parseDirection(String scenePath, String fieldPath, JsonValue value) {
+        if (value == null) {
+            return new float[0];
+        }
+        float[] direction = toFloatArray(value);
+        if (direction.length < 3) {
+            throw new SceneParseException(
+                    "Scene '" + scenePath + "': \"" + fieldPath + ".direction\" must be a 3-element array.");
+        }
+        return direction;
+    }
+
+    private static float[] toFloatArray(JsonValue value) {
+        if (value == null || value.isNull()) {
+            return new float[0];
+        }
+        if (value.isArray()) {
+            float[] arr = new float[value.size];
+            for (int i = 0; i < value.size; i++) {
+                arr[i] = value.getFloat(i);
+            }
+            return arr;
+        }
+        if (value.isNumber()) {
+            return new float[] {value.asFloat()};
+        }
+        return new float[0];
     }
 
     private static SceneUiConfig parseUiConfig(String scenePath, JsonValue uiValue) {

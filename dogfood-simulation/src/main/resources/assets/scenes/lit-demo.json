@@ -1,0 +1,42 @@
+{
+  "lighting": {
+    "version": 1,
+    "ambient": { "color": [0.08, 0.08, 0.12, 1], "intensity": 1 },
+    "directional": {
+      "color": [1, 0.92, 0.75, 1],
+      "intensity": 1.15,
+      "direction": [-0.5, -1, -0.2]
+    }
+  },
+  "entities": [
+    {
+      "id": "cam",
+      "components": {
+        "Transform": { "x": 0, "y": 2, "z": 6 },
+        "Camera": {
+          "projection": "perspective",
+          "active": true,
+          "fieldOfView": 60
+        }
+      }
+    },
+    {
+      "type": "spin-cube",
+      "id": "cube"
+    },
+    {
+      "type": "torch",
+      "id": "torch-a",
+      "components": {
+        "Transform": { "x": -2, "z": 0 }
+      }
+    },
+    {
+      "type": "torch",
+      "id": "torch-b",
+      "components": {
+        "Transform": { "x": 2, "z": 0 }
+      }
+    }
+  ]
+}

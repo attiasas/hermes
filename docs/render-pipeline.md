@@ -45,10 +45,41 @@ Passes that target an unknown framebuffer id fail at graph build time.
 
 | `type`    | Description                                                                               |
 |-----------|-------------------------------------------------------------------------------------------|
-| `world3d` | Meshes with materials; perspective/ortho from active `Camera`.                            |
+| `world3d` | Meshes with materials; perspective/ortho from active `Camera`. Supports optional `lighting` budgets. |
 | `sprites` | `Sprite` entities on `RenderLayer.WORLD`.                                                  |
 | `ui`      | Scene widget trees via `UiRenderPass` / `UiService`; `depthTest` usually `false`.         |
 | `custom`  | Code-registered pass; requires `handler` matching `HermesApplication.configureRendering`. |
+
+### World3d pass lighting budgets
+
+Each `world3d` pass may declare a `lighting` object that caps how many lights the forward shader compiles for that
+graph. Budgets are applied when the scene loads and stored on the internal scene lighting state.
+
+```json
+{
+  "id": "world3d",
+  "type": "world3d",
+  "target": "screen",
+  "layers": ["WORLD"],
+  "lighting": {
+    "maxDirectional": 1,
+    "maxPoint": 8,
+    "maxSpot": 2
+  }
+}
+```
+
+| Field | Default | Maps to |
+|-------|---------|---------|
+| `maxDirectional` | `1` | libGDX `DefaultShader.Config.numDirectionalLights` |
+| `maxPoint` | `0` | `numPointLights` |
+| `maxSpot` | `0` | `numSpotLights` |
+
+Omitted `lighting` on a pass → `{1, 0, 0}`. When a pipeline has multiple `world3d` passes, the engine takes the
+**element-wise max** across passes (one shader registry per graph). If more point or spot lights exist in the scene
+than the budget allows, lights nearest the active camera are kept.
+
+High point counts are costly on WebGL; prefer conservative `maxPoint` for HTML builds. See [world-lighting.md](world-lighting.md).
 
 ### Custom passes
 
@@ -75,9 +106,13 @@ pass that draws meshes using those uniforms.
 
 ### Shaders: g3d vs SpriteBatch
 
-`default/unlit` assets under `shaders/default.vert` / `shaders/default.frag` are **g3d** shaders for `Mesh` /
-`world3d` (`u_projViewTrans`). `SpritesPass` keeps SpriteBatch's built-in shader unless a registered vertex shader
-declares `u_projTrans`. Custom 2D sprite shaders must include that uniform.
+| Shader id | Assets | Use |
+|-----------|--------|-----|
+| `default/lit` | `shaders/default.vert` + `shaders/default.frag` | Forward-lit 3D `Mesh` / `world3d` (`u_projViewTrans`); requires vertex normals |
+| `default/unlit` | `shaders/default.vert` + `shaders/default-unlit.frag` | Flat albedo (no lighting); sprites and unlit props |
+
+`SpritesPass` keeps SpriteBatch's built-in shader unless a registered vertex shader declares `u_projTrans`. Custom 2D
+sprite shaders must include that uniform.
 
 ### GLES uniform precision
 

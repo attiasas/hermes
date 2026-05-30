@@ -121,7 +121,7 @@ Multiple bindings may target the same axis action (e.g. WASD + stick). Contribut
 
 Parsed via `InputKey.byName` (libGDX `Input.Keys` values):
 
-`A`, `D`, `S`, `W`, `SPACE`, `F1`, `ESCAPE`
+`A`, `D`, `S`, `W`, `SPACE`, `ENTER`, `Q`, `F1`, `ESCAPE`, `UP`, `DOWN`, `LEFT`, `RIGHT`
 
 Additional keys can be added to `hermes-api` as the engine grows; until then, use `devices().keyboard()` with raw key
 codes for unlisted keys.

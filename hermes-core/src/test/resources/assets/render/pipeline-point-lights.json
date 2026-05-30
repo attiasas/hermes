@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "passes": [
+    {
+      "id": "world3d",
+      "type": "world3d",
+      "target": "screen",
+      "layers": ["WORLD"],
+      "lighting": {
+        "maxPoint": 4
+      }
+    }
+  ]
+}

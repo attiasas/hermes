@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "passes": [
+    {
+      "id": "sprites",
+      "type": "sprites",
+      "target": "screen",
+      "layers": ["WORLD"]
+    }
+  ]
+}

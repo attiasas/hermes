@@ -168,6 +168,6 @@ final class ScenePipelineOverrideTest {
                     }
                 });
 
-        assertEquals(0, manager.entities().entityCount());
+        assertEquals(1, manager.entities().entityCount());
     }
 }

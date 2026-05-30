@@ -15,9 +15,13 @@
     }
   ],
   "shaders": {
-    "default/unlit": {
+    "default/lit": {
       "vertex": "shaders/default.vert",
       "fragment": "shaders/default.frag"
+    },
+    "default/unlit": {
+      "vertex": "shaders/default.vert",
+      "fragment": "shaders/default-unlit.frag"
     }
   },
   "passes": [
@@ -27,7 +31,12 @@
       "target": "screen",
       "layers": [
         "WORLD"
-      ]
+      ],
+      "lighting": {
+        "maxDirectional": 1,
+        "maxPoint": 8,
+        "maxSpot": 0
+      }
     },
     {
       "id": "sprites",
