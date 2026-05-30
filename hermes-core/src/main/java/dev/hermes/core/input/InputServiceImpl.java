@@ -77,6 +77,13 @@ public final class InputServiceImpl implements InputService {
         return worldPicker.pick(entities, screenX, screenY, layer);
     }
 
+    @Override
+    public void pulseAction(String action) {
+        if (action != null && !action.isBlank()) {
+            actionsState.setJustPressed(action);
+        }
+    }
+
     private String resolveContext() {
         SceneHandle active = engine.scenes().active();
         if (active != null) {

@@ -62,6 +62,14 @@ public final class UiNode {
         return node;
     }
 
+    public static UiNode button(String id, String text, String action) {
+        UiNode node = new UiNode("button");
+        node.setId(id);
+        node.setProp("text", text);
+        node.setProp("action", action);
+        return node;
+    }
+
     public List<UiNode> children() {
         return Collections.unmodifiableList(children);
     }

@@ -18,6 +18,7 @@ import dev.hermes.core.input.CameraSceneControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
 import dev.hermes.core.ui.UiAttachSystem;
+import dev.hermes.core.ui.UiInputSystem;
 import dev.hermes.core.ui.UiServiceImpl;
 
 import java.util.HashMap;
@@ -161,6 +162,7 @@ public final class BuiltinComponents {
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
         if (engine instanceof HermesEngineImpl) {
             HermesEngineImpl impl = (HermesEngineImpl) engine;
+            engine.addSystem(new UiInputSystem(impl), SystemScope.GLOBAL);
             engine.addSystem(new UiAttachSystem((UiServiceImpl) impl.ui(), impl.viewport()), SystemScope.GLOBAL);
         }
     }
