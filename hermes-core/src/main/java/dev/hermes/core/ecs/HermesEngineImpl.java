@@ -11,7 +11,9 @@ import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.core.config.RuntimeConfigServices;
 import dev.hermes.core.input.InputServiceImpl;
+import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
+import dev.hermes.api.ui.UiService;
 import dev.hermes.api.viewport.ViewportService;
 
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ public final class HermesEngineImpl implements HermesEngine {
     private final EntityTypeRegistryImpl entityTypes = new EntityTypeRegistryImpl();
     private final ViewportServiceImpl viewport = new ViewportServiceImpl();
     private final InputServiceImpl input;
+    private final UiServiceImpl ui = new UiServiceImpl();
     private final List<SystemEntry> systems = new ArrayList<>();
 
     public HermesEngineImpl() {
@@ -93,6 +96,11 @@ public final class HermesEngineImpl implements HermesEngine {
     @Override
     public RuntimeConfigService runtimeConfig() {
         return RuntimeConfigServices.get();
+    }
+
+    @Override
+    public UiService ui() {
+        return ui;
     }
 
     public List<SystemEntry> systems() {
