@@ -5,8 +5,6 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
@@ -19,6 +17,7 @@ import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.core.lighting.LightingRuntime;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ModelCache;
@@ -41,7 +40,6 @@ public final class World3dPass {
     private final ShaderRegistry shaderRegistry;
     private final boolean disposeModelCache;
     private final ModelBatch modelBatch;
-    private final Environment environment = new Environment();
     private final Matrix4 instanceTransform = new Matrix4();
     private final Map<String, Shader> g3dShaderCache = new HashMap<>();
     private final RenderablePool renderablePool = new RenderablePool();
@@ -64,8 +62,6 @@ public final class World3dPass {
         this.shaderRegistry = shaderRegistry;
         this.disposeModelCache = disposeModelCache;
         this.modelBatch = new ModelBatch();
-        environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
-        environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
     }
 
     public void resize(int width, int height) {
@@ -81,14 +77,15 @@ public final class World3dPass {
             return;
         }
 
+        Environment environment = LightingRuntime.require(entities);
         modelBatch.begin(bound.gdxCamera());
         for (Entity entity : drawables) {
-            drawMesh(entities, entity);
+            drawMesh(entities, entity, environment);
         }
         modelBatch.end();
     }
 
-    private void drawMesh(EntityStore entities, Entity entity) {
+    private void drawMesh(EntityStore entities, Entity entity, Environment environment) {
         Transform transform = entities.getComponent(entity.id(), Transform.class);
         Mesh mesh = entities.getComponent(entity.id(), Mesh.class);
         Material material = entities.getComponent(entity.id(), Material.class);
@@ -108,7 +105,7 @@ public final class World3dPass {
         ModelInstance instance = new ModelInstance(modelCache.get(modelPath));
         applyTransform(instance.transform, transform);
 
-        Shader g3dShader = resolveG3dShader(shaderId, instance);
+        Shader g3dShader = resolveG3dShader(shaderId, instance, environment);
         if (g3dShader != null) {
             applyMaterialUniforms(g3dShader, material);
             modelBatch.render(instance, environment, g3dShader);
@@ -117,7 +114,7 @@ public final class World3dPass {
         }
     }
 
-    private Shader resolveG3dShader(String shaderId, ModelInstance instance) {
+    private Shader resolveG3dShader(String shaderId, ModelInstance instance, Environment environment) {
         if (shaderRegistry == null || shaderRegistry.usesBuiltin(shaderId)) {
             return null;
         }
