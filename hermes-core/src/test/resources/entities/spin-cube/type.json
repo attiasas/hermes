@@ -1,7 +1,13 @@
 {
   "version": 1,
   "components": {
-    "Transform": { "z": 0 },
-    "Material": { "shader": "default/unlit" }
+    "Transform": { "x": 0, "y": 0, "z": 0 },
+    "Material": { "shader": "default/unlit" },
+    "SpinMarker": {
+      "centerX": { "$ref": "Transform.x" },
+      "centerY": { "$ref": "Transform.y" },
+      "speed": 1,
+      "radius": 1
+    }
   }
 }

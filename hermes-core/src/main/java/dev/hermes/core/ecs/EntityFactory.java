@@ -34,6 +34,7 @@ final class EntityFactory {
                         : ((EntityTypeDefinitionImpl) types.require(normalizedKind)).componentsJson();
         JsonValue merged =
                 ComponentMerge.merge(template, ComponentMerge.toJsonObject(instanceComponents));
+        ComponentRefResolver.resolve(sourcePath, name, merged);
         EntityKind entityKind =
                 normalizedKind.isEmpty() ? EntityKind.UNSET : EntityKind.of(normalizedKind);
         Entity entity = store.create(name, entityKind);
