@@ -17,6 +17,22 @@ public final class Rect4 {
         this.height = height;
     }
 
+    public float x() {
+        return x;
+    }
+
+    public float y() {
+        return y;
+    }
+
+    public float width() {
+        return width;
+    }
+
+    public float height() {
+        return height;
+    }
+
     public Rect4 set(float x, float y, float width, float height) {
         this.x = x;
         this.y = y;

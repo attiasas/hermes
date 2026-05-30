@@ -95,4 +95,18 @@ public final class UiLayout {
     public void setZIndex(int zIndex) {
         this.zIndex = zIndex;
     }
+
+    public static UiLayout stretch() {
+        UiLayout layout = new UiLayout();
+        layout.setAnchor(UiAnchor.STRETCH);
+        return layout;
+    }
+
+    public static UiLayout of(UiAnchor anchor, float width, float height) {
+        UiLayout layout = new UiLayout();
+        layout.setAnchor(anchor);
+        layout.setWidth(width);
+        layout.setHeight(height);
+        return layout;
+    }
 }

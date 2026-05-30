@@ -44,6 +44,24 @@ public final class UiNode {
         this.layout = layout == null ? new UiLayout() : layout;
     }
 
+    public UiNode layout(UiLayout layout) {
+        setLayout(layout);
+        return this;
+    }
+
+    public static UiNode panel(String id) {
+        UiNode node = new UiNode("panel");
+        node.setId(id);
+        return node;
+    }
+
+    public static UiNode label(String id, String text) {
+        UiNode node = new UiNode("label");
+        node.setId(id);
+        node.setProp("text", text);
+        return node;
+    }
+
     public List<UiNode> children() {
         return Collections.unmodifiableList(children);
     }
