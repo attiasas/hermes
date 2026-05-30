@@ -67,7 +67,7 @@ Pipeline JSON references the handler by id:
 { "id": "water", "type": "custom", "handler": "water", "target": "screen" }
 ```
 
-Unregistered handlers fail at graph build time. Custom passes receive the active scene `World` each frame (no libGDX
+Unregistered handlers fail at graph build time. Custom passes receive the active scene `EntityStore` each frame (no libGDX
 types in the API).
 
 Custom passes that only update uniforms (for example `WaterPass` ticking `u_time`) must run **before** the `world3d`

@@ -35,9 +35,10 @@ load time with `SceneParseException`.
 | `inputContext`          | No       | Overrides the input profile default context while this scene is active (top of stack). Non-empty string. See [input-format-v1.md](input-format-v1.md).                                                                            |
 | `entities`              | No       | Array of entity objects. Omitted or empty means an empty scene.                                                                                                                                                                   |
 | `entities[]`            | —        | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`.                                                                                                                                 |
-| `entities[].id`         | No       | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime.                                                                                                                                    |
-| `entities[].kind`       | No       | Optional logical type tag (e.g. `"character"`, `"prop"`). Omitted entities use the unset kind. Used for `World.entitiesWithKind` and future save/load; does not affect component parsing.                                         |
-| `entities[].components` | No       | Map of component type name → property object.                                                                                                                                                                                     |
+| `entities[].id`         | No       | Logical name for lookup and error messages. Duplicate names in the same scene fail at runtime.                                                                                                                                    |
+| `entities[].type`       | No       | Entity template kind (preferred). Loads `assets/entities/<kind>/type.json` when registered, then merges scene `components`. See [entity-types.md](entity-types.md).                                                              |
+| `entities[].kind`       | No       | Alias for `type`. If both are set, `type` wins. Unregistered kind → tag-only (`EntityKind` stored, no template merge).                                                                                                          |
+| `entities[].components` | No       | Map of component type name → property object. Deep-merged on top of the type template when `"type"`/`"kind"` is set and registered.                                                                                               |
 | `renderPipeline`        | No       | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 
 ## Built-in component types
@@ -151,7 +152,7 @@ See [input.md](input.md).
 ### Selected
 
 Empty marker component. `SelectionSystem` adds it to the picked entity and clears any previous `Selected`. Games may read
-`world.entitiesWith(Selected.class)` for highlighting or custom logic. Not typically placed in scene JSON.
+`manager.entities().entitiesWith(Selected.class)` for highlighting or custom logic. Not typically placed in scene JSON.
 
 ### Camera properties
 
@@ -180,3 +181,22 @@ Register types in `onCreate(HermesEngine engine)` via `engine.registry().registe
 implementation that registers both the component deserializer and any systems.
 
 Unknown component type names fail at load time with a message naming the scene file, entity, and type.
+
+## Entity types and template merge
+
+Reusable templates live at `assets/entities/<kind>/type.json`. Reference them from scene JSON:
+
+```json
+{
+  "type": "spin-cube",
+  "id": "cube",
+  "components": {
+    "Transform": { "x": 3 }
+  }
+}
+```
+
+Merge order: type template `components` → scene `components` (instance wins) → `$ref` resolve → deserialize.
+Property wiring between sibling components uses `"$ref": "Transform.x"` (v1: `Transform.x|y|z` only).
+
+Full rules, `spawn()`, and complexity tiers: [entity-types.md](entity-types.md).

@@ -8,7 +8,7 @@ import java.util.Map;
 import com.badlogic.gdx.utils.JsonValue;
 
 /**
- * Loads a scene document into a world using an entity factory.
+ * Loads a scene document into an entity store using an entity factory.
  */
 final class SceneParser {
 

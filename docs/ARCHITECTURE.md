@@ -15,7 +15,7 @@ dogfood-simulation ──api──► hermes-api ◄── hermes-core (+ libGDX
 
 | Module                 | Role                                                                                                                                                                                               |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hermes-api`           | Public types: `HermesApplication`, ECS (`World`, `Component`, `System`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, scene-facing components (`Transform`, `Sprite`, `Camera`, `Selectable`). No libGDX. |
+| `hermes-api`           | Public types: `HermesApplication`, ECS (`WorldManager`, `EntityStore`, `Component`, `System`), entity types (`EntityTypeRegistry`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, scene-facing components (`Transform`, `Sprite`, `Camera`, `Selectable`). No libGDX. |
 | `hermes-core`          | Engine implementation: `SceneManagerImpl`, scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath).                                         |
 | `hermes-launcher-*`    | Platform entrypoints (LWJGL3, TeaVM, Android). Depend on `hermes-core`. Included by the settings plugin when enabled.                                                                              |
 | `dogfood-simulation`   | Engine monorepo dogfood game. `api` → `hermes-api`, `runtimeOnly` → `hermes-core`.                                                                    |
@@ -173,10 +173,27 @@ Games interact with scenes through `HermesEngine.scenes()` (`SceneManager`):
 
 - **Registration** — `scenes().registry().register(id, assetPath)` or a full `SceneDefinition`.
 - **Transitions** — queue `SceneChangeRequest.goTo`, `push`, or `pop`; the launcher calls `processPending()` each frame.
-- **Active world** — `scenes().activeWorld()` for the top scene; `visibleScenes()` for bottom-to-top rendering.
+- **Active scene** — `scenes().activeManager()` for the top scene’s `WorldManager`; `visibleScenes()` for bottom-to-top rendering.
 
-Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, calls `onCreate` (component/system
-registration), then requests `goTo("main")`. See [Scene management](scene-management.md).
+Bootstrap: the launcher registers the `hermes.json` `scene` path as `"main"`, scans `assets/entities/*/type.json` via
+`engine.entityTypes().scanAssets()`, calls `onCreate` (component/system registration), then requests `goTo("main")`.
+See [Scene management](scene-management.md).
+
+## ECS
+
+Each loaded scene owns one **`WorldManager`** — the simulation root for that scene. Systems receive `WorldManager` in
+`update` / `render`; render and input APIs take **`EntityStore`** from `manager.entities()`.
+
+| Type | Role |
+|------|------|
+| `WorldManager` | Per-scene root; today exposes `entities()` only |
+| `EntityStore` | Entity storage, components, queries, `spawn(kind)` |
+| `EntityTypeRegistry` | Template catalog (`entities/<kind>/type.json`); `engine.entityTypes()` |
+
+Entity creation (scene load and `spawn`) runs through **`EntityFactory`**: merge type template + instance overrides →
+`ComponentRefResolver` (`$ref`) → deserialize. Inline scene entities without a registered type skip template merge.
+
+See [Entity types](entity-types.md) and [Scene format v1](scene-format-v1.md).
 
 ## Input
 
@@ -200,5 +217,6 @@ and [coordinate-spaces.md](coordinate-spaces.md).
 - [Coordinate spaces & viewport service](coordinate-spaces.md)
 - [Render pipeline](render-pipeline.md)
 - [Scene format v1](scene-format-v1.md)
+- [Entity types](entity-types.md)
 - [Contributing](CONTRIBUTING.md)
 - [Docs index](README.md)

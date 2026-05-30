@@ -51,7 +51,7 @@ public final class SpritesPass {
     }
 
     public void render(EntityStore entities) {
-        throw new UnsupportedOperationException("Use render(World, layers, BoundCamera)");
+        throw new UnsupportedOperationException("Use render(EntityStore, layers, BoundCamera)");
     }
 
     public void render(EntityStore entities, Set<RenderLayer.Layer> layers, BoundCamera bound) {

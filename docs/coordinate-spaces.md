@@ -25,16 +25,17 @@ Hermes uses four canonical coordinate spaces. All projection, `glViewport`, and 
 ```java
 HermesEngine engine = ...;
 ViewportService vp = engine.viewport();
+EntityStore entities = engine.scenes().activeManager().entities();
 
 // Backbuffer pick (full-screen games)
-Vec3 world = new Vec3();
-vp.screenToWorld(world, pointerX, pointerY, 0f, world);
+Vec3 worldPt = new Vec3();
+vp.screenToWorld(entities, pointerX, pointerY, 0f, worldPt);
 
 // Per-surface (FBO workflows)
-RenderSurfaceDesc surface = vp.backbufferSurface(world);
+RenderSurfaceDesc surface = vp.backbufferSurface(entities);
 Vec2 surfacePx = new Vec2();
 vp.mapScreenToSurface(pointerX, pointerY, surface, surfacePx);
-vp.forSurface(world, surface).screenToWorld(surfacePx.x, surfacePx.y, 0f, world);
+vp.forSurface(entities, surface).screenToWorld(surfacePx.x, surfacePx.y, 0f, worldPt);
 ```
 
 ## Render pipeline integration
@@ -43,7 +44,7 @@ Each outer `TargetBindingGraphPass`:
 
 1. Binds the pass target (backbuffer or FBO).
 2. Builds a `RenderSurface` from FBO/window pixel size + camera `fitMode` / `designAspect`.
-3. Resolves the camera with `CameraResolver.resolveForPass(world, targetId, surfaceW, surfaceH)`.
+3. Resolves the camera with `CameraResolver.resolveForPass(entities, targetId, surfaceW, surfaceH)`.
 4. Binds `SceneCamera` via `ViewportCameraBinder`, applies `glViewport` to the letterbox rect.
 5. Passes `BoundCamera` to `World3dPass`, `SpritesPass`, `UiPass`, or `RenderContext` for custom passes.
 

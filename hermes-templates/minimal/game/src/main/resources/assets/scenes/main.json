@@ -16,26 +16,8 @@
       }
     },
     {
-      "id": "cube",
-      "components": {
-        "Transform": {
-          "z": 0
-        },
-        "Mesh": {
-          "model": "models/cube.obj"
-        },
-        "Material": {
-          "shader": "default/unlit"
-        },
-        "PulseMarker": {
-          "amplitude": 0.15,
-          "speed": 2.5
-        },
-        "Selectable": {
-          "radius": 1.2,
-          "layer": "WORLD"
-        }
-      }
+      "type": "logo",
+      "id": "cube"
     }
   ]
 }
