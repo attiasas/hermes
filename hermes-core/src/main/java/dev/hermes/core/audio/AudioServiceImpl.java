@@ -14,6 +14,8 @@ import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.core.HermesAssetPaths;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /** Default {@link AudioService} using libGDX sound playback behind {@link SoundBackend}. */
@@ -27,6 +29,8 @@ public final class AudioServiceImpl implements AudioService {
     private AudioMixer mixer;
     private AudioProfile profile;
     private boolean missingProfileLogged;
+    private final Map<String, SceneAudioConfig> sceneConfigs = new HashMap<>();
+    private String bgmOwnerSceneId;
 
     public AudioServiceImpl(SoundBackend backend, AudioMixer mixer, SoundCache soundCache) {
         this(backend, new NoopMusicBackend(), mixer, soundCache);
@@ -126,16 +130,54 @@ public final class AudioServiceImpl implements AudioService {
     }
 
     @Override
-    public void onSceneEnter(String sceneId, Optional<SceneAudioConfig> config) {}
+    public void onSceneEnter(String sceneId, Optional<SceneAudioConfig> config) {
+        config.ifPresent(c -> sceneConfigs.put(sceneId, c));
+        if (!config.isPresent()) {
+            return;
+        }
+        SceneAudioConfig audioConfig = config.get();
+        Optional<String> playlistPath = resolvePlaylistPath(audioConfig);
+        if (playlistPath.isPresent()) {
+            bgmOwnerSceneId = sceneId;
+            bgm().crossfadeTo(playlistPath.get(), audioConfig.fadeInSeconds());
+        }
+    }
 
     @Override
-    public void onSceneExit(String sceneId) {}
+    public void onSceneExit(String sceneId) {
+        SceneAudioConfig config = sceneConfigs.remove(sceneId);
+        if (sceneId.equals(bgmOwnerSceneId)) {
+            float fadeOut = config != null ? config.fadeOutSeconds() : 1f;
+            bgm().stop(fadeOut);
+            bgmOwnerSceneId = null;
+        }
+    }
 
     @Override
-    public void onScenePause(String sceneId) {}
+    public void onScenePause(String sceneId) {
+        SceneAudioConfig config = sceneConfigs.get(sceneId);
+        if (config != null && config.pauseBgmOnPause()) {
+            bgm().pause();
+        }
+    }
 
     @Override
-    public void onSceneResume(String sceneId) {}
+    public void onSceneResume(String sceneId) {
+        SceneAudioConfig config = sceneConfigs.get(sceneId);
+        if (config != null && config.pauseBgmOnPause()) {
+            bgm().resume();
+        }
+    }
+
+    private static Optional<String> resolvePlaylistPath(SceneAudioConfig config) {
+        if (config.bgmPlaylistPath().isPresent()) {
+            return config.bgmPlaylistPath();
+        }
+        if (config.bgmPlaylistId().isPresent()) {
+            return Optional.of("audio/bgm/" + config.bgmPlaylistId().get() + ".json");
+        }
+        return Optional.empty();
+    }
 
     private static final class NoopMusicBackend implements MusicBackend {
 
