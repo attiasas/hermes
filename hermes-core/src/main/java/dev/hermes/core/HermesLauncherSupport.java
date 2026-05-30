@@ -64,4 +64,8 @@ public final class HermesLauncherSupport {
     public static String gameRenderPipelinePath() {
         return RuntimeConfigServices.get().gameRenderPipeline();
     }
+
+    public static String inputProfilePath() {
+        return RuntimeConfigServices.get().gameInputProfile();
+    }
 }

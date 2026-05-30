@@ -145,10 +145,24 @@ final class SceneParserTest {
                         + "  \"entities\": []\n"
                         + "}\n";
 
-        Optional<String> override =
+        SceneLoadMetadata metadata =
                 SceneLoader.loadFromString("scenes/overlay.json", json, world, registry);
 
-        assertEquals(Optional.of("render/ui-overlay.json"), override);
+        assertEquals(Optional.of("render/ui-overlay.json"), metadata.renderPipeline());
+    }
+
+    @Test
+    void loadsOptionalInputContext() {
+        String json =
+                "{\n"
+                        + "  \"inputContext\": \"menu\",\n"
+                        + "  \"entities\": []\n"
+                        + "}\n";
+
+        SceneLoadMetadata metadata =
+                SceneLoader.loadFromString("scenes/menu.json", json, world, registry);
+
+        assertEquals(Optional.of("menu"), metadata.inputContext());
     }
 
     @Test

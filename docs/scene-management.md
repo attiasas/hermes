@@ -86,6 +86,25 @@ engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
 
 Global systems still receive `render(world)` for each visible scene from the launcher loop.
 
+## Built-in pointer demos
+
+Stock `main.json` scenes ship with `Selectable` entities and `input/profile.json` (pointer → `select`). The engine
+registers three GLOBAL input systems in `BuiltinComponents`:
+
+| Camera projection | Pointer behavior |
+|-------------------|------------------|
+| **Perspective (3D)** | Click entity → select; drag empty space → orbit active camera (`CameraSceneControlSystem`). |
+| **Orthographic (2D)** | Click sprite → select; drag → move selected entity (`EntityDragSystem`). |
+
+| Project | Scene | Demo |
+|---------|-------|------|
+| `dogfood-simulation` | `scenes/main.json` | 3D cube with `Selectable`; orbit on empty drag |
+| `hermes-templates/minimal` | `scenes/main.json` | Same 3D cube demo |
+| `hermes-templates/multi-scene` | `scenes/main.json` | Same; overlay pause scene via `SceneNavigationSystem` |
+| `hermes-templates/2d` | `scenes/main.json` | Two sprites; click and drag to move |
+
+Run dogfood: `./gradlew :dogfood-simulation:hermesRunDesktop`. Details: [input.md](input.md).
+
 ## Entity kinds and saves (future)
 
 Scene JSON may set an optional [`kind`](scene-format-v1.md) on entities (e.g. `"character"`, `"prop"`). Kinds are
@@ -97,5 +116,6 @@ rules change.
 
 ## Related docs
 
-- [Scene format v1](scene-format-v1.md) — JSON entity/component schema (`Material`, `Mesh`, `RenderLayer`)
+- [Input system](input.md) — profiles, picking, built-in selection and drag
+- [Scene format v1](scene-format-v1.md) — JSON entity/component schema (`Material`, `Mesh`, `RenderLayer`, `Selectable`)
 - [Architecture](ARCHITECTURE.md) — module boundaries and launcher bootstrap order

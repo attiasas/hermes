@@ -22,6 +22,7 @@ def winIconPath = providers.provider { findProperty('hermesWinIcon') }
 dependencies {
     implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    implementation "com.badlogicgames.gdx-controllers:gdx-controllers-desktop:$gdxControllersVersion"
 
     constraints {
         implementation("org.lwjgl:lwjgl:$lwjgl3Version")

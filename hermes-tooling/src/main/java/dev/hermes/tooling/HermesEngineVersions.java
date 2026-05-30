@@ -16,6 +16,7 @@ public final class HermesEngineVersions {
 
     public static final String[] GRADLE_PROPERTY_KEYS = {
             "gdxVersion",
+            "gdxControllersVersion",
             "lwjgl3Version",
             "gdxTeaVMVersion",
             "android.useAndroidX",
@@ -32,6 +33,7 @@ public final class HermesEngineVersions {
     };
 
     private static final String DEFAULT_GDX_VERSION = "1.14.0";
+    private static final String DEFAULT_GDX_CONTROLLERS_VERSION = "2.2.4";
     private static final String DEFAULT_LWJGL3_VERSION = "3.4.1";
     private static final String DEFAULT_GDX_TEAVM_VERSION = "1.5.5";
     private static final String DEFAULT_ANDROID_USE_ANDROIDX = "true";
@@ -59,6 +61,7 @@ public final class HermesEngineVersions {
     public static Properties defaults() {
         Properties props = new Properties();
         props.setProperty("gdxVersion", DEFAULT_GDX_VERSION);
+        props.setProperty("gdxControllersVersion", DEFAULT_GDX_CONTROLLERS_VERSION);
         props.setProperty("lwjgl3Version", DEFAULT_LWJGL3_VERSION);
         props.setProperty("gdxTeaVMVersion", DEFAULT_GDX_TEAVM_VERSION);
         props.setProperty("android.useAndroidX", DEFAULT_ANDROID_USE_ANDROIDX);

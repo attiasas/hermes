@@ -12,16 +12,16 @@ import java.util.List;
 /**
  * {@link GL20} mock that records framebuffer bind calls for render pipeline tests.
  */
-final class FramebufferGlMock {
+public final class FramebufferGlMock {
 
     private FramebufferGlMock() {
     }
 
-    static RecordingGl create() {
+    public static RecordingGl create() {
         return new RecordingGl();
     }
 
-    static final class RecordingGl implements InvocationHandler {
+    public static final class RecordingGl implements InvocationHandler {
         private final GL20 delegate = ShaderCompileGlMock.create();
         private final List<Integer> bindFramebufferCalls = new ArrayList<>();
         private final List<int[]> viewportCalls = new ArrayList<>();
@@ -29,7 +29,7 @@ final class FramebufferGlMock {
         private int nextTextureId = 20;
         private int nextBufferId = 30;
 
-        GL20 gl() {
+        public GL20 gl() {
             return (GL20) Proxy.newProxyInstance(GL20.class.getClassLoader(), new Class<?>[]{GL20.class}, this);
         }
 
@@ -37,11 +37,11 @@ final class FramebufferGlMock {
             return List.copyOf(bindFramebufferCalls);
         }
 
-        List<int[]> viewportCalls() {
+        public List<int[]> viewportCalls() {
             return List.copyOf(viewportCalls);
         }
 
-        void clearViewportCalls() {
+        public void clearViewportCalls() {
             viewportCalls.clear();
         }
 

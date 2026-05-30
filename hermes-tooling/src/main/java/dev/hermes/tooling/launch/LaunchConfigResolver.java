@@ -30,6 +30,7 @@ public final class LaunchConfigResolver {
                         .windowSize(desktop.getWidth(), desktop.getHeight())
                         .scene(game.getScene())
                         .renderPipeline(game.getRenderPipeline())
+                        .inputProfile(game.getInputProfile())
                         .desktopVsync(desktop.isVsync())
                         .desktopResizable(desktop.isResizable())
                         .desktopForegroundFps(desktop.getForegroundFps())

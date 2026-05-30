@@ -1,0 +1,25 @@
+{
+  "entities": [
+    {
+      "id": "cam",
+      "components": {
+        "Transform": {
+          "x": 0,
+          "y": 2,
+          "z": 5,
+          "rotationY": 0
+        },
+        "Camera": {
+          "projection": "perspective",
+          "active": true,
+          "fitMode": "stretch",
+          "lookAt": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          }
+        }
+      }
+    }
+  ]
+}

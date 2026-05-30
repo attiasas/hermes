@@ -1,6 +1,7 @@
 package dev.hermes.api.ecs;
 
 import dev.hermes.api.config.RuntimeConfigService;
+import dev.hermes.api.input.InputService;
 import dev.hermes.api.scene.SceneManager;
 import dev.hermes.api.viewport.ViewportService;
 
@@ -14,6 +15,8 @@ public interface HermesEngine {
     ComponentRegistry registry();
 
     ViewportService viewport();
+
+    InputService input();
 
     void addSystem(System system);
 

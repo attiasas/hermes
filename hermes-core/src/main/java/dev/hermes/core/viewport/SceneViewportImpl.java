@@ -45,9 +45,23 @@ public final class SceneViewportImpl implements SceneViewport {
 
     @Override
     public void screenToWorld(float screenX, float screenY, float worldZ, Vec3 out) {
-        scratch.set(screenX, screenY, worldZ);
-        bound.gdxCamera().unproject(scratch);
-        out.set(scratch.x, scratch.y, scratch.z);
+        com.badlogic.gdx.graphics.Camera gdx = bound.gdxCamera();
+        Rect4 rect = bound.viewportRect();
+        screenY = rect.height - screenY + 2f * rect.y;
+        scratch.set(screenX, screenY, 0f);
+        gdx.unproject(scratch);
+        float nearX = scratch.x;
+        float nearY = scratch.y;
+        float nearZ = scratch.z;
+        scratch.set(screenX, screenY, 1f);
+        gdx.unproject(scratch);
+        float dz = scratch.z - nearZ;
+        if (Math.abs(dz) < 1e-6f) {
+            out.set(nearX, nearY, nearZ);
+            return;
+        }
+        float t = (worldZ - nearZ) / dz;
+        out.set(nearX + (scratch.x - nearX) * t, nearY + (scratch.y - nearY) * t, worldZ);
     }
 
     @Override

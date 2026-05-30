@@ -21,7 +21,8 @@ class DoctorCommandTest {
                 "{\n"
                         + "  \"title\": \"Test\",\n"
                         + "  \"scene\": \"scenes/main.json\",\n"
-                        + "  \"renderPipeline\": \"render/pipeline.json\"\n"
+                        + "  \"renderPipeline\": \"render/pipeline.json\",\n"
+                        + "  \"inputProfile\": \"input/profile.json\"\n"
                         + "}\n",
                 java.nio.charset.StandardCharsets.UTF_8);
 

@@ -65,7 +65,11 @@ public final class HermesLaunchProperties {
         }
 
         public Builder renderPipeline(String value) {
-            return put("hermes.game.renderPipeline", value);
+            return put(RuntimeConfigKeys.GAME_RENDER_PIPELINE, value);
+        }
+
+        public Builder inputProfile(String value) {
+            return put(RuntimeConfigKeys.GAME_INPUT_PROFILE, value);
         }
 
         public Builder desktopVsync(boolean value) {

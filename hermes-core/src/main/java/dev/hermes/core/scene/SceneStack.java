@@ -10,6 +10,7 @@ import dev.hermes.api.scene.SceneContext;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneLifecycle;
 import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldImpl;
@@ -113,14 +114,19 @@ public final class SceneStack {
                         return componentRegistry;
                     }
                 };
-        Optional<String> jsonOverride;
+        SceneLoadMetadata jsonMetadata = SceneLoadMetadata.empty();
         if (definition.source() instanceof AssetSceneSource) {
-            jsonOverride = SceneLoader.load(((AssetSceneSource) definition.source()).assetPath(), ctx);
+            jsonMetadata = SceneLoader.load(((AssetSceneSource) definition.source()).assetPath(), ctx);
         } else {
             definition.source().populate(ctx);
-            jsonOverride = Optional.empty();
         }
-        return new SceneInstance(definition.id(), world, definition, jsonOverride, false);
+        return new SceneInstance(
+                definition.id(),
+                world,
+                definition,
+                jsonMetadata.renderPipeline(),
+                jsonMetadata.inputContext(),
+                false);
     }
 
     private void enterScene(SceneInstance instance) {

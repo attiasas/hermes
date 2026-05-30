@@ -5,6 +5,8 @@ import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.World;
 
+import java.util.Optional;
+
 /**
  * Selects the active scene camera from ECS entities.
  */
@@ -92,6 +94,30 @@ public final class CameraResolver {
 
     public static ActiveCamera resolve(World world, float windowWidth, float windowHeight) {
         return resolveForPass(world, "screen", windowWidth, windowHeight);
+    }
+
+    /** First active camera entity with Transform, same choice as {@link #resolveForPass}. */
+    public static Optional<Entity> activeCameraEntity(World world) {
+        if (world == null) {
+            return Optional.empty();
+        }
+        Entity active = null;
+        Entity fallback = null;
+        for (Entity entity : world.entitiesWith(Camera.class)) {
+            Camera camera = world.getComponent(entity.id(), Camera.class);
+            if (camera == null || world.getComponent(entity.id(), Transform.class) == null) {
+                continue;
+            }
+            if (fallback == null) {
+                fallback = entity;
+            }
+            if (camera.active()) {
+                active = entity;
+                break;
+            }
+        }
+        Entity chosen = active != null ? active : fallback;
+        return Optional.ofNullable(chosen);
     }
 
     /**

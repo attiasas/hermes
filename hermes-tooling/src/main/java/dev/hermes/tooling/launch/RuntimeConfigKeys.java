@@ -9,6 +9,7 @@ public final class RuntimeConfigKeys {
     public static final String WINDOW_HEIGHT = "hermes.window.height";
     public static final String GAME_SCENE = "hermes.game.scene";
     public static final String GAME_RENDER_PIPELINE = "hermes.game.renderPipeline";
+    public static final String GAME_INPUT_PROFILE = "hermes.game.inputProfile";
     public static final String LOG_MIN_LEVEL = "hermes.log.minLevel";
     public static final String LOG_PATTERN_TYPE = "hermes.log.patternType";
     public static final String LOG_PATTERNS = "hermes.log.patterns";

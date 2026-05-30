@@ -1,0 +1,47 @@
+{
+  "entities": [
+    {
+      "id": "cam",
+      "components": {
+        "Transform": {
+          "x": 320,
+          "y": 240,
+          "z": 0
+        },
+        "Camera": {
+          "projection": "orthographic",
+          "active": true,
+          "fitMode": "stretch"
+        }
+      }
+    },
+    {
+      "id": "near",
+      "components": {
+        "Transform": {
+          "x": 150,
+          "y": 240,
+          "z": 0
+        },
+        "Selectable": {
+          "radius": 80,
+          "layer": "WORLD"
+        }
+      }
+    },
+    {
+      "id": "far",
+      "components": {
+        "Transform": {
+          "x": 200,
+          "y": 240,
+          "z": 0
+        },
+        "Selectable": {
+          "radius": 40,
+          "layer": "WORLD"
+        }
+      }
+    }
+  ]
+}

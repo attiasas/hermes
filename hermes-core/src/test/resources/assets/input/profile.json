@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "context": "gameplay",
+  "actions": {
+    "move_x": { "type": "axis" },
+    "move_y": { "type": "axis" },
+    "select": { "type": "button" },
+    "pause": { "type": "button" }
+  },
+  "bindings": [
+    { "action": "move_x", "source": "keyboard", "key": "D", "scale": 1 },
+    { "action": "move_x", "source": "keyboard", "key": "A", "scale": -1 },
+    { "action": "move_y", "source": "keyboard", "key": "W", "scale": 1 },
+    { "action": "move_y", "source": "keyboard", "key": "S", "scale": -1 },
+    { "action": "select", "source": "pointer", "button": "LEFT", "when": "justPressed" },
+    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" },
+    { "action": "move_x", "source": "gamepad", "axis": "LEFT_X" }
+  ],
+  "gamepad": { "deadzone": 0.15 }
+}

@@ -3,12 +3,16 @@ package dev.hermes.core.ecs;
 import dev.hermes.api.Component;
 import dev.hermes.api.ecs.ComponentDeserializer;
 import dev.hermes.api.ecs.ComponentRegistry;
+import dev.hermes.api.log.Logger;
+import dev.hermes.api.log.Logs;
 import dev.hermes.api.ecs.ComponentData;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public final class ComponentRegistryImpl implements ComponentRegistry {
+
+    private static final Logger log = Logs.get(ComponentRegistryImpl.class);
 
     private final Map<String, Registration> registrations = new HashMap<>();
 
@@ -20,6 +24,7 @@ public final class ComponentRegistryImpl implements ComponentRegistry {
         if (typeName == null || typeName.isBlank()) {
             throw new IllegalArgumentException("typeName is required");
         }
+        log.debug("Registering component: " + typeName + " with type: " + type.getName());
         registrations.put(typeName, new Registration(type, deserializer));
     }
 
@@ -34,6 +39,7 @@ public final class ComponentRegistryImpl implements ComponentRegistry {
             throw new SceneLoadException(
                     formatUnknownComponent(scenePath, entityName, typeName));
         }
+        log.debug("Deserializing component: " + typeName + " for entity: " + entityName + " in scene: " + scenePath);
         return registration.deserializer().deserialize(data);
     }
 

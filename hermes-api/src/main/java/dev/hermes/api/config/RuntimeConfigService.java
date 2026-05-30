@@ -17,6 +17,8 @@ public interface RuntimeConfigService {
 
     String gameRenderPipeline();
 
+    String gameInputProfile();
+
     String logMinLevel();
 
     int logMinSeverity();

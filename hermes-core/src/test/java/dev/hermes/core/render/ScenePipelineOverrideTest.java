@@ -10,6 +10,7 @@ import dev.hermes.api.scene.SceneLoadContext;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
+import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldImpl;
@@ -46,14 +47,14 @@ final class ScenePipelineOverrideTest {
     @Test
     void sceneLoader_readsRenderPipelineFromSceneJson() {
         WorldImpl world = new WorldImpl();
-        Optional<String> override =
+        SceneLoadMetadata metadata =
                 SceneLoader.loadFromString(
                         "scenes/with-pipeline.json",
                         "{ \"renderPipeline\": \"render/ui-overlay.json\", \"entities\": [] }",
                         world,
                         registry);
 
-        assertEquals(Optional.of("render/ui-overlay.json"), override);
+        assertEquals(Optional.of("render/ui-overlay.json"), metadata.renderPipeline());
     }
 
     @Test
@@ -136,6 +137,11 @@ final class ScenePipelineOverrideTest {
 
                     @Override
                     public Optional<String> renderPipelineOverride() {
+                        return Optional.empty();
+                    }
+
+                    @Override
+                    public Optional<String> inputContext() {
                         return Optional.empty();
                     }
                 };

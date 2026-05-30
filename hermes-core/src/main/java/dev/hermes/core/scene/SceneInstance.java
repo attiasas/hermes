@@ -16,6 +16,7 @@ public final class SceneInstance implements SceneHandle {
     private final WorldImpl world;
     private final SceneDefinition definition;
     private final Optional<String> renderPipelineOverride;
+    private final Optional<String> inputContextOverride;
     private boolean paused;
 
     SceneInstance(
@@ -23,11 +24,13 @@ public final class SceneInstance implements SceneHandle {
             WorldImpl world,
             SceneDefinition definition,
             Optional<String> renderPipelineOverride,
+            Optional<String> inputContextOverride,
             boolean paused) {
         this.id = id;
         this.world = world;
         this.definition = definition;
         this.renderPipelineOverride = renderPipelineOverride == null ? Optional.empty() : renderPipelineOverride;
+        this.inputContextOverride = inputContextOverride == null ? Optional.empty() : inputContextOverride;
         this.paused = paused;
     }
 
@@ -48,6 +51,11 @@ public final class SceneInstance implements SceneHandle {
     @Override
     public Optional<String> renderPipelineOverride() {
         return renderPipelineOverride;
+    }
+
+    @Override
+    public Optional<String> inputContext() {
+        return inputContextOverride;
     }
 
     @Override

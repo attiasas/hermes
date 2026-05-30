@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "context": "gameplay",
+  "actions": {
+    "select": { "type": "button" },
+    "pause": { "type": "button" }
+  },
+  "bindings": [
+    { "action": "select", "source": "pointer", "button": "LEFT", "when": "justPressed" },
+    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" }
+  ],
+  "gamepad": { "deadzone": 0.15 }
+}

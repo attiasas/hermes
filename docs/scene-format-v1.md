@@ -14,6 +14,7 @@ load time with `SceneParseException`.
 
 ```json
 {
+  "inputContext": "gameplay",
   "entities": [
     {
       "id": "logo",
@@ -31,6 +32,7 @@ load time with `SceneParseException`.
 
 | Field                   | Required | Description                                                                                                                                                                                                                       |
 |-------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `inputContext`          | No       | Overrides the input profile default context while this scene is active (top of stack). Non-empty string. See [input-format-v1.md](input-format-v1.md).                                                                            |
 | `entities`              | No       | Array of entity objects. Omitted or empty means an empty scene.                                                                                                                                                                   |
 | `entities[]`            | —        | Each element **must** be a JSON object. Non-objects fail at load time with `SceneParseException`.                                                                                                                                 |
 | `entities[].id`         | No       | Logical name for lookup and error messages. Duplicate names in the same world fail at runtime.                                                                                                                                    |
@@ -47,6 +49,8 @@ load time with `SceneParseException`.
 | `Mesh`        | `model` (string), `texture` (optional string)   | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
 | `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`.                                               |
 | `RenderLayer` | `layer` (string)                                | `"WORLD"` (default) or `"UI"` — world-space vs overlay draw order.                                                                |
+| `Selectable`  | See below                                       | Marks entity as screen-pickable; pair with `Transform`. Used by built-in selection and drag systems.                              |
+| `Selected`    | —                                               | Runtime marker for the currently selected entity (usually set by `SelectionSystem`, not authored in JSON).                      |
 | `Camera`      | See below                                       | View/projection settings; pair with `Transform` on the same entity.                                                               |
 
 ### Transform properties
@@ -128,6 +132,26 @@ Example with tint:
 | Property | Default   | Description                                                             |
 |----------|-----------|-------------------------------------------------------------------------|
 | `layer`  | `"WORLD"` | `"WORLD"` for scene geometry/sprites, `"UI"` for screen-space overlays. |
+
+### Selectable properties
+
+Pair with `Transform` for pick center. Used by `InputService.pick` and built-in `SelectionSystem` / camera / drag systems.
+See [input.md](input.md).
+
+| Property  | Default   | Description                                                                                    |
+|-----------|-----------|------------------------------------------------------------------------------------------------|
+| `enabled` | `true`    | When `false`, entity is skipped by picking.                                                    |
+| `radius`  | `16`      | Pick radius in world units (circle in XY for ortho; sphere for perspective).                   |
+| `layer`   | `"WORLD"` | `"WORLD"`, `"UI"`, or `"ANY"` — must align with `pick(..., PickLayer)` filter.                |
+
+```json
+"Selectable": { "radius": 48, "layer": "WORLD" }
+```
+
+### Selected
+
+Empty marker component. `SelectionSystem` adds it to the picked entity and clears any previous `Selected`. Games may read
+`world.entitiesWith(Selected.class)` for highlighting or custom logic. Not typically placed in scene JSON.
 
 ### Camera properties
 

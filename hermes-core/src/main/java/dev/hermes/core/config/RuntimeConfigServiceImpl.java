@@ -72,6 +72,11 @@ public final class RuntimeConfigServiceImpl implements RuntimeConfigService, Run
     }
 
     @Override
+    public String gameInputProfile() {
+        return get("hermes.game.inputProfile", "input/profile.json");
+    }
+
+    @Override
     public String logMinLevel() {
         String explicit = get("hermes.log.minLevel", "");
         if (!explicit.isBlank()) {

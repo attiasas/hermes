@@ -1,0 +1,33 @@
+{
+  "entities": [
+    {
+      "id": "cam",
+      "components": {
+        "Transform": {
+          "x": 320,
+          "y": 240,
+          "z": 0
+        },
+        "Camera": {
+          "projection": "orthographic",
+          "active": true,
+          "fitMode": "stretch"
+        }
+      }
+    },
+    {
+      "id": "logo",
+      "components": {
+        "Transform": {
+          "x": 100,
+          "y": 100,
+          "z": 0
+        },
+        "Selectable": {
+          "radius": 16,
+          "layer": "WORLD"
+        }
+      }
+    }
+  ]
+}

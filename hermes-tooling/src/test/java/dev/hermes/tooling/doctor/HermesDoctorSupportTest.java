@@ -26,7 +26,8 @@ final class HermesDoctorSupportTest {
                 "{"
                         + "\"title\":\"Test\","
                         + "\"scene\":\"scenes/main.json\","
-                        + "\"renderPipeline\":\"render/custom-pipeline.json\""
+                        + "\"renderPipeline\":\"render/custom-pipeline.json\","
+                        + "\"inputProfile\":\"input/profile.json\""
                         + "}",
                 StandardCharsets.UTF_8);
         Files.writeString(
@@ -63,7 +64,8 @@ final class HermesDoctorSupportTest {
                 "{"
                         + "\"title\":\"Test\","
                         + "\"scene\":\"scenes/main.json\","
-                        + "\"renderPipeline\":\"render/pipeline.json\""
+                        + "\"renderPipeline\":\"render/pipeline.json\","
+                        + "\"inputProfile\":\"input/profile.json\""
                         + "}",
                 StandardCharsets.UTF_8);
         Files.writeString(
@@ -92,7 +94,8 @@ final class HermesDoctorSupportTest {
                 "{"
                         + "\"title\":\"Test\","
                         + "\"scene\":\"scenes/main.json\","
-                        + "\"renderPipeline\":\"render/custom-pipeline.json\""
+                        + "\"renderPipeline\":\"render/custom-pipeline.json\","
+                        + "\"inputProfile\":\"input/profile.json\""
                         + "}",
                 StandardCharsets.UTF_8);
         Files.writeString(
@@ -126,7 +129,7 @@ final class HermesDoctorSupportTest {
         Files.createDirectories(project.resolve("my-game"));
         Files.writeString(
                 project.resolve("my-game/hermes.json"),
-                "{\"title\":\"Test\",\"scene\":\"scenes/main.json\",\"renderPipeline\":\"render/pipeline.json\"}",
+                "{\"title\":\"Test\",\"scene\":\"scenes/main.json\",\"renderPipeline\":\"render/pipeline.json\",\"inputProfile\":\"input/profile.json\"}",
                 StandardCharsets.UTF_8);
 
         var results = HermesDoctorSupport.runStandalone(project);
@@ -156,7 +159,8 @@ final class HermesDoctorSupportTest {
                 "{"
                         + "\"title\":\"Test\","
                         + "\"scene\":\"scenes/main.json\","
-                        + "\"renderPipeline\":\"render/custom-pipeline.json\""
+                        + "\"renderPipeline\":\"render/custom-pipeline.json\","
+                        + "\"inputProfile\":\"input/profile.json\""
                         + "}",
                 StandardCharsets.UTF_8);
         Files.writeString(
