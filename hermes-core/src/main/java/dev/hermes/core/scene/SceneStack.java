@@ -16,6 +16,7 @@ import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldManagerImpl;
+import dev.hermes.core.lighting.LightingRuntime;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -158,6 +159,7 @@ public final class SceneStack {
         if (lifecycle != null) {
             lifecycle.onExit(sceneContext(instance));
         }
+        LightingRuntime.remove(instance.manager().entities());
         instance.manager().entities().clear();
     }
 

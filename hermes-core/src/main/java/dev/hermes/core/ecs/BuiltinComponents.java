@@ -22,6 +22,7 @@ import dev.hermes.api.input.PickLayer;
 import dev.hermes.core.input.CameraSceneControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
+import dev.hermes.core.lighting.BuiltinLightingSystem;
 import dev.hermes.core.ui.UiAttachSystem;
 import dev.hermes.core.ui.UiInputSystem;
 import dev.hermes.core.ui.UiServiceImpl;
@@ -212,6 +213,7 @@ public final class BuiltinComponents {
     }
 
     public static void registerSystems(HermesEngine engine) {
+        engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
