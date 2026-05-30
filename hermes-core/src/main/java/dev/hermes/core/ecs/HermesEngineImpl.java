@@ -1,6 +1,7 @@
 package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.ComponentRegistry;
+import dev.hermes.api.ecs.EntityTypeRegistry;
 import dev.hermes.api.ecs.HermesEngine;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
@@ -27,6 +28,7 @@ public final class HermesEngineImpl implements HermesEngine {
 
     private final SceneManagerImpl sceneManager;
     private final ComponentRegistryImpl registry;
+    private final EntityTypeRegistryImpl entityTypes = new EntityTypeRegistryImpl();
     private final ViewportServiceImpl viewport = new ViewportServiceImpl();
     private final InputServiceImpl input;
     private final List<SystemEntry> systems = new ArrayList<>();
@@ -60,6 +62,11 @@ public final class HermesEngineImpl implements HermesEngine {
     @Override
     public ComponentRegistry registry() {
         return registry;
+    }
+
+    @Override
+    public EntityTypeRegistry entityTypes() {
+        return entityTypes;
     }
 
     @Override

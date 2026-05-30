@@ -14,6 +14,8 @@ public interface HermesEngine {
 
     ComponentRegistry registry();
 
+    EntityTypeRegistry entityTypes();
+
     ViewportService viewport();
 
     InputService input();

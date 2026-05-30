@@ -4,6 +4,8 @@ plugins {
 }
 
 dependencies {
+    api "com.badlogicgames.gdx:gdx:$gdxVersion"
+
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation "com.badlogicgames.gdx:gdx:$gdxVersion"

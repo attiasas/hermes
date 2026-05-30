@@ -76,6 +76,8 @@ public final class HermesGdxApplication implements ApplicationListener {
 
             application.onCreate(engine);
 
+            engine.entityTypes().scanAssets();
+
             if (scenePath != null && !scenePath.isBlank()) {
                 engine.scenes().request(SceneChangeRequest.goTo("main"));
                 engine.scenes().processPending();
