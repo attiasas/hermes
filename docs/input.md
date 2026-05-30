@@ -119,6 +119,15 @@ includes `worldX`, `worldY`, `worldZ`.
 
 `Selectable.layer` must be `"WORLD"`. Screen-space UI uses widget hit-testing (`UiInputSystem`), not `pick(...)`.
 
+### UI buttons and actions
+
+Menu and HUD buttons live in `assets/ui/*.json` with an `"action"` string per button. `UiInputSystem` hit-tests the **active**
+scene tree (top of stack) and calls `input.pulseAction(action)` on click. Map the same action names in `input/profile.json`
+for keyboard, gamepad, or pointer so gameplay systems can use `input.actions().wasActionPressed("start_game")`.
+
+Example: pause overlay scene sets `"ui": "ui/pause-menu.json"` and `"inputContext": "menu"` while gameplay uses
+`"inputContext": "gameplay"` on the main scene. Full widget and binding rules: [ui-format-v1.md](ui-format-v1.md).
+
 ## Scene context override
 
 Scene JSON may set a top-level `inputContext` (see [scene-format-v1.md](scene-format-v1.md)). When that scene is active,
@@ -127,8 +136,9 @@ without `context` (or with `"*"`) apply in every context.
 
 ## Related docs
 
+- [UI format v1](ui-format-v1.md) — widget trees, bindings, breaking changes
 - [Input profile format v1](input-format-v1.md)
-- [Scene format v1](scene-format-v1.md) — `Selectable`, `Selected`, `inputContext`
+- [Scene format v1](scene-format-v1.md) — `Selectable`, `Selected`, `inputContext`, `"ui"`, `UiAttach`
 - [Coordinate spaces](coordinate-spaces.md)
 - [Scene management](scene-management.md)
 - [Architecture](ARCHITECTURE.md)

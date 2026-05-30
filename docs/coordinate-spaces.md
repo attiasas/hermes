@@ -10,7 +10,7 @@ Hermes uses four canonical coordinate spaces. All projection, `glViewport`, and 
 | **SCREEN**     | Bottom-left of the OS window (libGDX backbuffer)         | Pixels      | Raw pointer events, fullscreen UI             |
 | **SURFACE**    | Bottom-left of the current render target (backbuffer/FBO) | Pixels      | GL viewport, active-pass `SceneViewport`      |
 | **WORLD**      | ECS `Transform` space                                    | World units | Entities, simulation, picks                   |
-| **NORMALIZED** | Bottom-left of the camera viewport rect on the surface   | 0..1        | Config anchors (`0.5, 0.5` = center)          |
+| **NORMALIZED** | Bottom-left of the camera viewport rect on the surface   | 0..1        | Camera fit anchors; UI layout maps anchors → SURFACE via `SceneViewport.normalizedToSurface` |
 
 ## Rules
 
@@ -50,8 +50,15 @@ Each outer `TargetBindingGraphPass`:
 
 `Camera.renderTarget` in scene JSON links a camera entity to a pipeline framebuffer id (see [render-pipeline.md](render-pipeline.md)).
 
+## UI layout
+
+Screen-space UI (`scene "ui"` and `UiAttach` documents) lays out in **design pixels**, then scales to the full backbuffer
+**SURFACE** using scene `fitMode`. Pointer hit-tests use SURFACE coordinates after `mapScreenToSurface`. World-attached UI
+projects entity **WORLD** positions with `worldToScreen` before anchoring. See [ui-format-v1.md](ui-format-v1.md).
+
 ## Related docs
 
+- [ui-format-v1.md](ui-format-v1.md) — widget trees, anchors, bindings
 - [render-pipeline.md](render-pipeline.md) — pass targets and FBO sizing
-- [scene-format-v1.md](scene-format-v1.md) — `Camera` JSON (`fitMode`, `lookAt`, `renderTarget`)
-- Unified input plan — `InputService` delegates picks to `ViewportService` (no separate mapper)
+- [scene-format-v1.md](scene-format-v1.md) — `Camera` JSON (`fitMode`, `lookAt`, `renderTarget`), `"ui"`, `UiAttach`
+- [input.md](input.md) — `InputService` picks and UI button actions

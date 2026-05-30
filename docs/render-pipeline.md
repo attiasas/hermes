@@ -46,8 +46,8 @@ Passes that target an unknown framebuffer id fail at graph build time.
 | `type`    | Description                                                                               |
 |-----------|-------------------------------------------------------------------------------------------|
 | `world3d` | Meshes with materials; perspective/ortho from active `Camera`.                            |
-| `sprites` | `Sprite` entities by `RenderLayer`.                                                       |
-| `ui`      | UI layer sprites; `depthTest` usually `false`.                                            |
+| `sprites` | `Sprite` entities on `RenderLayer.WORLD`.                                                  |
+| `ui`      | Scene widget trees via `UiRenderPass` / `UiService`; `depthTest` usually `false`.         |
 | `custom`  | Code-registered pass; requires `handler` matching `HermesApplication.configureRendering`. |
 
 ### Custom passes
@@ -131,11 +131,11 @@ The `ui` pass draws widget trees from the scene `"ui"` field via `UiRenderPass` 
 { "id": "ui", "type": "ui", "target": "screen", "depthTest": false }
 ```
 
-## HUD framebuffer (future UI system)
+## HUD framebuffer (future)
 
 A UI pass may target a dedicated framebuffer (for example `"target": "hud"`) declared under `framebuffers`. A later
-composite pass can blit `hud` to `screen` for engine-managed HUD layers. Declare `hud` with `depth: false` for pure 2D
-overlays.
+composite pass could blit `hud` to `screen` for engine-managed HUD layers. v1 draws UI directly to `screen` (or the pass
+`target`). See [ui-format-v1.md](ui-format-v1.md).
 
 ## Future passes (not implemented yet)
 
