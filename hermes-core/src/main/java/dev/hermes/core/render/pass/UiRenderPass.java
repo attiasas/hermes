@@ -28,6 +28,6 @@ public final class UiRenderPass {
         }
         int width = surface != null ? surface.pixelWidth() : BackbufferSize.width();
         int height = surface != null ? surface.pixelHeight() : BackbufferSize.height();
-        ui.layoutAndRender(sceneId, batch, width, height);
+        ui.layoutAndRender(sceneId, entities, batch, width, height);
     }
 }
