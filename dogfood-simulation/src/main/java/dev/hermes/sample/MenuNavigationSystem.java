@@ -8,7 +8,7 @@ import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneManager;
 
 /**
- * Handles menu UI actions: start gameplay, resume pause overlay, quit desktop run.
+ * Handles menu UI actions: start gameplay, resume pause overlay, return to main menu on quit.
  */
 public final class MenuNavigationSystem implements System {
 
@@ -34,7 +34,7 @@ public final class MenuNavigationSystem implements System {
             return;
         }
         if (input.actions().justPressed("quit")) {
-            java.lang.System.exit(0);
+            scenes.request(SceneChangeRequest.goTo("main"));
         }
     }
 }

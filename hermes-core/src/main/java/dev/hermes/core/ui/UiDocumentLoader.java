@@ -1,11 +1,8 @@
 package dev.hermes.core.ui;
 
 import com.badlogic.gdx.files.FileHandle;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
 import dev.hermes.api.ui.UiAnchor;
 import dev.hermes.api.ui.UiDocument;
 import dev.hermes.api.ui.UiLayout;
@@ -23,7 +20,6 @@ import java.util.Set;
 /** Loads {@link UiDocument} instances from game asset paths. */
 public final class UiDocumentLoader {
 
-    private static final Gson GSON = new Gson();
     private static final Set<String> NODE_RESERVED =
             Set.of("type", "id", "layout", "style", "children");
 
@@ -46,18 +42,18 @@ public final class UiDocumentLoader {
 
     public UiDocument parse(String json) {
         try {
-            JsonObject root = GSON.fromJson(json, JsonObject.class);
-            if (root == null) {
+            JsonValue root = new JsonReader().parse(json);
+            if (root == null || !root.isObject()) {
                 throw new UiDocumentParseException("UI document root must be a JSON object");
             }
-            int version = root.has("version") ? root.get("version").getAsInt() : 0;
+            int version = root.getInt("version", 0);
             if (version != 1) {
                 throw new UiDocumentParseException("\"version\" must be 1");
             }
-            JsonObject designSize = requireObject(root, "designSize", "document");
+            JsonValue designSize = requireObject(root, "designSize", "document");
             float designWidth = requireNumber(designSize, "width", "designSize");
             float designHeight = requireNumber(designSize, "height", "designSize");
-            JsonObject rootNode = requireObject(root, "root", "document");
+            JsonValue rootNode = requireObject(root, "root", "document");
             UiNode tree = parseNode(rootNode, "root");
             return new UiDocument(tree, designWidth, designHeight);
         } catch (UiDocumentParseException e) {
@@ -67,87 +63,86 @@ public final class UiDocumentLoader {
         }
     }
 
-    private UiNode parseNode(JsonObject json, String context) {
+    private UiNode parseNode(JsonValue json, String context) {
         String type = requireString(json, "type", context);
         if (!widgetTypes.supports(type)) {
             throw new UiDocumentParseException(context + ": unknown widget type '" + type + "'");
         }
         UiNode node = new UiNode(type);
         if (json.has("id")) {
-            String id = json.get("id").getAsString();
-            if (id != null && !id.isBlank()) {
+            String id = json.getString("id", "").trim();
+            if (!id.isEmpty()) {
                 node.setId(id);
             }
         }
-        if (json.has("layout")) {
-            JsonElement layoutValue = json.get("layout");
-            if (!layoutValue.isJsonObject()) {
+        JsonValue layoutValue = json.get("layout");
+        if (layoutValue != null) {
+            if (!layoutValue.isObject()) {
                 throw new UiDocumentParseException(context + ": \"layout\" must be an object");
             }
-            node.setLayout(parseLayout(layoutValue.getAsJsonObject(), context + ".layout"));
+            node.setLayout(parseLayout(layoutValue, context + ".layout"));
         }
-        if (json.has("style")) {
-            JsonElement styleValue = json.get("style");
-            if (!styleValue.isJsonObject()) {
+        JsonValue styleValue = json.get("style");
+        if (styleValue != null) {
+            if (!styleValue.isObject()) {
                 throw new UiDocumentParseException(context + ": \"style\" must be an object");
             }
-            node.setProp("style", jsonObjectToMap(styleValue.getAsJsonObject()));
+            node.setProp("style", jsonObjectToMap(styleValue));
         }
-        if (json.has("children")) {
-            JsonElement childrenValue = json.get("children");
-            if (!childrenValue.isJsonArray()) {
+        JsonValue childrenValue = json.get("children");
+        if (childrenValue != null) {
+            if (!childrenValue.isArray()) {
                 throw new UiDocumentParseException(context + ": \"children\" must be an array");
             }
-            JsonArray children = childrenValue.getAsJsonArray();
-            for (int i = 0; i < children.size(); i++) {
-                JsonElement entry = children.get(i);
-                if (!entry.isJsonObject()) {
+            for (int i = 0; i < childrenValue.size; i++) {
+                JsonValue entry = childrenValue.get(i);
+                if (!entry.isObject()) {
                     throw new UiDocumentParseException(context + ".children[" + i + "] must be an object");
                 }
-                node.addChild(parseNode(entry.getAsJsonObject(), context + ".children[" + i + "]"));
+                node.addChild(parseNode(entry, context + ".children[" + i + "]"));
             }
         }
-        for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
-            String key = entry.getKey();
+        for (JsonValue entry : json) {
+            String key = entry.name;
             if (NODE_RESERVED.contains(key)) {
                 continue;
             }
-            node.setProp(key, jsonElementToValue(entry.getValue()));
+            node.setProp(key, jsonValueToObject(entry));
         }
         return node;
     }
 
-    private static UiLayout parseLayout(JsonObject layout, String context) {
+    private static UiLayout parseLayout(JsonValue layout, String context) {
         UiLayout result = new UiLayout();
         if (layout.has("anchor")) {
             result.setAnchor(parseAnchor(requireString(layout, "anchor", context), context));
         }
         if (layout.has("offsetX")) {
-            result.setOffsetX(layout.get("offsetX").getAsFloat());
+            result.setOffsetX(layout.getFloat("offsetX"));
         }
         if (layout.has("offsetY")) {
-            result.setOffsetY(layout.get("offsetY").getAsFloat());
+            result.setOffsetY(layout.getFloat("offsetY"));
         }
         if (layout.has("width")) {
-            result.setWidth(layout.get("width").getAsFloat());
+            result.setWidth(layout.getFloat("width"));
         }
         if (layout.has("height")) {
-            result.setHeight(layout.get("height").getAsFloat());
+            result.setHeight(layout.getFloat("height"));
         }
         if (layout.has("paddingLeft")) {
-            result.setPaddingLeft(layout.get("paddingLeft").getAsFloat());
+            result.setPaddingLeft(layout.getFloat("paddingLeft"));
         }
         if (layout.has("paddingTop")) {
-            result.setPaddingTop(layout.get("paddingTop").getAsFloat());
+            result.setPaddingTop(layout.getFloat("paddingTop"));
         }
         if (layout.has("paddingRight")) {
-            result.setPaddingRight(layout.get("paddingRight").getAsFloat());
+            result.setPaddingRight(layout.getFloat("paddingRight"));
         }
         if (layout.has("paddingBottom")) {
-            result.setPaddingBottom(layout.get("paddingBottom").getAsFloat());
+            result.setPaddingBottom(layout.getFloat("paddingBottom"));
         }
         if (layout.has("zIndex")) {
-            result.setZIndex(layout.get("zIndex").getAsInt());
+            result.setZIndex(layout.getInt("zIndex"));
         }
         return result;
     }
@@ -182,81 +177,77 @@ public final class UiDocumentLoader {
         }
     }
 
-    private static JsonObject requireObject(JsonObject parent, String field, String context) {
+    private static JsonValue requireObject(JsonValue parent, String field, String context) {
         if (!parent.has(field)) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" is required");
         }
-        JsonElement value = parent.get(field);
-        if (!value.isJsonObject()) {
+        JsonValue value = parent.get(field);
+        if (value == null || !value.isObject()) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" must be an object");
         }
-        return value.getAsJsonObject();
+        return value;
     }
 
-    private static String requireString(JsonObject object, String field, String context) {
+    private static String requireString(JsonValue object, String field, String context) {
         if (!object.has(field)) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" is required");
         }
-        JsonElement value = object.get(field);
-        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) {
+        JsonValue value = object.get(field);
+        if (value == null || !value.isString()) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" must be a string");
         }
-        String text = value.getAsString().trim();
+        String text = value.asString().trim();
         if (text.isEmpty()) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" must be non-empty");
         }
         return text;
     }
 
-    private static float requireNumber(JsonObject object, String field, String context) {
+    private static float requireNumber(JsonValue object, String field, String context) {
         if (!object.has(field)) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" is required");
         }
-        JsonElement value = object.get(field);
-        if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isNumber()) {
+        JsonValue value = object.get(field);
+        if (value == null || !value.isNumber()) {
             throw new UiDocumentParseException(context + ": \"" + field + "\" must be a number");
         }
-        return value.getAsFloat();
+        return value.asFloat();
     }
 
-    private static Object jsonElementToValue(JsonElement element) {
-        if (element == null || element.isJsonNull()) {
+    private static Object jsonValueToObject(JsonValue value) {
+        if (value == null || value.isNull()) {
             return null;
         }
-        if (element.isJsonPrimitive()) {
-            JsonPrimitive primitive = element.getAsJsonPrimitive();
-            if (primitive.isBoolean()) {
-                return primitive.getAsBoolean();
-            }
-            if (primitive.isString()) {
-                return primitive.getAsString();
-            }
-            if (primitive.isNumber()) {
-                return primitive.getAsDouble();
-            }
-            return null;
+        if (value.isBoolean()) {
+            return value.asBoolean();
         }
-        if (element.isJsonArray()) {
-            return jsonArrayToList(element.getAsJsonArray());
+        if (value.isString()) {
+            return value.asString();
         }
-        if (element.isJsonObject()) {
-            return jsonObjectToMap(element.getAsJsonObject());
+        if (value.isNumber()) {
+            return value.asDouble();
+        }
+        if (value.isArray()) {
+            return jsonArrayToList(value);
+        }
+        if (value.isObject()) {
+            return jsonObjectToMap(value);
         }
         return null;
     }
 
-    private static List<Object> jsonArrayToList(JsonArray array) {
-        List<Object> values = new ArrayList<>(array.size());
-        for (JsonElement entry : array) {
-            values.add(jsonElementToValue(entry));
+    private static List<Object> jsonArrayToList(JsonValue array) {
+        List<Object> values = new ArrayList<>(array.size);
+        for (int i = 0; i < array.size; i++) {
+            values.add(jsonValueToObject(array.get(i)));
         }
         return values;
     }
 
-    private static Map<String, Object> jsonObjectToMap(JsonObject object) {
+    private static Map<String, Object> jsonObjectToMap(JsonValue object) {
         Map<String, Object> map = new HashMap<>();
-        for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
-            map.put(entry.getKey(), jsonElementToValue(entry.getValue()));
+        for (JsonValue entry : object) {
+            map.put(entry.name, jsonValueToObject(entry));
         }
         return map;
     }
