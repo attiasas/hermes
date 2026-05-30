@@ -205,6 +205,9 @@ public final class HermesGdxApplication implements ApplicationListener {
     public void dispose() {
         log.info("Disposing Hermes engine...");
         application.dispose();
+        if (engine != null) {
+            engine.dispose();
+        }
         if (renderPipeline != null) {
             renderPipeline.dispose();
         }

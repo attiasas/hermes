@@ -8,14 +8,20 @@ final class GdxSoundHandle implements SoundHandle {
     private final SoundBackend backend;
     private final String path;
     private final long instanceId;
+    private final Runnable onStop;
     private volatile boolean playing = true;
     private volatile float volume = 1f;
 
     GdxSoundHandle(SoundBackend backend, String path, long instanceId, float volume) {
+        this(backend, path, instanceId, volume, null);
+    }
+
+    GdxSoundHandle(SoundBackend backend, String path, long instanceId, float volume, Runnable onStop) {
         this.backend = backend;
         this.path = path;
         this.instanceId = instanceId;
         this.volume = volume;
+        this.onStop = onStop;
     }
 
     @Override
@@ -30,8 +36,14 @@ final class GdxSoundHandle implements SoundHandle {
 
     @Override
     public void stop() {
+        if (!playing) {
+            return;
+        }
         backend.stop(path, instanceId);
         playing = false;
+        if (onStop != null) {
+            onStop.run();
+        }
     }
 
     @Override

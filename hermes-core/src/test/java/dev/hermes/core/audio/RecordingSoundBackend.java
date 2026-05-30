@@ -16,6 +16,7 @@ final class RecordingSoundBackend implements SoundBackend {
     volatile float listenerX;
     volatile float listenerY;
     volatile float listenerZ;
+    volatile int stopCount;
 
     private final Map<String, Object> loaded = new HashMap<>();
 
@@ -36,7 +37,9 @@ final class RecordingSoundBackend implements SoundBackend {
     }
 
     @Override
-    public void stop(String path, long instanceId) {}
+    public void stop(String path, long instanceId) {
+        stopCount++;
+    }
 
     @Override
     public void setVolume(String path, long instanceId, float volume) {

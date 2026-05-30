@@ -14,7 +14,12 @@ import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.core.HermesAssetPaths;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,6 +27,7 @@ import java.util.Optional;
 public final class AudioServiceImpl implements AudioService {
 
     private static final Logger log = Logs.get(AudioServiceImpl.class);
+    private static final int DEFAULT_MAX_INSTANCES_PER_CLIP = 8;
 
     private final SoundBackend backend;
     private final SoundCache soundCache;
@@ -31,6 +37,9 @@ public final class AudioServiceImpl implements AudioService {
     private boolean missingProfileLogged;
     private final Map<String, SceneAudioConfig> sceneConfigs = new HashMap<>();
     private String bgmOwnerSceneId;
+    private final Map<String, Deque<GdxSoundHandle>> activeByPath = new HashMap<>();
+    private final Deque<GdxSoundHandle> allSfx = new ArrayDeque<>();
+    private boolean instanceCapWarned;
 
     public AudioServiceImpl(SoundBackend backend, AudioMixer mixer, SoundCache soundCache) {
         this(backend, new NoopMusicBackend(), mixer, soundCache);
@@ -77,7 +86,11 @@ public final class AudioServiceImpl implements AudioService {
                     options.worldY().orElse(0f),
                     options.worldZ().orElse(0f));
         }
-        return new GdxSoundHandle(backend, clipPath, id, gain);
+        GdxSoundHandle[] handleRef = new GdxSoundHandle[1];
+        handleRef[0] =
+                new GdxSoundHandle(backend, clipPath, id, gain, () -> untrack(clipPath, handleRef[0]));
+        trackInstance(clipPath, handleRef[0]);
+        return handleRef[0];
     }
 
     @Override
@@ -92,7 +105,24 @@ public final class AudioServiceImpl implements AudioService {
     }
 
     @Override
-    public void stopAll(String clipPath) {}
+    public void stopAll(String clipPath) {
+        if (clipPath == null) {
+            for (GdxSoundHandle handle : new ArrayList<>(allSfx)) {
+                handle.stop();
+            }
+            allSfx.clear();
+            activeByPath.clear();
+            return;
+        }
+        Deque<GdxSoundHandle> instances = activeByPath.remove(clipPath);
+        if (instances == null) {
+            return;
+        }
+        for (GdxSoundHandle handle : instances) {
+            handle.stop();
+            allSfx.remove(handle);
+        }
+    }
 
     @Override
     public BgmController bgm() {
@@ -164,8 +194,17 @@ public final class AudioServiceImpl implements AudioService {
     @Override
     public void onSceneResume(String sceneId) {
         SceneAudioConfig config = sceneConfigs.get(sceneId);
-        if (config != null && config.pauseBgmOnPause()) {
+        if (config == null) {
+            return;
+        }
+        if (config.pauseBgmOnPause()) {
             bgm().resume();
+            return;
+        }
+        Optional<String> playlistPath = resolvePlaylistPath(config);
+        if (playlistPath.isPresent() && !bgm().isPlaying()) {
+            bgmOwnerSceneId = sceneId;
+            bgm().crossfadeTo(playlistPath.get(), config.fadeInSeconds());
         }
     }
 
@@ -186,6 +225,43 @@ public final class AudioServiceImpl implements AudioService {
     void loadProfileFromJson(String json) {
         profile = AudioProfileLoader.parse(json);
         applyProfileBusVolumes();
+    }
+
+    private void trackInstance(String clipPath, GdxSoundHandle handle) {
+        activeByPath.computeIfAbsent(clipPath, key -> new ArrayDeque<>()).addLast(handle);
+        allSfx.addLast(handle);
+        enforceInstanceCap(clipPath);
+    }
+
+    private void untrack(String clipPath, GdxSoundHandle handle) {
+        Deque<GdxSoundHandle> instances = activeByPath.get(clipPath);
+        if (instances != null) {
+            instances.remove(handle);
+            if (instances.isEmpty()) {
+                activeByPath.remove(clipPath);
+            }
+        }
+        allSfx.remove(handle);
+    }
+
+    private void enforceInstanceCap(String clipPath) {
+        int maxInstances =
+                profile != null ? profile.maxInstancesPerClip() : DEFAULT_MAX_INSTANCES_PER_CLIP;
+        Deque<GdxSoundHandle> instances = activeByPath.get(clipPath);
+        if (instances == null) {
+            return;
+        }
+        while (instances.size() > maxInstances) {
+            GdxSoundHandle oldest = instances.peekFirst();
+            if (oldest == null) {
+                break;
+            }
+            if (!instanceCapWarned) {
+                log.warn("Max sound instances per clip reached; stopping oldest instance");
+                instanceCapWarned = true;
+            }
+            oldest.stop();
+        }
     }
 
     private static final class NoopMusicBackend implements MusicBackend {

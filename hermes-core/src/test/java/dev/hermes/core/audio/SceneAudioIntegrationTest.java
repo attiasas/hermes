@@ -115,4 +115,21 @@ final class SceneAudioIntegrationTest {
         audio.onSceneResume("game");
         assertTrue(musicBackend.resumed);
     }
+
+    @Test
+    void onSceneResumeRestoresBgmAfterOverlayExit() {
+        RecordingSoundBackend soundBackend = new RecordingSoundBackend();
+        RecordingMusicBackend musicBackend = new RecordingMusicBackend();
+        AudioServiceImpl audio =
+                new AudioServiceImpl(soundBackend, musicBackend, new AudioMixerImpl(), new SoundCache(soundBackend));
+
+        SceneAudioConfig gameConfig = new SceneAudioConfig("main-menu", null, 1f, 1f, false);
+        SceneAudioConfig overlayConfig = new SceneAudioConfig("main-menu", null, 0.5f, 0.5f, false);
+        audio.onSceneEnter("game", Optional.of(gameConfig));
+        audio.onSceneEnter("overlay", Optional.of(overlayConfig));
+        audio.onSceneExit("overlay");
+        audio.onSceneResume("game");
+
+        assertTrue(audio.bgm().isPlaying());
+    }
 }

@@ -3,14 +3,17 @@ package dev.hermes.core.audio;
 import dev.hermes.api.Entity;
 import dev.hermes.api.EntityId;
 import dev.hermes.api.audio.PlayOptions;
+import dev.hermes.api.audio.SoundHandle;
 import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.ecs.SoundEmitter;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.WorldManager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,12 +42,12 @@ public final class SoundEmitterSystem implements System {
 
             EmitterState state = states.computeIfAbsent(entityId, id -> new EmitterState());
             if (emitter.playOn() == SoundEmitter.PlayOn.SPAWN && !state.spawnPlayed) {
-                play(emitter);
+                play(emitter, state);
                 state.spawnPlayed = true;
             } else if (emitter.playOn() == SoundEmitter.PlayOn.INTERVAL) {
                 state.elapsed += deltaSeconds;
                 if (state.elapsed >= emitter.intervalSeconds()) {
-                    play(emitter);
+                    play(emitter, state);
                     state.elapsed = 0f;
                 }
             }
@@ -52,13 +55,15 @@ public final class SoundEmitterSystem implements System {
 
         Iterator<Map.Entry<EntityId, EmitterState>> iterator = states.entrySet().iterator();
         while (iterator.hasNext()) {
-            if (!seen.contains(iterator.next().getKey())) {
+            Map.Entry<EntityId, EmitterState> entry = iterator.next();
+            if (!seen.contains(entry.getKey())) {
+                stopLooping(entry.getValue());
                 iterator.remove();
             }
         }
     }
 
-    private void play(SoundEmitter emitter) {
+    private void play(SoundEmitter emitter, EmitterState state) {
         PlayOptions options =
                 PlayOptions.builder()
                         .bus(emitter.bus())
@@ -66,11 +71,23 @@ public final class SoundEmitterSystem implements System {
                         .pitch(emitter.pitch())
                         .loop(emitter.loop())
                         .build();
-        AudioComponentPlayback.play(audio, emitter.clip(), emitter.clipIsId(), options);
+        SoundHandle handle =
+                AudioComponentPlayback.play(audio, emitter.clip(), emitter.clipIsId(), options);
+        if (emitter.loop()) {
+            state.loopHandles.add(handle);
+        }
+    }
+
+    private static void stopLooping(EmitterState state) {
+        for (SoundHandle handle : state.loopHandles) {
+            handle.stop();
+        }
+        state.loopHandles.clear();
     }
 
     private static final class EmitterState {
         private boolean spawnPlayed;
         private float elapsed;
+        private final List<SoundHandle> loopHandles = new ArrayList<>();
     }
 }
