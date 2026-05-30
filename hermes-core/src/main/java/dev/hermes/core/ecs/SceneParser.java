@@ -30,6 +30,7 @@ final class SceneParser {
                     entitySpec.kind(),
                     instanceComponents);
         }
-        return new SceneLoadMetadata(document.renderPipeline(), document.inputContext());
+        return new SceneLoadMetadata(
+                document.renderPipeline(), document.inputContext(), document.uiConfig());
     }
 }

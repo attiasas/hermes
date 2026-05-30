@@ -3,6 +3,8 @@ package dev.hermes.core.ecs;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
+import dev.hermes.api.scene.SceneUiConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,11 +17,14 @@ final class SceneDocument {
     private final List<EntitySpec> entities;
     private final String renderPipeline;
     private final String inputContext;
+    private final SceneUiConfig uiConfig;
 
-    private SceneDocument(List<EntitySpec> entities, String renderPipeline, String inputContext) {
+    private SceneDocument(
+            List<EntitySpec> entities, String renderPipeline, String inputContext, SceneUiConfig uiConfig) {
         this.entities = entities;
         this.renderPipeline = renderPipeline;
         this.inputContext = inputContext;
+        this.uiConfig = uiConfig;
     }
 
     static SceneDocument parse(String scenePath, String json) {
@@ -69,7 +74,11 @@ final class SceneDocument {
                             "Scene '" + scenePath + "': \"inputContext\" must be non-empty when set.");
                 }
             }
-            return new SceneDocument(entities, renderPipeline, inputContext);
+            SceneUiConfig uiConfig = null;
+            if (root.has("ui")) {
+                uiConfig = parseUiConfig(scenePath, root.get("ui"));
+            }
+            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig);
         } catch (SceneParseException e) {
             throw e;
         } catch (Exception e) {
@@ -87,6 +96,35 @@ final class SceneDocument {
 
     Optional<String> inputContext() {
         return Optional.ofNullable(inputContext);
+    }
+
+    Optional<SceneUiConfig> uiConfig() {
+        return Optional.ofNullable(uiConfig);
+    }
+
+    private static SceneUiConfig parseUiConfig(String scenePath, JsonValue uiValue) {
+        if (uiValue == null) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"ui\" must be a string or object.");
+        }
+        if (uiValue.isString()) {
+            String document = uiValue.asString().trim();
+            if (document.isEmpty()) {
+                throw new SceneParseException(
+                        "Scene '" + scenePath + "': \"ui\" document path must be non-empty.");
+            }
+            return new SceneUiConfig(document);
+        }
+        if (uiValue.isObject()) {
+            String document = uiValue.getString("document", "").trim();
+            if (document.isEmpty()) {
+                throw new SceneParseException(
+                        "Scene '" + scenePath + "': \"ui.document\" must be non-empty when \"ui\" is an object.");
+            }
+            String fitMode = uiValue.has("fitMode") ? uiValue.getString("fitMode", "") : null;
+            Float designAspect = uiValue.has("designAspect") ? uiValue.getFloat("designAspect", 0f) : null;
+            return new SceneUiConfig(document, fitMode, designAspect);
+        }
+        throw new SceneParseException("Scene '" + scenePath + "': \"ui\" must be a string or object.");
     }
 
     static final class EntitySpec {

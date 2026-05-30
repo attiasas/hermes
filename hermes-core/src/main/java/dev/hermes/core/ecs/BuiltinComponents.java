@@ -12,6 +12,7 @@ import dev.hermes.api.ecs.Selectable;
 import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
+import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
 import dev.hermes.core.input.CameraSceneControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
@@ -30,6 +31,7 @@ public final class BuiltinComponents {
     static final String RENDER_LAYER = "RenderLayer";
     static final String SELECTABLE = "Selectable";
     static final String SELECTED = "Selected";
+    static final String UI_ATTACH = "UiAttach";
 
     private BuiltinComponents() {
     }
@@ -134,6 +136,21 @@ public final class BuiltinComponents {
                     return selectable;
                 });
         registry.register(SELECTED, Selected.class, (data, ctx) -> new Selected());
+        registry.register(
+                UI_ATTACH,
+                UiAttach.class,
+                (data, ctx) -> {
+                    UiAttach attach = new UiAttach();
+                    attach.setDocument(data.getString("document", ""));
+                    if (data.has("follow")) {
+                        attach.setFollow(data.getString("follow", ""));
+                    }
+                    attach.setOffsetX(data.getFloat("offsetX", 0f));
+                    attach.setOffsetY(data.getFloat("offsetY", 0f));
+                    attach.setOffsetZ(data.getFloat("offsetZ", 0f));
+                    attach.setVisible(data.getBoolean("visible", true));
+                    return attach;
+                });
     }
 
     public static void registerSystems(HermesEngine engine) {

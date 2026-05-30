@@ -1,0 +1,11 @@
+{
+  "ui": "ui/test-panel.json",
+  "entities": [
+    {
+      "id": "hp",
+      "components": {
+        "UiAttach": { "document": "ui/hp-bar.json", "follow": "player", "offsetY": 2.0 }
+      }
+    }
+  ]
+}

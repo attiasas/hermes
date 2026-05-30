@@ -27,6 +27,7 @@ public final class UiServiceImpl implements UiService {
 
     @Override
     public void onSceneEnter(String sceneId, Optional<SceneUiConfig> config) {
+        config.ifPresent(c -> load(c.document()));
     }
 
     @Override
