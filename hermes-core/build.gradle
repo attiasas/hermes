@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     api project(':hermes-api')
+    implementation 'com.google.code.gson:gson:2.13.1'
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
     implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
 

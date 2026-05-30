@@ -12,16 +12,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** Stub {@link UiService}; document loading and layout arrive in later tasks. */
+/** {@link UiService} implementation; layout and rendering arrive in later tasks. */
 public final class UiServiceImpl implements UiService {
 
+    private final UiDocumentLoader documentLoader = new UiDocumentLoader(new BuiltinUiWidgets());
     private final UiWidgetRegistryImpl widgets = new UiWidgetRegistryImpl();
     private final Map<String, Object> bindings = new HashMap<>();
     private final List<UiBindingProvider> bindingProviders = new ArrayList<>();
 
     @Override
     public UiDocument load(String assetPath) {
-        throw new UnsupportedOperationException("UI document loading not implemented yet");
+        return documentLoader.load(assetPath);
     }
 
     @Override
