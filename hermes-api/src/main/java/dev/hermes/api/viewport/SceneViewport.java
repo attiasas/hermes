@@ -24,5 +24,11 @@ public interface SceneViewport {
 
     void worldToScreen(float worldX, float worldY, float worldZ, Vec2 out);
 
+    /** Maps NORMALIZED (0..1) coordinates within the viewport rect to SURFACE pixels. */
+    void normalizedToSurface(float nx, float ny, Vec2 out);
+
+    /** Maps SURFACE pixels to NORMALIZED (0..1) coordinates within the viewport rect. */
+    void surfaceToNormalized(float sx, float sy, Vec2 out);
+
     ScreenRay screenRay(float screenX, float screenY);
 }

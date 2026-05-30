@@ -1,14 +1,15 @@
 package dev.hermes.core.viewport;
 
 import com.badlogic.gdx.math.Vector3;
-import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.ViewportFitMode;
 import dev.hermes.api.math.CoordinateSpace;
 import dev.hermes.api.math.Rect4;
 import dev.hermes.api.math.ScreenRay;
 import dev.hermes.api.math.Vec2;
 import dev.hermes.api.math.Vec3;
 import dev.hermes.api.viewport.SceneViewport;
-import dev.hermes.core.ecs.SceneCamera;
+import dev.hermes.core.ecs.ActiveCamera;
 
 /**
  * Per-surface viewport facade using a bound {@link SceneCamera}.
@@ -20,6 +21,35 @@ public final class SceneViewportImpl implements SceneViewport {
 
     public SceneViewportImpl(BoundCamera bound) {
         this.bound = bound;
+    }
+
+    /** Test and layout helper: viewport rect on a screen-sized surface. */
+    public static SceneViewportImpl forRect(
+            float viewportX, float viewportY, float viewportW, float viewportH, int surfaceW, int surfaceH) {
+        Rect4 rect = new Rect4().set(viewportX, viewportY, viewportW, viewportH);
+        RenderSurface surface = RenderSurface.screen(surfaceW, surfaceH, rect);
+        ActiveCamera active =
+                new ActiveCamera(
+                        Camera.Projection.ORTHOGRAPHIC,
+                        viewportW * 0.5f,
+                        viewportH * 0.5f,
+                        0f,
+                        0f,
+                        0f,
+                        0f,
+                        1f,
+                        67f,
+                        0.1f,
+                        3000f,
+                        surfaceW,
+                        surfaceH,
+                        ViewportFitMode.STRETCH,
+                        surfaceW / (float) Math.max(surfaceH, 1),
+                        Float.NaN,
+                        Float.NaN,
+                        Float.NaN,
+                        null);
+        return new SceneViewportImpl(new ViewportCameraBinder().bind(active, surface));
     }
 
     @Override
@@ -69,6 +99,18 @@ public final class SceneViewportImpl implements SceneViewport {
         scratch.set(worldX, worldY, worldZ);
         bound.gdxCamera().project(scratch);
         out.set(scratch.x, scratch.y);
+    }
+
+    @Override
+    public void normalizedToSurface(float nx, float ny, Vec2 out) {
+        Rect4 rect = bound.viewportRect();
+        out.set(rect.x + nx * rect.width, rect.y + ny * rect.height);
+    }
+
+    @Override
+    public void surfaceToNormalized(float sx, float sy, Vec2 out) {
+        Rect4 rect = bound.viewportRect();
+        out.set((sx - rect.x) / rect.width, (sy - rect.y) / rect.height);
     }
 
     @Override
