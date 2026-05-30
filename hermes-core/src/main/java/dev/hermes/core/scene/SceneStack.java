@@ -10,6 +10,7 @@ import dev.hermes.api.scene.SceneContext;
 import dev.hermes.api.scene.SceneDefinition;
 import dev.hermes.api.scene.SceneLifecycle;
 import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
@@ -116,7 +117,11 @@ public final class SceneStack {
                 };
         SceneLoadMetadata jsonMetadata = SceneLoadMetadata.empty();
         if (definition.source() instanceof AssetSceneSource) {
-            jsonMetadata = SceneLoader.load(((AssetSceneSource) definition.source()).assetPath(), ctx);
+            jsonMetadata =
+                    SceneLoader.load(
+                            ((AssetSceneSource) definition.source()).assetPath(),
+                            ctx,
+                            engine == null ? new EntityTypeRegistryImpl() : engine.entityTypes());
         } else {
             definition.source().populate(ctx);
         }

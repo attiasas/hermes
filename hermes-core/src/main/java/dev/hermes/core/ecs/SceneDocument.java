@@ -35,7 +35,12 @@ final class SceneDocument {
                                 "Scene '" + scenePath + "': entities[" + i + "] must be an object.");
                     }
                     String id = entityValue.has("id") ? entityValue.getString("id", "") : "";
-                    String kind = entityValue.has("kind") ? entityValue.getString("kind", "") : "";
+                    String kind = "";
+                    if (entityValue.has("type")) {
+                        kind = entityValue.getString("type", "");
+                    } else if (entityValue.has("kind")) {
+                        kind = entityValue.getString("kind", "");
+                    }
                     JsonValue componentsValue = entityValue.get("components");
                     List<ComponentSpec> components = new ArrayList<>();
                     if (componentsValue != null && componentsValue.isObject()) {
