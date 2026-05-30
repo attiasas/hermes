@@ -3,6 +3,7 @@ package dev.hermes.core.ecs;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
+import dev.hermes.api.scene.SceneAudioConfig;
 import dev.hermes.api.scene.SceneUiConfig;
 import dev.hermes.core.lighting.SceneLightingBlock;
 
@@ -19,6 +20,7 @@ final class SceneDocument {
     private final String renderPipeline;
     private final String inputContext;
     private final SceneUiConfig uiConfig;
+    private final SceneAudioConfig audioConfig;
     private final Optional<SceneLightingBlock> lighting;
 
     private SceneDocument(
@@ -26,11 +28,13 @@ final class SceneDocument {
             String renderPipeline,
             String inputContext,
             SceneUiConfig uiConfig,
+            SceneAudioConfig audioConfig,
             Optional<SceneLightingBlock> lighting) {
         this.entities = entities;
         this.renderPipeline = renderPipeline;
         this.inputContext = inputContext;
         this.uiConfig = uiConfig;
+        this.audioConfig = audioConfig;
         this.lighting = lighting;
     }
 
@@ -85,11 +89,15 @@ final class SceneDocument {
             if (root.has("ui")) {
                 uiConfig = parseUiConfig(scenePath, root.get("ui"));
             }
+            SceneAudioConfig audioConfig = null;
+            if (root.has("audio")) {
+                audioConfig = parseAudioConfig(scenePath, root.get("audio"));
+            }
             Optional<SceneLightingBlock> lighting = Optional.empty();
             if (root.has("lighting")) {
                 lighting = Optional.of(parseLighting(scenePath, root.get("lighting")));
             }
-            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig, lighting);
+            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig, audioConfig, lighting);
         } catch (SceneParseException e) {
             throw e;
         } catch (Exception e) {
@@ -113,8 +121,24 @@ final class SceneDocument {
         return Optional.ofNullable(uiConfig);
     }
 
+    Optional<SceneAudioConfig> audioConfig() {
+        return Optional.ofNullable(audioConfig);
+    }
+
     Optional<SceneLightingBlock> lighting() {
         return lighting;
+    }
+
+    private static SceneAudioConfig parseAudioConfig(String scenePath, JsonValue audioValue) {
+        if (audioValue == null || !audioValue.isObject()) {
+            throw new SceneParseException("Scene '" + scenePath + "': \"audio\" must be an object.");
+        }
+        String bgm = audioValue.getString("bgm", "").trim();
+        String bgmPlaylist = audioValue.getString("bgmPlaylist", "").trim();
+        float fadeInSeconds = audioValue.getFloat("fadeInSeconds", 1f);
+        float fadeOutSeconds = audioValue.getFloat("fadeOutSeconds", 1f);
+        boolean pauseBgmOnPause = audioValue.getBoolean("pauseBgmOnPause", false);
+        return new SceneAudioConfig(bgm, bgmPlaylist, fadeInSeconds, fadeOutSeconds, pauseBgmOnPause);
     }
 
     private static SceneLightingBlock parseLighting(String scenePath, JsonValue lightingValue) {

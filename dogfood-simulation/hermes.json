@@ -2,5 +2,6 @@
   "title": "HermesSample",
   "scene": "scenes/main-menu.json",
   "renderPipeline": "render/pipeline.json",
-  "inputProfile": "input/profile.json"
+  "inputProfile": "input/profile.json",
+  "audioProfile": "audio/profile.json"
 }

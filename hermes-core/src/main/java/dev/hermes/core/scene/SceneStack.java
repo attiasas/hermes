@@ -152,6 +152,7 @@ public final class SceneStack {
                         jsonMetadata.renderPipeline(),
                         jsonMetadata.inputContext(),
                         jsonMetadata.uiConfig(),
+                        jsonMetadata.audioConfig(),
                         false);
         String pipelinePath =
                 RenderPipelineExecutor.resolvePipelinePath(instance, projectDefaultPipelinePath);
@@ -163,6 +164,7 @@ public final class SceneStack {
         log.debug("Entering scene: " + instance.id());
         if (engine != null) {
             engine.ui().onSceneEnter(instance.id(), instance.uiConfig());
+            engine.audio().onSceneEnter(instance.id(), instance.audioConfig());
         }
         SceneLifecycle lifecycle = instance.definition().lifecycle();
         if (lifecycle != null) {
@@ -174,6 +176,7 @@ public final class SceneStack {
         log.debug("Exiting scene: " + instance.id());
         if (engine != null) {
             engine.ui().onSceneExit(instance.id());
+            engine.audio().onSceneExit(instance.id());
         }
         SceneLifecycle lifecycle = instance.definition().lifecycle();
         if (lifecycle != null) {
@@ -186,6 +189,9 @@ public final class SceneStack {
     private void pauseScene(SceneInstance instance) {
         log.debug("Pausing scene: " + instance.id());
         instance.setPaused(true);
+        if (engine != null) {
+            engine.audio().onScenePause(instance.id());
+        }
         SceneLifecycle lifecycle = instance.definition().lifecycle();
         if (lifecycle != null) {
             lifecycle.onPause(sceneContext(instance));
@@ -195,6 +201,9 @@ public final class SceneStack {
     private void resumeScene(SceneInstance instance) {
         log.debug("Resuming scene: " + instance.id());
         instance.setPaused(false);
+        if (engine != null) {
+            engine.audio().onSceneResume(instance.id());
+        }
         SceneLifecycle lifecycle = instance.definition().lifecycle();
         if (lifecycle != null) {
             lifecycle.onResume(sceneContext(instance));

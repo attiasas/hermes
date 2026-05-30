@@ -1,5 +1,7 @@
 package dev.hermes.core.ecs;
 
+import dev.hermes.api.audio.AudioMixer;
+import dev.hermes.api.audio.AudioService;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.EntityTypeRegistry;
 import dev.hermes.api.ecs.HermesEngine;
@@ -10,6 +12,8 @@ import dev.hermes.api.input.InputService;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.core.config.RuntimeConfigServices;
+import dev.hermes.core.audio.AudioMixerImpl;
+import dev.hermes.core.audio.AudioServiceImpl;
 import dev.hermes.core.input.InputServiceImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
@@ -35,19 +39,27 @@ public final class HermesEngineImpl implements HermesEngine {
     private final ViewportServiceImpl viewport = new ViewportServiceImpl();
     private final InputServiceImpl input;
     private final UiServiceImpl ui = new UiServiceImpl();
+    private final AudioMixerImpl internalMixer = new AudioMixerImpl();
+    private final AudioServiceImpl audio;
     private final List<SystemEntry> systems = new ArrayList<>();
 
     public HermesEngineImpl() {
         this.registry = new ComponentRegistryImpl();
         this.sceneManager = new SceneManagerImpl(registry);
         this.input = new InputServiceImpl(this);
+        this.audio = AudioServiceImpl.createDefault(internalMixer);
         BuiltinComponents.register(registry);
         BuiltinComponents.registerSystems(this);
         loadServiceRegistrations();
     }
 
     public void bindApplication(dev.hermes.api.HermesApplication application) {
-        sceneManager.bind(this, application.createSession());
+        dev.hermes.api.HermesSession session = application.createSession();
+        AudioMixer sessionMixer = session.mixer();
+        if (sessionMixer != AudioMixer.NOOP) {
+            audio.setMixer(sessionMixer);
+        }
+        sceneManager.bind(this, session);
     }
 
     private void loadServiceRegistrations() {
@@ -106,6 +118,15 @@ public final class HermesEngineImpl implements HermesEngine {
     @Override
     public UiService ui() {
         return ui;
+    }
+
+    @Override
+    public AudioService audio() {
+        return audio;
+    }
+
+    public void dispose() {
+        audio.dispose();
     }
 
     public List<SystemEntry> systems() {

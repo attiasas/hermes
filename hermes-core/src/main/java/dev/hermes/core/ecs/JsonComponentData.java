@@ -71,6 +71,18 @@ final class JsonComponentData implements ComponentData {
         return toFloatArray(object.get(key));
     }
 
+    String[] getStringArray(String key) {
+        JsonValue value = object.get(key);
+        if (value == null || !value.isArray()) {
+            return new String[0];
+        }
+        String[] arr = new String[value.size];
+        for (int i = 0; i < value.size; i++) {
+            arr[i] = value.get(i).asString();
+        }
+        return arr;
+    }
+
     Map<String, float[]> getFloatArrayMap(String key) {
         JsonValue map = object.get(key);
         if (map == null || !map.isObject()) {

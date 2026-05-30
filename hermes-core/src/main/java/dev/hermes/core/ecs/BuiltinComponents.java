@@ -1,13 +1,16 @@
 package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.AmbientLight;
+import dev.hermes.api.ecs.AmbientSource;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.ComponentData;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.DirectionalLight;
 import dev.hermes.api.ecs.PointLight;
 import dev.hermes.api.ecs.SpotLight;
+import dev.hermes.api.ecs.FootstepEmitter;
 import dev.hermes.api.ecs.HermesEngine;
+import dev.hermes.api.ecs.SoundEmitter;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.MaterialUniform;
@@ -19,6 +22,12 @@ import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
+import dev.hermes.api.audio.AudioBus;
+import dev.hermes.core.audio.AmbientAudioSystem;
+import dev.hermes.core.audio.AudioActionSystem;
+import dev.hermes.core.audio.AudioServiceImpl;
+import dev.hermes.core.audio.FootstepSystem;
+import dev.hermes.core.audio.SoundEmitterSystem;
 import dev.hermes.core.input.CameraSceneControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
@@ -45,6 +54,9 @@ public final class BuiltinComponents {
     static final String DIRECTIONAL_LIGHT = "DirectionalLight";
     static final String POINT_LIGHT = "PointLight";
     static final String SPOT_LIGHT = "SpotLight";
+    static final String AMBIENT_SOURCE = "AmbientSource";
+    static final String SOUND_EMITTER = "SoundEmitter";
+    static final String FOOTSTEP_EMITTER = "FootstepEmitter";
 
     private BuiltinComponents() {
     }
@@ -210,9 +222,61 @@ public final class BuiltinComponents {
                     applyDirection(data, light::setDirection);
                     return light;
                 });
+        registry.register(
+                AMBIENT_SOURCE,
+                AmbientSource.class,
+                (data, ctx) -> {
+                    AmbientSource source = new AmbientSource();
+                    source.setClip(data.getString("clip", ""));
+                    source.setClipIsId(data.getBoolean("clipIsId", false));
+                    source.setBus(parseAudioBus(data.getString("bus", "ambient"), AudioBus.AMBIENT));
+                    source.setVolume(data.getFloat("volume", 1f));
+                    source.setLoop(data.getBoolean("loop", true));
+                    source.setMinDistance(data.getFloat("minDistance", 1f));
+                    source.setMaxDistance(data.getFloat("maxDistance", 50f));
+                    source.setRefDistance(data.getFloat("refDistance", 1f));
+                    return source;
+                });
+        registry.register(
+                SOUND_EMITTER,
+                SoundEmitter.class,
+                (data, ctx) -> {
+                    SoundEmitter emitter = new SoundEmitter();
+                    emitter.setClip(data.getString("clip", ""));
+                    emitter.setClipIsId(data.getBoolean("clipIsId", false));
+                    emitter.setBus(parseAudioBus(data.getString("bus", "sfx"), AudioBus.SFX));
+                    emitter.setVolume(data.getFloat("volume", 1f));
+                    emitter.setPitch(data.getFloat("pitch", 1f));
+                    emitter.setLoop(data.getBoolean("loop", false));
+                    emitter.setPlayOn(parsePlayOn(data.getString("playOn", "manual")));
+                    emitter.setIntervalSeconds(data.getFloat("intervalSeconds", 0f));
+                    return emitter;
+                });
+        registry.register(
+                FOOTSTEP_EMITTER,
+                FootstepEmitter.class,
+                (data, ctx) -> {
+                    FootstepEmitter emitter = new FootstepEmitter();
+                    if (data instanceof JsonComponentData) {
+                        emitter.setClips(((JsonComponentData) data).getStringArray("clips"));
+                    }
+                    emitter.setClipIsId(data.getBoolean("clipIsId", false));
+                    emitter.setIntervalSeconds(data.getFloat("intervalSeconds", 0.35f));
+                    emitter.setMinSpeed(data.getFloat("minSpeed", 0.5f));
+                    emitter.setBus(parseAudioBus(data.getString("bus", "sfx"), AudioBus.SFX));
+                    emitter.setVolume(data.getFloat("volume", 0.6f));
+                    return emitter;
+                });
     }
 
     public static void registerSystems(HermesEngine engine) {
+        if (engine instanceof HermesEngineImpl) {
+            AudioServiceImpl audio = (AudioServiceImpl) engine.audio();
+            engine.addSystem(new AmbientAudioSystem(audio), SystemScope.ACTIVE_SCENE);
+            engine.addSystem(new SoundEmitterSystem(audio), SystemScope.ACTIVE_SCENE);
+            engine.addSystem(new FootstepSystem(audio), SystemScope.ACTIVE_SCENE);
+            engine.addSystem(new AudioActionSystem(engine.input().actions(), audio), SystemScope.GLOBAL);
+        }
         engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
@@ -295,6 +359,40 @@ public final class BuiltinComponents {
             return Camera.Projection.PERSPECTIVE;
         }
         return Camera.Projection.ORTHOGRAPHIC;
+    }
+
+    private static AudioBus parseAudioBus(String value, AudioBus defaultBus) {
+        if (value == null || value.isBlank()) {
+            return defaultBus;
+        }
+        String normalized = value.trim().toLowerCase();
+        switch (normalized) {
+            case "sfx":
+                return AudioBus.SFX;
+            case "ambient":
+                return AudioBus.AMBIENT;
+            case "music":
+                return AudioBus.MUSIC;
+            default:
+                throw new IllegalArgumentException("unknown audio bus: " + value);
+        }
+    }
+
+    private static SoundEmitter.PlayOn parsePlayOn(String value) {
+        if (value == null || value.isBlank()) {
+            return SoundEmitter.PlayOn.MANUAL;
+        }
+        String normalized = value.trim().toLowerCase();
+        switch (normalized) {
+            case "spawn":
+                return SoundEmitter.PlayOn.SPAWN;
+            case "interval":
+                return SoundEmitter.PlayOn.INTERVAL;
+            case "manual":
+                return SoundEmitter.PlayOn.MANUAL;
+            default:
+                throw new IllegalArgumentException("unknown SoundEmitter.playOn: " + value);
+        }
     }
 
     private static dev.hermes.api.ecs.ViewportFitMode parseFitMode(String value) {

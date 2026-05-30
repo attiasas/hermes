@@ -77,6 +77,11 @@ public final class RuntimeConfigServiceImpl implements RuntimeConfigService, Run
     }
 
     @Override
+    public String gameAudioProfile() {
+        return get("hermes.game.audioProfile", "audio/profile.json");
+    }
+
+    @Override
     public String logMinLevel() {
         String explicit = get("hermes.log.minLevel", "");
         if (!explicit.isBlank()) {

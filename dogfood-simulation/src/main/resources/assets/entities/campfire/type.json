@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "components": {
+    "Transform": { "x": 0, "y": 0, "z": 0 },
+    "AmbientSource": {
+      "clip": "fire_loop",
+      "clipIsId": true,
+      "minDistance": 2,
+      "maxDistance": 25,
+      "volume": 0.8
+    }
+  }
+}

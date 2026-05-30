@@ -80,6 +80,11 @@ public final class HermesGdxApplication implements ApplicationListener {
 
             engine.entityTypes().scanAssets();
 
+            String audioProfile = RuntimeConfigServices.get().gameAudioProfile();
+            if (audioProfile != null && !audioProfile.isBlank()) {
+                engine.audio().loadProfile(audioProfile);
+            }
+
             if (scenePath != null && !scenePath.isBlank()) {
                 engine.scenes().request(SceneChangeRequest.goTo("main"));
                 engine.scenes().processPending();
@@ -129,6 +134,14 @@ public final class HermesGdxApplication implements ApplicationListener {
                     updateGlobalSystem(entry, engine.scenes().updateScenes(), delta, hasActiveScene, stackPolicy);
                 }
             }
+
+            engine.audio()
+                    .tick(
+                            delta,
+                            hasActiveScene ? engine.scenes().activeManager() : null,
+                            width,
+                            height);
+
             if (hasActiveScene) {
                 WorldManager activeManager = engine.scenes().activeManager();
                 for (HermesEngineImpl.SystemEntry entry : engine.systems()) {
@@ -192,6 +205,9 @@ public final class HermesGdxApplication implements ApplicationListener {
     public void dispose() {
         log.info("Disposing Hermes engine...");
         application.dispose();
+        if (engine != null) {
+            engine.dispose();
+        }
         if (renderPipeline != null) {
             renderPipeline.dispose();
         }

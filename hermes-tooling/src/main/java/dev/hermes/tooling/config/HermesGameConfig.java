@@ -9,6 +9,7 @@ public final class HermesGameConfig {
     private String scene = "scenes/main.json";
     private String renderPipeline = "render/pipeline.json";
     private String inputProfile = "input/profile.json";
+    private String audioProfile = "audio/profile.json";
 
     public String getTitle() {
         return title;
@@ -40,5 +41,13 @@ public final class HermesGameConfig {
 
     public void setInputProfile(String inputProfile) {
         this.inputProfile = inputProfile;
+    }
+
+    public String getAudioProfile() {
+        return audioProfile;
+    }
+
+    public void setAudioProfile(String audioProfile) {
+        this.audioProfile = audioProfile;
     }
 }
