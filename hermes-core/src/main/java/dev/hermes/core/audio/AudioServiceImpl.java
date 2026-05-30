@@ -179,6 +179,15 @@ public final class AudioServiceImpl implements AudioService {
         return Optional.empty();
     }
 
+    AudioProfile currentProfile() {
+        return profile;
+    }
+
+    void loadProfileFromJson(String json) {
+        profile = AudioProfileLoader.parse(json);
+        applyProfileBusVolumes();
+    }
+
     private static final class NoopMusicBackend implements MusicBackend {
 
         @Override

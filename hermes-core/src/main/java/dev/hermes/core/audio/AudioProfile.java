@@ -43,4 +43,8 @@ final class AudioProfile {
     int maxInstancesPerClip() {
         return maxInstancesPerClip;
     }
+
+    Iterable<Map.Entry<String, String>> actionSoundEntries() {
+        return actionSounds.entrySet();
+    }
 }
