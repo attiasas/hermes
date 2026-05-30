@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "designSize": { "width": 1280, "height": 720 },
+  "root": {
+    "type": "panel",
+    "id": "root",
+    "layout": { "anchor": "stretch" },
+    "children": [
+      {
+        "type": "panel",
+        "id": "hud-bar",
+        "layout": { "anchor": "topLeft", "offsetX": 16, "offsetY": -16, "width": 320, "height": 48 },
+        "style": { "color": [0, 0, 0, 0.35] },
+        "children": [
+          {
+            "type": "label",
+            "id": "hud-title",
+            "text": "Dogfood",
+            "layout": { "anchor": "centerLeft", "offsetX": 12, "width": 200, "height": 32 },
+            "style": { "color": [1, 1, 1, 0.9] }
+          }
+        ]
+      },
+      {
+        "type": "label",
+        "id": "hint",
+        "text": "ESC: pause (timer demo) — click cube to select",
+        "layout": { "anchor": "bottomCenter", "offsetY": 24, "width": 640, "height": 28 },
+        "style": { "color": [1, 1, 1, 0.55] }
+      }
+    ]
+  }
+}

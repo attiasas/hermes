@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "designSize": { "width": 1280, "height": 720 },
+  "root": {
+    "type": "panel",
+    "id": "root",
+    "layout": { "anchor": "stretch" },
+    "style": { "color": [0.08, 0.09, 0.14, 1] },
+    "children": [
+      {
+        "type": "image",
+        "id": "logo",
+        "texture": "hermes-logo.png",
+        "layout": { "anchor": "topCenter", "offsetY": -48, "width": 200, "height": 200 }
+      },
+      {
+        "type": "label",
+        "id": "title",
+        "text": "Hermes Sample",
+        "layout": { "anchor": "topCenter", "offsetY": -280, "width": 480, "height": 64 },
+        "style": { "color": [1, 1, 1, 1] }
+      },
+      {
+        "type": "button",
+        "id": "play",
+        "text": "Play",
+        "action": "start_game",
+        "layout": { "anchor": "center", "offsetY": 24, "width": 220, "height": 56 }
+      },
+      {
+        "type": "button",
+        "id": "quit",
+        "text": "Quit",
+        "action": "quit",
+        "layout": { "anchor": "center", "offsetY": 96, "width": 220, "height": 56 }
+      }
+    ]
+  }
+}

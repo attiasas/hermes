@@ -24,7 +24,7 @@ public final class SceneNavigationSystem implements System {
     @Override
     public void update(WorldManager manager, float deltaSeconds) {
         EntityStore entities = manager.entities();
-        if (scenes.active() != null && !"main".equals(scenes.active().id())) {
+        if (scenes.active() != null && !"game".equals(scenes.active().id())) {
             return;
         }
         elapsed += deltaSeconds;

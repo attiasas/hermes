@@ -1,6 +1,6 @@
 {
   "title": "HermesSample",
-  "scene": "scenes/main.json",
+  "scene": "scenes/main-menu.json",
   "renderPipeline": "render/pipeline.json",
   "inputProfile": "input/profile.json"
 }
