@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.core.render.pass.SpritesPass;
-import dev.hermes.core.render.pass.UiPass;
+import dev.hermes.core.render.pass.UiRenderPass;
 import dev.hermes.core.render.pass.World3dPass;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
@@ -83,6 +83,8 @@ public final class RenderGraphBuilder {
                 pass =
                         new CustomGraphPass(
                                 passDef.id(), passRegistry.require(passDef.handler()), viewport);
+            } else if (passDef.type() == PipelineDocument.PassType.UI) {
+                pass = new UiGraphPass(passDef.id(), new UiRenderPass(), passDef.depthTest());
             } else if (passDef.type() == PipelineDocument.PassType.POST
                     || passDef.type() == PipelineDocument.PassType.PARTICLES
                     || passDef.type() == PipelineDocument.PassType.COMPUTE) {
@@ -135,8 +137,7 @@ public final class RenderGraphBuilder {
                 return new SpritesGraphPass(
                         passDef.id(), new SpritesPass(batch, shaderRegistry), layers, passDef.depthTest());
             case UI:
-                return new UiGraphPass(
-                        passDef.id(), new UiPass(batch, passDef.camera()), layers, passDef.depthTest());
+                return new UiGraphPass(passDef.id(), new UiRenderPass(), passDef.depthTest());
             case CUSTOM:
                 return new CustomGraphPass(
                         passDef.id(), passRegistry.require(passDef.handler()), viewport);

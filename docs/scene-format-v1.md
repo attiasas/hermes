@@ -49,7 +49,7 @@ load time with `SceneParseException`.
 | `Sprite`      | `texture` (string)                              | 2D texture path relative to the assets root. **Requires `Material` on the same entity.**                                          |
 | `Mesh`        | `model` (string), `texture` (optional string)   | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
 | `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`.                                               |
-| `RenderLayer` | `layer` (string)                                | `"WORLD"` (default) or `"UI"` — world-space vs overlay draw order.                                                                |
+| `RenderLayer` | `layer` (string)                                | `"WORLD"` (default). Screen-space UI uses the scene `"ui"` field (widget trees), not `RenderLayer`.                              |
 | `Selectable`  | See below                                       | Marks entity as screen-pickable; pair with `Transform`. Used by built-in selection and drag systems.                              |
 | `Selected`    | —                                               | Runtime marker for the currently selected entity (usually set by `SelectionSystem`, not authored in JSON).                      |
 | `Camera`      | See below                                       | View/projection settings; pair with `Transform` on the same entity.                                                               |
@@ -132,7 +132,7 @@ Example with tint:
 
 | Property | Default   | Description                                                             |
 |----------|-----------|-------------------------------------------------------------------------|
-| `layer`  | `"WORLD"` | `"WORLD"` for scene geometry/sprites, `"UI"` for screen-space overlays. |
+| `layer`  | `"WORLD"` | World-space draw order for sprites and meshes.                            |
 
 ### Selectable properties
 
@@ -143,7 +143,7 @@ See [input.md](input.md).
 |-----------|-----------|------------------------------------------------------------------------------------------------|
 | `enabled` | `true`    | When `false`, entity is skipped by picking.                                                    |
 | `radius`  | `16`      | Pick radius in world units (circle in XY for ortho; sphere for perspective).                   |
-| `layer`   | `"WORLD"` | `"WORLD"`, `"UI"`, or `"ANY"` — must align with `pick(..., PickLayer)` filter.                |
+| `layer`   | `"WORLD"` | Must be `"WORLD"`; gameplay picking uses `PickLayer.WORLD` only.                             |
 
 ```json
 "Selectable": { "radius": 48, "layer": "WORLD" }

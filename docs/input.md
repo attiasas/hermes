@@ -31,7 +31,7 @@ loads the profile at startup; a missing file fails fast. Schema details: [input-
 | `devices()` | Raw keyboard, pointer, and gamepad snapshots for the current frame (`InputDevices`). |
 | `viewport(entities)` | Delegates to `engine.viewport().forWorld(entities)`. |
 | `pick(entities, screenX, screenY)` | Screen-space hit test against `Selectable` entities (default `PickLayer.WORLD`). |
-| `pick(entities, screenX, screenY, layer)` | Same, filtered by `PickLayer` (`WORLD`, `UI`, `ANY`). |
+| `pick(entities, screenX, screenY, layer)` | Same, filtered by `PickLayer` (`WORLD` only). |
 
 ### Actions vs devices
 
@@ -115,16 +115,9 @@ if (input.actions().justPressed("select")) {
 Or use `input.pick(entities, p.screenX(), p.screenY())` when you only care about hits on `Selectable` entities; `PickHit`
 includes `worldX`, `worldY`, `worldZ`.
 
-### UI vs WORLD pick layer
+### Pick layer
 
-`Selectable.layer` filters picks (`PickLayer.WORLD`, `UI`, `ANY`). Pair with `RenderLayer`:
-
-| `RenderLayer.layer` | Typical `Selectable.layer` | Use |
-|---------------------|----------------------------|-----|
-| `"WORLD"` | `"WORLD"` | Scene sprites/meshes (default demos). |
-| `"UI"` | `"UI"` | Overlay buttons; pass `PickLayer.UI` to `pick(...)`. |
-
-Entities on `RenderLayer.UI` with `Selectable.layer: "UI"` are tested only when picking with `PickLayer.UI` or `ANY`.
+`Selectable.layer` must be `"WORLD"`. Screen-space UI uses widget hit-testing (`UiInputSystem`), not `pick(...)`.
 
 ## Scene context override
 

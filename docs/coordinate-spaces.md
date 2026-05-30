@@ -46,7 +46,7 @@ Each outer `TargetBindingGraphPass`:
 2. Builds a `RenderSurface` from FBO/window pixel size + camera `fitMode` / `designAspect`.
 3. Resolves the camera with `CameraResolver.resolveForPass(entities, targetId, surfaceW, surfaceH)`.
 4. Binds `SceneCamera` via `ViewportCameraBinder`, applies `glViewport` to the letterbox rect.
-5. Passes `BoundCamera` to `World3dPass`, `SpritesPass`, `UiPass`, or `RenderContext` for custom passes.
+5. Passes `BoundCamera` to `World3dPass`, `SpritesPass`, `UiRenderPass`, or `RenderContext` for custom passes.
 
 `Camera.renderTarget` in scene JSON links a camera entity to a pipeline framebuffer id (see [render-pipeline.md](render-pipeline.md)).
 

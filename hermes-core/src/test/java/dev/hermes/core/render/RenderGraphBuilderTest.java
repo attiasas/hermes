@@ -2,9 +2,18 @@ package dev.hermes.core.render;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.backends.headless.mock.graphics.MockGraphics;
+
+import dev.hermes.core.TestGdx;
+import dev.hermes.core.ecs.EntityStoreImpl;
+import dev.hermes.core.render.pass.UiRenderPass;
+
+import java.lang.reflect.Field;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -35,7 +44,7 @@ final class RenderGraphBuilderTest {
                         + "  ],\n"
                         + "  \"passes\": [\n"
                         + "    { \"id\": \"world3d\", \"type\": \"world3d\", \"target\": \"sceneColor\", \"layers\": [\"WORLD\"] },\n"
-                        + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"layers\": [\"UI\"] }\n"
+                        + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"depthTest\": false }\n"
                         + "  ]\n"
                         + "}\n";
 
@@ -51,17 +60,20 @@ final class RenderGraphBuilderTest {
 
     @Test
     void build_screenTargetRecordsBinding() {
+        TestGdx.initHeadlessGl();
+        Gdx.graphics = new MockGraphics();
+
         String json =
                 "{\n"
                         + "  \"version\": 1,\n"
                         + "  \"passes\": [\n"
-                        + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"layers\": [\"UI\"] }\n"
+                        + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"depthTest\": false }\n"
                         + "  ]\n"
                         + "}\n";
 
         RenderGraph graph = new RenderGraphBuilder().buildWithStubs(PipelineDocument.parse(json));
         graph.resize(640, 480);
-        graph.render(null);
+        graph.render(new EntityStoreImpl());
 
         assertEquals("screen", graph.framebufferPool().lastBoundTarget());
         graph.dispose();
@@ -97,5 +109,45 @@ final class RenderGraphBuilderTest {
                         () -> new RenderGraphBuilder().buildWithStubs(PipelineDocument.parse(json)));
 
         assertTrue(error.getMessage().contains("HUD"));
+    }
+
+    @Test
+    void build_uiPassUsesUiRenderPass() throws Exception {
+        String json =
+                "{\n"
+                        + "  \"version\": 1,\n"
+                        + "  \"passes\": [\n"
+                        + "    { \"id\": \"ui\", \"type\": \"ui\", \"target\": \"screen\", \"depthTest\": false }\n"
+                        + "  ]\n"
+                        + "}\n";
+
+        RenderGraph graph =
+                new RenderGraphBuilder().buildWithStubs(PipelineDocument.parse(json));
+        assertInstanceOf(UiRenderPass.class, uiDelegate(graph, 0));
+        graph.dispose();
+    }
+
+    private static Object uiDelegate(RenderGraph graph, int index) throws Exception {
+        RenderGraphPass wrapped = passAt(graph, index);
+        if (wrapped instanceof TargetBindingGraphPass) {
+            wrapped = targetDelegate((TargetBindingGraphPass) wrapped);
+        }
+        assertInstanceOf(UiGraphPass.class, wrapped);
+        Field delegate = UiGraphPass.class.getDeclaredField("delegate");
+        delegate.setAccessible(true);
+        return delegate.get(wrapped);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static RenderGraphPass passAt(RenderGraph graph, int index) throws Exception {
+        Field passes = RenderGraph.class.getDeclaredField("passes");
+        passes.setAccessible(true);
+        return ((List<RenderGraphPass>) passes.get(graph)).get(index);
+    }
+
+    private static RenderGraphPass targetDelegate(TargetBindingGraphPass targetPass) throws Exception {
+        Field delegate = TargetBindingGraphPass.class.getDeclaredField("delegate");
+        delegate.setAccessible(true);
+        return (RenderGraphPass) delegate.get(targetPass);
     }
 }

@@ -2,25 +2,20 @@ package dev.hermes.core.render;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.EntityStore;
-import dev.hermes.core.render.pass.UiPass;
+import dev.hermes.core.render.pass.UiRenderPass;
 import dev.hermes.core.viewport.BoundCamera;
 import dev.hermes.core.viewport.RenderSurface;
-
-import java.util.Set;
 
 final class UiGraphPass implements RenderGraphPass {
 
     private final String id;
-    private final UiPass delegate;
-    private final Set<RenderLayer.Layer> layers;
+    private final UiRenderPass delegate;
     private final boolean depthTest;
 
-    UiGraphPass(String id, UiPass delegate, Set<RenderLayer.Layer> layers, boolean depthTest) {
+    UiGraphPass(String id, UiRenderPass delegate, boolean depthTest) {
         this.id = id;
         this.delegate = delegate;
-        this.layers = Set.copyOf(layers);
         this.depthTest = depthTest;
     }
 
@@ -31,7 +26,6 @@ final class UiGraphPass implements RenderGraphPass {
 
     @Override
     public void resize(int width, int height) {
-        delegate.resize(width, height);
     }
 
     @Override
@@ -39,7 +33,7 @@ final class UiGraphPass implements RenderGraphPass {
         if (!depthTest) {
             Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
         }
-        delegate.render(entities, layers, bound);
+        delegate.render(entities, bound);
         if (!depthTest) {
             Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
         }
@@ -47,6 +41,5 @@ final class UiGraphPass implements RenderGraphPass {
 
     @Override
     public void dispose() {
-        delegate.dispose();
     }
 }

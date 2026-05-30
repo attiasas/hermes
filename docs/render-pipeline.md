@@ -97,7 +97,7 @@ Example:
 "passes": [
   { "id": "world3d", "type": "world3d", "target": "sceneColor", "layers": ["WORLD"] },
   { "id": "sprites", "type": "sprites", "target": "screen", "layers": ["WORLD"] },
-  { "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "depthTest": false }
+  { "id": "ui", "type": "ui", "target": "screen", "depthTest": false }
 ]
 ```
 
@@ -122,16 +122,14 @@ the window size (see [coordinate-spaces.md](coordinate-spaces.md)).
 A scene may set `"renderPipeline": "render/ui-overlay.json"` to use a different graph (for example a UI-only pause
 menu). Resolution order: scene JSON override → `SceneDefinition.renderPipeline` → project default from `hermes.json`.
 
-## UI pass camera
+## UI pass
 
-UI passes may pin the scene camera by entity id:
+The `ui` pass draws widget trees from the scene `"ui"` field via `UiRenderPass` (no `layers` or `camera` fields). Use
+`depthTest: false` when compositing over a 3D scene.
 
 ```json
-{ "id": "ui", "type": "ui", "target": "screen", "layers": ["UI"], "camera": "ui-camera", "depthTest": false }
+{ "id": "ui", "type": "ui", "target": "screen", "depthTest": false }
 ```
-
-The entity `ui-camera` must have `Transform` + `Camera` (usually orthographic). When omitted, the pass uses the active
-scene camera.
 
 ## HUD framebuffer (future UI system)
 

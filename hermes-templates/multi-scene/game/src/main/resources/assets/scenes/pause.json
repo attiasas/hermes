@@ -1,41 +1,4 @@
 {
   "renderPipeline": "render/ui-overlay.json",
-  "entities": [
-    {
-      "id": "ui-camera",
-      "components": {
-        "Transform": {
-          "x": 320,
-          "y": 240,
-          "z": 1
-        },
-        "Camera": {
-          "projection": "orthographic",
-          "active": true,
-          "zoom": 1
-        }
-      }
-    },
-    {
-      "id": "pause-badge",
-      "components": {
-        "Transform": {
-          "x": 320,
-          "y": 240,
-          "z": 2,
-          "scaleX": 0.35,
-          "scaleY": 0.35
-        },
-        "Sprite": {
-          "texture": "hermes-logo.png"
-        },
-        "Material": {
-          "shader": "default/unlit"
-        },
-        "RenderLayer": {
-          "layer": "UI"
-        }
-      }
-    }
-  ]
+  "entities": []
 }

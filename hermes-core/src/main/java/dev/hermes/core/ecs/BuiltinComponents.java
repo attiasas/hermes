@@ -143,23 +143,23 @@ public final class BuiltinComponents {
     }
 
     private static PickLayer parsePickLayer(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return PickLayer.WORLD;
         }
         String normalized = value.trim().toUpperCase();
-        if ("UI".equals(normalized)) {
-            return PickLayer.UI;
+        if (!"WORLD".equals(normalized)) {
+            throw new IllegalArgumentException("unknown Selectable.layer: " + value);
         }
         return PickLayer.WORLD;
     }
 
     private static RenderLayer.Layer parseRenderLayer(String value) {
-        if (value == null) {
+        if (value == null || value.isBlank()) {
             return RenderLayer.Layer.WORLD;
         }
         String normalized = value.trim().toUpperCase();
-        if ("UI".equals(normalized)) {
-            return RenderLayer.Layer.UI;
+        if (!"WORLD".equals(normalized)) {
+            throw new IllegalArgumentException("unknown RenderLayer.layer: " + value);
         }
         return RenderLayer.Layer.WORLD;
     }
