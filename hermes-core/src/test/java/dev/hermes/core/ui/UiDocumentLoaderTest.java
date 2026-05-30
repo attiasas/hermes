@@ -16,7 +16,10 @@ final class UiDocumentLoaderTest {
 
     @Test
     void loadsPanelWithLabelChild() {
-        UiDocument doc = new UiDocumentLoader(new BuiltinUiWidgets()).load("ui/test-panel.json");
+        UiWidgetRegistryImpl registry = new UiWidgetRegistryImpl();
+        UiDocument doc =
+                new UiDocumentLoader(new UiWidgetTypes(new BuiltinUiWidgets(), registry))
+                        .load("ui/test-panel.json");
         assertEquals(800, doc.designWidth());
         assertEquals("label", doc.root().children().get(0).type());
         assertEquals("Hello", doc.root().children().get(0).prop("text"));

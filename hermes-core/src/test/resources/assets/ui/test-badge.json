@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "designSize": { "width": 100, "height": 50 },
+  "root": { "type": "badge", "id": "b1", "text": "NEW" }
+}

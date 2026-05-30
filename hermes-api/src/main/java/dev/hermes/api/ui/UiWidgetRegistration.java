@@ -1,7 +1,9 @@
 package dev.hermes.api.ui;
 
 /**
- * SPI hook for custom widget types: deserialize JSON props and contribute draw operations.
+ * ServiceLoader entry for custom widget types (deserialize props and draw hooks).
  */
 public interface UiWidgetRegistration {
+
+    void register(UiWidgetRegistry registry);
 }

@@ -16,7 +16,6 @@ import dev.hermes.api.ui.UiNode;
 import dev.hermes.api.ui.UiService;
 import dev.hermes.api.ui.UiWidgetRegistry;
 import dev.hermes.api.viewport.ViewportService;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,14 +24,14 @@ import java.util.Optional;
 /** {@link UiService} implementation with per-scene widget trees and rendering. */
 public final class UiServiceImpl implements UiService {
 
-    private final UiDocumentLoader documentLoader = new UiDocumentLoader(new BuiltinUiWidgets());
     private final UiWidgetRegistryImpl widgets = new UiWidgetRegistryImpl();
+    private final UiWidgetTypes widgetTypes = new UiWidgetTypes(new BuiltinUiWidgets(), widgets);
+    private final UiDocumentLoader documentLoader = new UiDocumentLoader(widgetTypes);
     private final UiLayoutEngine layoutEngine = new UiLayoutEngine();
     private final UiFontRegistry fontRegistry = new UiFontRegistry();
     private final UiTextureCache textureCache = new UiTextureCache();
-    private final UiTreeRenderer treeRenderer = new UiTreeRenderer(fontRegistry, textureCache);
-    private final Map<String, Object> bindings = new HashMap<>();
-    private final List<UiBindingProvider> bindingProviders = new ArrayList<>();
+    private final UiTreeRenderer treeRenderer = new UiTreeRenderer(fontRegistry, textureCache, widgets);
+    private final UiBindingResolver bindingResolver = new UiBindingResolver();
     private final Map<String, SceneUiState> sceneStates = new HashMap<>();
     private final Map<EntityId, AttachAnchor> attachAnchors = new HashMap<>();
 
@@ -59,33 +58,17 @@ public final class UiServiceImpl implements UiService {
 
     @Override
     public void setBinding(String key, Object value) {
-        if (key != null && !key.isBlank()) {
-            bindings.put(key, value);
-        }
+        bindingResolver.setBinding(key, value);
     }
 
     @Override
     public Object getBinding(String key) {
-        if (key == null || key.isBlank()) {
-            return null;
-        }
-        if (bindings.containsKey(key)) {
-            return bindings.get(key);
-        }
-        for (UiBindingProvider provider : bindingProviders) {
-            Optional<Object> resolved = provider.resolve(key);
-            if (resolved.isPresent()) {
-                return resolved.get();
-            }
-        }
-        return null;
+        return bindingResolver.resolve(key);
     }
 
     @Override
     public void addBindingProvider(UiBindingProvider provider) {
-        if (provider != null) {
-            bindingProviders.add(provider);
-        }
+        bindingResolver.addProvider(provider);
     }
 
     @Override
@@ -123,14 +106,20 @@ public final class UiServiceImpl implements UiService {
         batch.getProjectionMatrix().setToOrtho2D(0, 0, surfaceWidth, surfaceHeight);
         batch.begin();
         layoutScene(sceneId, surfaceWidth, surfaceHeight)
-                .ifPresent(laidOut -> treeRenderer.draw(laidOut.root(), laidOut.layout(), batch, this::getBinding));
+                .ifPresent(
+                        laidOut ->
+                                treeRenderer.draw(
+                                        laidOut.root(), laidOut.layout(), batch, bindingResolver::resolve));
         if (entities != null) {
             for (Entity entity : entities.entitiesWith(UiAttach.class)) {
                 tryLayoutAttach(entity.id(), surfaceWidth, surfaceHeight)
                         .ifPresent(
                                 laidOut ->
                                         treeRenderer.draw(
-                                                laidOut.root(), laidOut.layout(), batch, this::getBinding));
+                                                laidOut.root(),
+                                                laidOut.layout(),
+                                                batch,
+                                                bindingResolver::resolve));
             }
         }
         batch.end();

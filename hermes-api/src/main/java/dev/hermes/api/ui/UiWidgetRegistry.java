@@ -5,5 +5,7 @@ package dev.hermes.api.ui;
  */
 public interface UiWidgetRegistry {
 
-    void register(String type, UiWidgetRegistration registration);
+    void register(String type, UiCustomWidget widget);
+
+    boolean supports(String type);
 }

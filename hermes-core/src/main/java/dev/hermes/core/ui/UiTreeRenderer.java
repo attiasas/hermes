@@ -18,11 +18,17 @@ public final class UiTreeRenderer {
 
     private final UiFontRegistry fonts;
     private final UiTextureCache textures;
+    private final UiWidgetRegistryImpl customWidgets;
     private final GlyphLayout glyphLayout = new GlyphLayout();
 
     public UiTreeRenderer(UiFontRegistry fonts, UiTextureCache textures) {
+        this(fonts, textures, null);
+    }
+
+    public UiTreeRenderer(UiFontRegistry fonts, UiTextureCache textures, UiWidgetRegistryImpl customWidgets) {
         this.fonts = Objects.requireNonNull(fonts, "fonts");
         this.textures = Objects.requireNonNull(textures, "textures");
+        this.customWidgets = customWidgets;
     }
 
     /** Ordered draw-op ids for tests ({@code type:nodeId}). */
@@ -57,6 +63,13 @@ public final class UiTreeRenderer {
         if (id == null || id.isBlank() || !layout.boundsById().containsKey(id)) {
             return;
         }
+        if (customWidgets != null) {
+            UiCustomWidgetImpl handler = customWidgets.handler(node.type());
+            if (handler != null) {
+                handler.recordDebugOp(node, ops);
+                return;
+            }
+        }
         ops.add(node.type() + ":" + id);
     }
 
@@ -78,6 +91,11 @@ public final class UiTreeRenderer {
             drawButton(node, bounds, batch);
         } else if ("progressBar".equals(type)) {
             drawProgressBar(node, bounds, batch, bindings);
+        } else if (customWidgets != null) {
+            UiCustomWidgetImpl handler = customWidgets.handler(type);
+            if (handler != null) {
+                handler.draw(node, bounds, batch, bindings);
+            }
         }
     }
 

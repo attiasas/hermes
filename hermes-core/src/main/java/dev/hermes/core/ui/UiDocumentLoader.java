@@ -27,10 +27,10 @@ public final class UiDocumentLoader {
     private static final Set<String> NODE_RESERVED =
             Set.of("type", "id", "layout", "style", "children");
 
-    private final BuiltinUiWidgets builtins;
+    private final UiWidgetTypes widgetTypes;
 
-    public UiDocumentLoader(BuiltinUiWidgets builtins) {
-        this.builtins = Objects.requireNonNull(builtins, "builtins");
+    public UiDocumentLoader(UiWidgetTypes widgetTypes) {
+        this.widgetTypes = Objects.requireNonNull(widgetTypes, "widgetTypes");
     }
 
     public UiDocument load(String assetPath) {
@@ -69,7 +69,7 @@ public final class UiDocumentLoader {
 
     private UiNode parseNode(JsonObject json, String context) {
         String type = requireString(json, "type", context);
-        if (!builtins.supports(type)) {
+        if (!widgetTypes.supports(type)) {
             throw new UiDocumentParseException(context + ": unknown widget type '" + type + "'");
         }
         UiNode node = new UiNode(type);
