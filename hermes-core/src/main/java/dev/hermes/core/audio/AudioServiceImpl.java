@@ -23,19 +23,27 @@ public final class AudioServiceImpl implements AudioService {
 
     private final SoundBackend backend;
     private final SoundCache soundCache;
+    private final BgmControllerImpl bgmController;
     private AudioMixer mixer;
     private AudioProfile profile;
     private boolean missingProfileLogged;
 
     public AudioServiceImpl(SoundBackend backend, AudioMixer mixer, SoundCache soundCache) {
+        this(backend, new NoopMusicBackend(), mixer, soundCache);
+    }
+
+    AudioServiceImpl(
+            SoundBackend backend, MusicBackend musicBackend, AudioMixer mixer, SoundCache soundCache) {
         this.backend = backend;
         this.mixer = mixer;
         this.soundCache = soundCache;
+        this.bgmController = new BgmControllerImpl(musicBackend, mixer);
     }
 
     public static AudioServiceImpl createDefault(AudioMixerImpl mixer) {
         GdxSoundBackend backend = new GdxSoundBackend();
-        return new AudioServiceImpl(backend, mixer, new SoundCache(backend));
+        GdxMusicBackend musicBackend = new GdxMusicBackend();
+        return new AudioServiceImpl(backend, musicBackend, mixer, new SoundCache(backend));
     }
 
     public void setMixer(AudioMixer mixer) {
@@ -44,6 +52,7 @@ public final class AudioServiceImpl implements AudioService {
 
     public void dispose() {
         soundCache.dispose();
+        bgmController.dispose();
     }
 
     @Override
@@ -83,7 +92,7 @@ public final class AudioServiceImpl implements AudioService {
 
     @Override
     public BgmController bgm() {
-        return NoopBgmController.INSTANCE;
+        return bgmController;
     }
 
     @Override
@@ -109,7 +118,9 @@ public final class AudioServiceImpl implements AudioService {
     }
 
     @Override
-    public void tick(float delta, WorldManager activeManager, float surfaceWidth, float surfaceHeight) {}
+    public void tick(float delta, WorldManager activeManager, float surfaceWidth, float surfaceHeight) {
+        bgmController.tick(delta);
+    }
 
     @Override
     public void onSceneEnter(String sceneId, Optional<SceneAudioConfig> config) {}
@@ -123,21 +134,34 @@ public final class AudioServiceImpl implements AudioService {
     @Override
     public void onSceneResume(String sceneId) {}
 
-    private static final class NoopBgmController implements BgmController {
-
-        private static final NoopBgmController INSTANCE = new NoopBgmController();
+    private static final class NoopMusicBackend implements MusicBackend {
 
         @Override
-        public void playPlaylist(String playlistAssetPath) {}
+        public MusicHandle load(String path) {
+            return NoopMusicHandle.INSTANCE;
+        }
 
         @Override
-        public void playRandom(String playlistAssetPath) {}
+        public void disposeMusic() {}
+    }
+
+    private static final class NoopMusicHandle implements MusicHandle {
+
+        private static final NoopMusicHandle INSTANCE = new NoopMusicHandle();
 
         @Override
-        public void crossfadeTo(String playlistAssetPath, float fadeSeconds) {}
+        public void play(float volume, boolean loop) {}
 
         @Override
-        public void stop(float fadeSeconds) {}
+        public void stop() {}
+
+        @Override
+        public void setVolume(float volume) {}
+
+        @Override
+        public boolean isPlaying() {
+            return false;
+        }
 
         @Override
         public void pause() {}
@@ -146,11 +170,6 @@ public final class AudioServiceImpl implements AudioService {
         public void resume() {}
 
         @Override
-        public void setVolume(float volume01) {}
-
-        @Override
-        public boolean isPlaying() {
-            return false;
-        }
+        public void dispose() {}
     }
 }
