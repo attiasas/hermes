@@ -3,6 +3,8 @@ package dev.hermes.core.render;
 import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 
+import dev.hermes.core.lighting.LightingBudgets;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -97,6 +99,34 @@ public final class PipelineDocument {
     }
 
     public static final class PassDef {
+        public static final class LightingBudgets {
+            private final int maxDirectional;
+            private final int maxPoint;
+            private final int maxSpot;
+
+            public LightingBudgets(int maxDirectional, int maxPoint, int maxSpot) {
+                this.maxDirectional = maxDirectional;
+                this.maxPoint = maxPoint;
+                this.maxSpot = maxSpot;
+            }
+
+            public static LightingBudgets defaults() {
+                return new LightingBudgets(1, 0, 0);
+            }
+
+            public int maxDirectional() {
+                return maxDirectional;
+            }
+
+            public int maxPoint() {
+                return maxPoint;
+            }
+
+            public int maxSpot() {
+                return maxSpot;
+            }
+        }
+
         private final String id;
         private final PassType type;
         private final String handler;
@@ -104,6 +134,7 @@ public final class PipelineDocument {
         private final List<String> layers;
         private final boolean depthTest;
         private final String camera;
+        private final LightingBudgets lighting;
 
         public PassDef(
                 String id,
@@ -112,7 +143,8 @@ public final class PipelineDocument {
                 String target,
                 List<String> layers,
                 boolean depthTest,
-                String camera) {
+                String camera,
+                LightingBudgets lighting) {
             this.id = id;
             this.type = type;
             this.handler = handler;
@@ -120,6 +152,7 @@ public final class PipelineDocument {
             this.layers = layers;
             this.depthTest = depthTest;
             this.camera = camera;
+            this.lighting = lighting == null ? LightingBudgets.defaults() : lighting;
         }
 
         public String id() {
@@ -154,6 +187,10 @@ public final class PipelineDocument {
          */
         public String camera() {
             return camera;
+        }
+
+        public LightingBudgets lighting() {
+            return lighting;
         }
     }
 
@@ -194,6 +231,28 @@ public final class PipelineDocument {
 
     public List<PassDef> passes() {
         return passes;
+    }
+
+    /**
+     * Element-wise maximum lighting budgets across all {@link PassType#WORLD3D} passes.
+     */
+    public static LightingBudgets maxWorld3dLightingBudgets(PipelineDocument doc) {
+        int maxDirectional = 0;
+        int maxPoint = 0;
+        int maxSpot = 0;
+        for (PassDef pass : doc.passes()) {
+            if (pass.type() != PassType.WORLD3D) {
+                continue;
+            }
+            PassDef.LightingBudgets budgets = pass.lighting();
+            maxDirectional = Math.max(maxDirectional, budgets.maxDirectional());
+            maxPoint = Math.max(maxPoint, budgets.maxPoint());
+            maxSpot = Math.max(maxSpot, budgets.maxSpot());
+        }
+        if (maxDirectional == 0 && maxPoint == 0 && maxSpot == 0) {
+            return LightingBudgets.defaults();
+        }
+        return new LightingBudgets(maxDirectional, maxPoint, maxSpot);
     }
 
     public static PipelineDocument parse(String json) {
@@ -287,9 +346,21 @@ public final class PipelineDocument {
             List<String> layers = parseLayers(entry.get("layers"));
             boolean depthTest = entry.getBoolean("depthTest", true);
             String camera = parseOptionalString(entry, "camera");
-            result.add(new PassDef(id, type, handler, target, layers, depthTest, camera));
+            PassDef.LightingBudgets lighting = parseLighting(entry);
+            result.add(new PassDef(id, type, handler, target, layers, depthTest, camera, lighting));
         }
         return result;
+    }
+
+    private static PassDef.LightingBudgets parseLighting(JsonValue entry) {
+        JsonValue value = entry.get("lighting");
+        if (value == null || !value.isObject()) {
+            return PassDef.LightingBudgets.defaults();
+        }
+        int maxDirectional = value.getInt("maxDirectional", 1);
+        int maxPoint = value.getInt("maxPoint", 0);
+        int maxSpot = value.getInt("maxSpot", 0);
+        return new PassDef.LightingBudgets(maxDirectional, maxPoint, maxSpot);
     }
 
     private static String parseHandler(JsonValue entry, PassType type) {

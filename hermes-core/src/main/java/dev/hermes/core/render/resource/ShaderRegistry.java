@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.utils.Disposable;
 import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.lighting.LightingBudgets;
 import dev.hermes.core.render.PipelineDocument;
 import dev.hermes.core.render.ShaderCompileException;
 
@@ -26,8 +27,14 @@ public final class ShaderRegistry implements Disposable {
 
     private final Map<String, RegisteredShader> shaders = new HashMap<>();
     private final Set<String> builtinIds = new HashSet<>();
+    private final LightingBudgets lightingBudgets;
 
     public ShaderRegistry(Map<String, PipelineDocument.ShaderDef> shaders) {
+        this(shaders, LightingBudgets.defaults());
+    }
+
+    public ShaderRegistry(Map<String, PipelineDocument.ShaderDef> shaders, LightingBudgets budgets) {
+        this.lightingBudgets = budgets == null ? LightingBudgets.defaults() : budgets;
         if (shaders != null) {
             for (Map.Entry<String, PipelineDocument.ShaderDef> entry : shaders.entrySet()) {
                 register(entry.getKey(), entry.getValue());
@@ -77,9 +84,9 @@ public final class ShaderRegistry implements Disposable {
         Renderable scoped = renderable;
         scoped.environment = environment;
         DefaultShader.Config config = new DefaultShader.Config();
-        config.numDirectionalLights = 1;
-        config.numPointLights = 0;
-        config.numSpotLights = 0;
+        config.numDirectionalLights = lightingBudgets.maxDirectional();
+        config.numPointLights = lightingBudgets.maxPoint();
+        config.numSpotLights = lightingBudgets.maxSpot();
         DefaultShader shader =
                 new DefaultShader(
                         scoped, config, "", sources.vertexSource(), sources.fragmentSource());

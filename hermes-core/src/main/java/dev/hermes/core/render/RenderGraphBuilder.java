@@ -6,6 +6,7 @@ import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.core.render.pass.SpritesPass;
 import dev.hermes.core.render.pass.UiRenderPass;
 import dev.hermes.core.render.pass.World3dPass;
+import dev.hermes.core.lighting.LightingBudgets;
 import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
 import dev.hermes.core.ui.UiServiceImpl;
@@ -46,7 +47,8 @@ public final class RenderGraphBuilder {
     }
 
     public RenderGraph build(PipelineDocument document, SpriteBatch batch) {
-        ShaderRegistry shaderRegistry = new ShaderRegistry(document.shaders());
+        LightingBudgets budgets = PipelineDocument.maxWorld3dLightingBudgets(document);
+        ShaderRegistry shaderRegistry = new ShaderRegistry(document.shaders(), budgets);
         FramebufferPool pool = new FramebufferPool(document.framebuffers());
         validatePassTargets(document);
         validateCustomHandlers(document);

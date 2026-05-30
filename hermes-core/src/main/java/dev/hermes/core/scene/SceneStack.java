@@ -16,7 +16,9 @@ import dev.hermes.core.ecs.SceneLoadMetadata;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneRegistryImpl;
 import dev.hermes.core.ecs.WorldManagerImpl;
+import dev.hermes.core.lighting.LightingBudgetResolver;
 import dev.hermes.core.lighting.LightingRuntime;
+import dev.hermes.core.render.RenderPipelineExecutor;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -38,6 +40,7 @@ public final class SceneStack {
     private final Deque<SceneInstance> stack = new ArrayDeque<>();
     private HermesEngine engine;
     private HermesSession session = HermesSession.EMPTY;
+    private String projectDefaultPipelinePath = "render/pipeline.json";
 
     public SceneStack(SceneRegistryImpl sceneRegistry) {
         this.sceneRegistry = Objects.requireNonNull(sceneRegistry, "sceneRegistry");
@@ -47,6 +50,18 @@ public final class SceneStack {
     public void bind(HermesEngine engine, HermesSession session) {
         this.engine = engine;
         this.session = session == null ? HermesSession.EMPTY : session;
+        if (engine != null) {
+            String pipeline = engine.runtimeConfig().gameRenderPipeline();
+            if (pipeline != null && !pipeline.isBlank()) {
+                projectDefaultPipelinePath = pipeline;
+            }
+        }
+    }
+
+    public void setProjectDefaultPipelinePath(String projectDefaultPipelinePath) {
+        if (projectDefaultPipelinePath != null && !projectDefaultPipelinePath.isBlank()) {
+            this.projectDefaultPipelinePath = projectDefaultPipelinePath;
+        }
     }
 
     public void goTo(String sceneId) {
@@ -129,14 +144,19 @@ public final class SceneStack {
         } else {
             definition.source().populate(ctx);
         }
-        return new SceneInstance(
-                definition.id(),
-                manager,
-                definition,
-                jsonMetadata.renderPipeline(),
-                jsonMetadata.inputContext(),
-                jsonMetadata.uiConfig(),
-                false);
+        SceneInstance instance =
+                new SceneInstance(
+                        definition.id(),
+                        manager,
+                        definition,
+                        jsonMetadata.renderPipeline(),
+                        jsonMetadata.inputContext(),
+                        jsonMetadata.uiConfig(),
+                        false);
+        String pipelinePath =
+                RenderPipelineExecutor.resolvePipelinePath(instance, projectDefaultPipelinePath);
+        LightingBudgetResolver.apply(manager, pipelinePath);
+        return instance;
     }
 
     private void enterScene(SceneInstance instance) {
