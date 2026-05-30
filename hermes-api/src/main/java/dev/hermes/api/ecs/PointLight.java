@@ -2,6 +2,7 @@ package dev.hermes.api.ecs;
 
 import dev.hermes.api.Component;
 
+/** Omnidirectional point light; position comes from {@link Transform}. */
 public final class PointLight implements Component {
     private boolean enabled = true;
     private float intensity = 1f;

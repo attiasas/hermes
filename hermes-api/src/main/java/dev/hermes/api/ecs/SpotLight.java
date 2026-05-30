@@ -2,6 +2,7 @@ package dev.hermes.api.ecs;
 
 import dev.hermes.api.Component;
 
+/** Spot light; position from {@link Transform}, aim along local −Z unless overridden. */
 public final class SpotLight implements Component {
     private boolean enabled = true;
     private float intensity = 1f;

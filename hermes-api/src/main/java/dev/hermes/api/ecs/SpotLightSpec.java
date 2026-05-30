@@ -1,5 +1,6 @@
 package dev.hermes.api.ecs;
 
+/** Static spot light entry parsed from a scene {@code lighting.spot} array. */
 public final class SpotLightSpec {
     private final float[] position;
     private final float[] color;
@@ -17,11 +18,11 @@ public final class SpotLightSpec {
             float[] direction,
             float cutoffAngle,
             float exponent) {
-        this.position = position;
-        this.color = color;
+        this.position = position == null ? new float[0] : position.clone();
+        this.color = color == null ? new float[0] : color.clone();
         this.intensity = intensity;
         this.range = range;
-        this.direction = direction;
+        this.direction = direction == null ? new float[0] : direction.clone();
         this.cutoffAngle = cutoffAngle;
         this.exponent = exponent;
     }

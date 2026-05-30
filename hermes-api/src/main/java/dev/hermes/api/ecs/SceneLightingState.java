@@ -4,12 +4,16 @@ import dev.hermes.api.Component;
 
 import java.util.List;
 
+/**
+ * Scene-owned lighting defaults, static light specs, GPU budgets, and revision counter.
+ * Lives on the reserved {@code __hermes_scene__} entity.
+ */
 public final class SceneLightingState implements Component {
-    private float[] defaultAmbientColor = {0.4f, 0.4f, 0.4f, 1f};
+    private final float[] defaultAmbientColor = {0.4f, 0.4f, 0.4f, 1f};
     private float defaultAmbientIntensity = 1f;
-    private float[] defaultDirectionalColor = {0.8f, 0.8f, 0.8f, 1f};
+    private final float[] defaultDirectionalColor = {0.8f, 0.8f, 0.8f, 1f};
     private float defaultDirectionalIntensity = 1f;
-    private float[] defaultDirectionalDirection = {-1f, -0.8f, -0.2f};
+    private final float[] defaultDirectionalDirection = {-1f, -0.8f, -0.2f};
     private boolean hasDefaultDirectional = true;
 
     private List<PointLightSpec> scenePointLights = List.of();
@@ -82,7 +86,7 @@ public final class SceneLightingState implements Component {
     }
 
     public void setScenePointLights(List<PointLightSpec> scenePointLights) {
-        this.scenePointLights = scenePointLights == null ? List.of() : scenePointLights;
+        this.scenePointLights = scenePointLights == null ? List.of() : List.copyOf(scenePointLights);
     }
 
     public List<SpotLightSpec> sceneSpotLights() {
@@ -90,7 +94,7 @@ public final class SceneLightingState implements Component {
     }
 
     public void setSceneSpotLights(List<SpotLightSpec> sceneSpotLights) {
-        this.sceneSpotLights = sceneSpotLights == null ? List.of() : sceneSpotLights;
+        this.sceneSpotLights = sceneSpotLights == null ? List.of() : List.copyOf(sceneSpotLights);
     }
 
     public int maxDirectional() {

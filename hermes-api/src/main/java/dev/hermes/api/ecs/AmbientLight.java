@@ -2,6 +2,7 @@ package dev.hermes.api.ecs;
 
 import dev.hermes.api.Component;
 
+/** Global ambient fill light component. Transform is ignored when gathered. */
 public final class AmbientLight implements Component {
     private boolean enabled = true;
     private float intensity = 1f;
