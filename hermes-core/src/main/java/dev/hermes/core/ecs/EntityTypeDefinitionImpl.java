@@ -18,8 +18,7 @@ final class EntityTypeDefinitionImpl implements EntityTypeDefinition {
         return kind;
     }
 
-    @Override
-    public JsonValue componentsJson() {
+    JsonValue componentsJson() {
         return componentsJson;
     }
 }

@@ -13,9 +13,10 @@ final class EntityTypeRegistryTest {
         EntityTypeRegistryImpl registry = new EntityTypeRegistryImpl();
         registry.scanTestAssets("entities/spin-cube/type.json");
         assertTrue(registry.has("spin-cube"));
+        EntityTypeDefinitionImpl definition =
+                (EntityTypeDefinitionImpl) registry.require("spin-cube");
         assertEquals(
-                "default/unlit",
-                registry.require("spin-cube").componentsJson().get("Material").getString("shader"));
+                "default/unlit", definition.componentsJson().get("Material").getString("shader"));
     }
 
     @Test
