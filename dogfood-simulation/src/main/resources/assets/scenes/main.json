@@ -3,11 +3,7 @@
     {
       "id": "main-camera",
       "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 5
-        },
+        "Transform": { "x": 0, "y": 0, "z": 5 },
         "Camera": {
           "projection": "perspective",
           "active": true,
@@ -17,35 +13,8 @@
       }
     },
     {
-      "id": "cube",
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 0
-        },
-        "Mesh": {
-          "model": "models/cube.obj",
-          "texture": "hermes-logo.png"
-        },
-        "Material": {
-          "shader": "default/unlit"
-        },
-        "SpinMarker": {
-          "speed": 1.2,
-          "centerX": 0,
-          "centerY": 0,
-          "radius": 1.5
-        },
-        "BounceMarker": {
-          "amplitude": 0.2,
-          "speed": 3
-        },
-        "Selectable": {
-          "radius": 1.2,
-          "layer": "WORLD"
-        }
-      }
+      "type": "spin-cube",
+      "id": "cube"
     }
   ]
 }
