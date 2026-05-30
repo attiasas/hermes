@@ -19,6 +19,8 @@ public interface RuntimeConfigService {
 
     String gameInputProfile();
 
+    String gameAudioProfile();
+
     String logMinLevel();
 
     int logMinSeverity();

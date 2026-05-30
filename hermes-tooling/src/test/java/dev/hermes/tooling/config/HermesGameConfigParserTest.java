@@ -71,6 +71,39 @@ class HermesGameConfigParserTest {
     }
 
     @Test
+    void parse_readsOptionalAudioProfile(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("hermes.json");
+        Files.writeString(
+                file,
+                "{\n"
+                        + "  \"renderPipeline\": \"render/pipeline.json\",\n"
+                        + "  \"inputProfile\": \"input/profile.json\",\n"
+                        + "  \"audioProfile\": \"audio/custom-profile.json\"\n"
+                        + "}\n",
+                StandardCharsets.UTF_8);
+
+        HermesGameConfig config = HermesGameConfigParser.parse(file.toFile());
+
+        assertEquals("audio/custom-profile.json", config.getAudioProfile());
+    }
+
+    @Test
+    void parse_omittedAudioProfileUsesDefault(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("hermes.json");
+        Files.writeString(
+                file,
+                "{\n"
+                        + "  \"renderPipeline\": \"render/pipeline.json\",\n"
+                        + "  \"inputProfile\": \"input/profile.json\"\n"
+                        + "}\n",
+                StandardCharsets.UTF_8);
+
+        HermesGameConfig config = HermesGameConfigParser.parse(file.toFile());
+
+        assertEquals("audio/profile.json", config.getAudioProfile());
+    }
+
+    @Test
     void parse_invalidJsonThrows(@TempDir Path dir) throws IOException {
         Path file = dir.resolve("hermes.json");
         Files.writeString(file, "{ not json", StandardCharsets.UTF_8);

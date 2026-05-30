@@ -80,6 +80,11 @@ public final class HermesGdxApplication implements ApplicationListener {
 
             engine.entityTypes().scanAssets();
 
+            String audioProfile = RuntimeConfigServices.get().gameAudioProfile();
+            if (audioProfile != null && !audioProfile.isBlank()) {
+                engine.audio().loadProfile(audioProfile);
+            }
+
             if (scenePath != null && !scenePath.isBlank()) {
                 engine.scenes().request(SceneChangeRequest.goTo("main"));
                 engine.scenes().processPending();

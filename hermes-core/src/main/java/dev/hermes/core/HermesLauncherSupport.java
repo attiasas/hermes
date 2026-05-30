@@ -68,4 +68,8 @@ public final class HermesLauncherSupport {
     public static String inputProfilePath() {
         return RuntimeConfigServices.get().gameInputProfile();
     }
+
+    public static String gameAudioProfilePath() {
+        return RuntimeConfigServices.get().gameAudioProfile();
+    }
 }

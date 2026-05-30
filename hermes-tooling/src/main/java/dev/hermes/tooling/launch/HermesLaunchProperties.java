@@ -72,6 +72,10 @@ public final class HermesLaunchProperties {
             return put(RuntimeConfigKeys.GAME_INPUT_PROFILE, value);
         }
 
+        public Builder audioProfile(String value) {
+            return put(RuntimeConfigKeys.GAME_AUDIO_PROFILE, value);
+        }
+
         public Builder desktopVsync(boolean value) {
             return put("hermes.desktop.vsync", Boolean.toString(value));
         }
