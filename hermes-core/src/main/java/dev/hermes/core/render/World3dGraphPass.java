@@ -36,7 +36,7 @@ final class World3dGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound, String sceneId) {
         if (!depthTest) {
             Gdx.gl.glDisable(GL20.GL_DEPTH_TEST);
         }

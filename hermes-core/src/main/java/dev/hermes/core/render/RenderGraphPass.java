@@ -10,7 +10,7 @@ interface RenderGraphPass {
 
     void resize(int width, int height);
 
-    void render(EntityStore entities, RenderSurface surface, BoundCamera bound);
+    void render(EntityStore entities, RenderSurface surface, BoundCamera bound, String sceneId);
 
     void dispose();
 }

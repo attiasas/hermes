@@ -29,7 +29,7 @@ final class CustomGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound, String sceneId) {
         RenderContextImpl context = new RenderContextImpl(surface, bound, viewport);
         delegate.render(entities, context);
     }

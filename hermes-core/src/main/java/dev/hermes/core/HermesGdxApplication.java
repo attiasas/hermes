@@ -14,6 +14,7 @@ import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
+import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.log.CachingLoggerProvider;
 import dev.hermes.core.log.GdxLogSink;
 import dev.hermes.core.log.LoggingRuntime;
@@ -67,7 +68,8 @@ public final class HermesGdxApplication implements ApplicationListener {
                             batch,
                             HermesLauncherSupport.gameRenderPipelinePath(),
                             passRegistry,
-                            (ViewportServiceImpl) engine.viewport());
+                            (ViewportServiceImpl) engine.viewport(),
+                            (UiServiceImpl) engine.ui());
 
             String scenePath = HermesLauncherSupport.gameScenePath();
             if (scenePath != null && !scenePath.isBlank()) {

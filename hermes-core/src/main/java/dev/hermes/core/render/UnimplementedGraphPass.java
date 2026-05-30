@@ -33,7 +33,7 @@ final class UnimplementedGraphPass implements RenderGraphPass {
     }
 
     @Override
-    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound) {
+    public void render(EntityStore entities, RenderSurface surface, BoundCamera bound, String sceneId) {
         String key = type.name() + ":" + id;
         if (LOGGED.add(key)) {
             System.err.println(
