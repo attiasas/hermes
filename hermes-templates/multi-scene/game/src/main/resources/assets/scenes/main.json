@@ -25,7 +25,7 @@
           "model": "models/cube.obj"
         },
         "Material": {
-          "shader": "default/unlit"
+          "shader": "default/lit"
         },
         "PulseMarker": {
           "amplitude": 0.15,

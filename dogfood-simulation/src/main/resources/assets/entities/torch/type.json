@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "components": {
+    "Transform": { "y": 0.5 },
+    "PointLight": {
+      "color": [1, 0.6, 0.2, 1],
+      "intensity": 2,
+      "range": 8
+    }
+  }
+}

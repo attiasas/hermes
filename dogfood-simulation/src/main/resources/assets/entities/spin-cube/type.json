@@ -3,7 +3,7 @@
   "components": {
     "Transform": { "x": 0, "y": 0, "z": 0 },
     "Mesh": { "model": "models/cube.obj", "texture": "hermes-logo.png" },
-    "Material": { "shader": "default/unlit" },
+    "Material": { "shader": "default/lit" },
     "SpinMarker": {
       "speed": 1.2,
       "centerX": { "$ref": "Transform.x" },

@@ -7,9 +7,13 @@
     1
   ],
   "shaders": {
-    "default/unlit": {
+    "default/lit": {
       "vertex": "shaders/default.vert",
       "fragment": "shaders/default.frag"
+    },
+    "default/unlit": {
+      "vertex": "shaders/default.vert",
+      "fragment": "shaders/default-unlit.frag"
     },
     "water": {
       "vertex": "shaders/water.vert",

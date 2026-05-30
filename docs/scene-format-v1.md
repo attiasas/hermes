@@ -42,6 +42,7 @@ load time with `SceneParseException`.
 | `entities[].kind`       | No       | Alias for `type`. If both are set, `type` wins. Unregistered kind → tag-only (`EntityKind` stored, no template merge).                                                                                                          |
 | `entities[].components` | No       | Map of component type name → property object. Deep-merged on top of the type template when `"type"`/`"kind"` is set and registered.                                                                                               |
 | `renderPipeline`        | No       | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
+| `lighting`              | No       | Scene-wide lighting defaults (version 1). See [World lighting](world-lighting.md) and [Lighting block](#lighting-block) below. |
 
 ## Built-in component types
 
@@ -50,12 +51,16 @@ load time with `SceneParseException`.
 | `Transform`   | See below                                       | Position, rotation (degrees), and scale. All fields optional.                                                                     |
 | `Sprite`      | `texture` (string)                              | 2D texture path relative to the assets root. **Requires `Material` on the same entity.**                                          |
 | `Mesh`        | `model` (string), `texture` (optional string)   | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
-| `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`.                                               |
+| `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`. Use `default/lit` for lit 3D meshes.          |
 | `RenderLayer` | `layer` (string)                                | `"WORLD"` (default). Screen-space UI uses the scene `"ui"` field (widget trees), not `RenderLayer`.                              |
 | `Selectable`  | See below                                       | Marks entity as screen-pickable; pair with `Transform`. Used by built-in selection and drag systems.                              |
 | `Selected`    | —                                               | Runtime marker for the currently selected entity (usually set by `SelectionSystem`, not authored in JSON).                      |
 | `UiAttach`    | See below                                       | World-attached UI overlay (`document`, `follow` entity id). No `Sprite` or `RenderLayer` required.                               |
 | `Camera`      | See below                                       | View/projection settings; pair with `Transform` on the same entity.                                                               |
+| `AmbientLight` | See [Light components](#light-components)      | Global ambient fill on a light entity (typically one). Position from `Transform` is ignored.                                     |
+| `DirectionalLight` | See [Light components](#light-components)  | Sun/moon; direction from entity **−Z** after rotation, or explicit `direction`. Pair with `Transform` for animated sun.        |
+| `PointLight`  | See [Light components](#light-components)       | Local lamp; position from `Transform`. Requires pipeline `maxPoint` budget.                                                      |
+| `SpotLight`   | See [Light components](#light-components)       | Cone light; position and aim from `Transform` (**−Z** or `direction` override). Requires pipeline `maxSpot` budget.              |
 
 ### Transform properties
 
@@ -92,7 +97,7 @@ Place models under `assets/models/` (e.g. `models/cube.obj`). Templates ship a m
   "components": {
     "Transform": { "z": 0 },
     "Mesh": { "model": "models/cube.obj" },
-    "Material": { "shader": "default/unlit" }
+    "Material": { "shader": "default/lit" }
   }
 }
 ```
@@ -119,7 +124,7 @@ Use a perspective camera for 3D scenes:
 
 | Property   | Default         | Description                                                       |
 |------------|-----------------|-------------------------------------------------------------------|
-| `shader`   | `default/unlit` | Built-in or registered shader id (path-style name).               |
+| `shader`   | `default/unlit` | Built-in or registered shader id. Use `default/lit` for forward-lit 3D meshes; `default/unlit` for flat albedo (sprites, unlit props). |
 | `uniforms` | —               | Map of uniform name → float array, e.g. `"u_tint": [1, 0, 0, 1]`. |
 
 Example with tint:
@@ -234,6 +239,96 @@ they also have a `Sprite` or `Mesh`.
 | `lookAt`                          | *(unset)*        | `{ "x", "y", "z" }` world point for perspective aim (optional)                                                  |
 
 Orthographic mode sorts drawables by world `z`. Perspective mode sorts by distance from the camera (farther first).
+
+## Lighting block
+
+Optional top-level `"lighting"` object sets scene-wide defaults without spawning light entities. Omitted entirely →
+engine defaults (Tier 0). Full guide: [world-lighting.md](world-lighting.md).
+
+```json
+{
+  "lighting": {
+    "version": 1,
+    "ambient": { "color": [0.35, 0.35, 0.4, 1], "intensity": 1 },
+    "directional": {
+      "color": [1, 0.95, 0.85, 1],
+      "intensity": 1.1,
+      "direction": [-0.4, -1, -0.3]
+    },
+    "point": [
+      { "position": [0, 2, 0], "color": [1, 0.8, 0.5, 1], "intensity": 1.5, "range": 12 }
+    ],
+    "spot": [
+      {
+        "position": [0, 3, 0],
+        "direction": [0, -1, 0],
+        "color": [1, 1, 1, 1],
+        "intensity": 1,
+        "range": 10,
+        "cutoffAngle": 45,
+        "exponent": 1
+      }
+    ]
+  },
+  "entities": []
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `lighting.version` | Yes | Must be `1`. |
+| `lighting.ambient` | No | `{ "color": [r,g,b,a], "intensity": float }` — default ambient when no `AmbientLight` entity wins. |
+| `lighting.directional` | No | Default sun; omitted → engine default directional. |
+| `lighting.point` | No | Static point lights (no entities). Each entry: `position`, `color`, `intensity`, `range`. |
+| `lighting.spot` | No | Static spot lights. Each entry: `position`, `direction`, `color`, `intensity`, `range`, `cutoffAngle`, `exponent`. |
+
+For moving or flickering lights, use light **entities** with `Transform` (see below).
+
+### Light components
+
+Light entities do not require `Mesh` or `Sprite` — they are invisible unless you add debug geometry later.
+
+Shared optional fields on all light components: `enabled` (default `true`), `intensity` (default `1`), `color` (RGBA
+float array, alpha ignored).
+
+**AmbientLight** — global fill; `Transform` is ignored.
+
+```json
+"AmbientLight": { "color": [0.2, 0.2, 0.25, 1], "intensity": 0.8 }
+```
+
+**DirectionalLight** — aims along entity local **−Z** in world space after `Transform` rotation, unless `direction`
+`[x,y,z]` is set.
+
+```json
+"DirectionalLight": {
+  "color": [1, 0.95, 0.8, 1],
+  "intensity": 1.2,
+  "direction": [-0.5, -1, -0.2]
+}
+```
+
+**PointLight** — position from `Transform`; `range` default `10`.
+
+```json
+"PointLight": { "color": [1, 0.6, 0.2, 1], "intensity": 2, "range": 8 }
+```
+
+**SpotLight** — position from `Transform`; direction **−Z** or `direction` override; `cutoffAngle` default `45`,
+`exponent` default `1`, `range` default `10`.
+
+```json
+"SpotLight": {
+  "color": [1, 1, 0.9, 1],
+  "intensity": 1.5,
+  "range": 12,
+  "cutoffAngle": 35,
+  "exponent": 2
+}
+```
+
+Point and spot lights require matching `maxPoint` / `maxSpot` budgets on the render pipeline `world3d` pass — see
+[render-pipeline.md](render-pipeline.md).
 
 ## Custom components
 
