@@ -1,0 +1,39 @@
+package dev.hermes.core.resource;
+
+import dev.hermes.api.resource.ResourceKind;
+import dev.hermes.api.resource.ResourceLoadException;
+import dev.hermes.core.resource.loaders.TextureResourceLoader;
+
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.Objects;
+
+/** Maps {@link ResourceKind} to {@link ResourceLoader} implementations. */
+public final class ResourceLoaderRegistry implements dev.hermes.api.resource.ResourceLoaderRegistry {
+
+    private final Map<ResourceKind, ResourceLoader> loaders = new EnumMap<>(ResourceKind.class);
+
+    public void register(ResourceKind kind, ResourceLoader loader) {
+        Objects.requireNonNull(kind, "kind");
+        Objects.requireNonNull(loader, "loader");
+        if (loader.kind() != kind) {
+            throw new IllegalArgumentException(
+                    "Loader kind " + loader.kind() + " does not match registration kind " + kind);
+        }
+        loaders.put(kind, loader);
+    }
+
+    public ResourceLoader require(ResourceKind kind) {
+        ResourceLoader loader = loaders.get(kind);
+        if (loader == null) {
+            throw new ResourceLoadException("No loader registered for kind: " + kind);
+        }
+        return loader;
+    }
+
+    public static ResourceLoaderRegistry withDefaults() {
+        ResourceLoaderRegistry registry = new ResourceLoaderRegistry();
+        registry.register(ResourceKind.TEXTURE, new TextureResourceLoader());
+        return registry;
+    }
+}
