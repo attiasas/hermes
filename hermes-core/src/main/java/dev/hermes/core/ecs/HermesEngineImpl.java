@@ -19,7 +19,9 @@ import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 import dev.hermes.api.ui.UiService;
 import dev.hermes.api.ui.UiWidgetRegistration;
+import dev.hermes.api.resource.ResourceService;
 import dev.hermes.api.viewport.ViewportService;
+import dev.hermes.core.resource.PlaceholderResourceService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,6 +43,7 @@ public final class HermesEngineImpl implements HermesEngine {
     private final UiServiceImpl ui = new UiServiceImpl();
     private final AudioMixerImpl internalMixer = new AudioMixerImpl();
     private final AudioServiceImpl audio;
+    private final ResourceService resources = new PlaceholderResourceService();
     private final List<SystemEntry> systems = new ArrayList<>();
 
     public HermesEngineImpl() {
@@ -123,6 +126,11 @@ public final class HermesEngineImpl implements HermesEngine {
     @Override
     public AudioService audio() {
         return audio;
+    }
+
+    @Override
+    public ResourceService resources() {
+        return resources;
     }
 
     public void dispose() {
