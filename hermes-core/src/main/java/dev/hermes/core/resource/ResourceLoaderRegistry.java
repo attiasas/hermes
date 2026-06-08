@@ -2,6 +2,10 @@ package dev.hermes.core.resource;
 
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceLoadException;
+import dev.hermes.core.audio.AudioBackends;
+import dev.hermes.core.audio.SoundBackend;
+import dev.hermes.core.resource.loaders.ModelResourceLoader;
+import dev.hermes.core.resource.loaders.SoundResourceLoader;
 import dev.hermes.core.resource.loaders.TextureResourceLoader;
 
 import java.util.EnumMap;
@@ -32,8 +36,15 @@ public final class ResourceLoaderRegistry implements dev.hermes.api.resource.Res
     }
 
     public static ResourceLoaderRegistry withDefaults() {
+        return withDefaults(AudioBackends.gdx());
+    }
+
+    public static ResourceLoaderRegistry withDefaults(SoundBackend soundBackend) {
+        Objects.requireNonNull(soundBackend, "soundBackend");
         ResourceLoaderRegistry registry = new ResourceLoaderRegistry();
         registry.register(ResourceKind.TEXTURE, new TextureResourceLoader());
+        registry.register(ResourceKind.MODEL, new ModelResourceLoader());
+        registry.register(ResourceKind.SOUND, new SoundResourceLoader(soundBackend));
         return registry;
     }
 }
