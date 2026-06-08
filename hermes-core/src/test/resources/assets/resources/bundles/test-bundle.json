@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "id": "test-bundle",
+  "resources": [
+    { "ref": "@logo", "kind": "texture" },
+    { "ref": "models/cube.obj", "kind": "model" },
+    { "ref": "sfx/test.wav", "kind": "sound" }
+  ]
+}
