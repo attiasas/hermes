@@ -1,28 +1,32 @@
 package dev.hermes.core.resource;
 
-import com.badlogic.gdx.files.FileHandle;
 import dev.hermes.api.resource.LoadProgress;
 import dev.hermes.api.resource.LoadTicket;
 import dev.hermes.api.resource.ResourceKind;
-import dev.hermes.api.resource.ResourceLoadException;
 import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.api.resource.ResourceService;
 import dev.hermes.core.HermesAssetPaths;
 
+import com.badlogic.gdx.files.FileHandle;
+
 import java.util.Objects;
 import java.util.Optional;
 
-/** Central resource orchestrator: resolve, sync load, cache, and lifecycle. */
+/** Central resource orchestrator: resolve, sync/async load, cache, and lifecycle. */
 public final class ResourceManagerImpl implements ResourceService {
 
     private static final String DEFAULT_PROFILE_BASE = "resources/";
+    private static final int DEFAULT_COOPERATIVE_ASSETS_PER_FRAME = 1;
 
     private final ResourceCatalog catalog;
     private final ResourcePathResolver resolver;
     private final ResourceLoaderRegistry registry;
     private final ResourceCache cache;
     private final SyncLoadPipeline syncPipeline;
+    private final AsyncLoadExecutor asyncExecutor;
     private final String bundlesDirectory;
+
+    private boolean forceCooperativeForTests;
 
     private ResourceManagerImpl(
             ResourceCatalog catalog,
@@ -34,6 +38,8 @@ public final class ResourceManagerImpl implements ResourceService {
         this.resolver = new ResourcePathResolver(catalog);
         this.cache = new ResourceCache();
         this.syncPipeline = new SyncLoadPipeline(cache, registry);
+        this.asyncExecutor =
+                new AsyncLoadExecutor(cache, registry, resolver, this::createLoadStrategy);
     }
 
     public static ResourceManagerImpl createDefault() {
@@ -42,6 +48,12 @@ public final class ResourceManagerImpl implements ResourceService {
 
     public static ResourceManagerImpl forTest(String profileBase) {
         return forProfileBase(profileBase);
+    }
+
+    /** Test hook: force cooperative frame-sliced loading instead of the thread pool. */
+    public void useCooperativeStrategyForTests(boolean cooperative) {
+        forceCooperativeForTests = cooperative;
+        asyncExecutor.resetStrategy();
     }
 
     private static ResourceManagerImpl forProfileBase(String profileBase) {
@@ -64,6 +76,13 @@ public final class ResourceManagerImpl implements ResourceService {
             throw new IllegalArgumentException("profileBase must not be blank");
         }
         return trimmed.endsWith("/") ? trimmed : trimmed + "/";
+    }
+
+    private LoadExecutionStrategy createLoadStrategy() {
+        if (forceCooperativeForTests || ResourcePlatform.isHtmlPlatform()) {
+            return new CooperativeLoadStrategy(DEFAULT_COOPERATIVE_ASSETS_PER_FRAME);
+        }
+        return new ThreadPoolLoadStrategy();
     }
 
     ResourceCache cache() {
@@ -100,17 +119,21 @@ public final class ResourceManagerImpl implements ResourceService {
 
     @Override
     public LoadTicket loadAsync(ResourceRef ref, ResourceKind kind) {
-        throw new UnsupportedOperationException("Async loading is not implemented yet");
+        Objects.requireNonNull(ref, "ref");
+        Objects.requireNonNull(kind, "kind");
+        return asyncExecutor.load(ref, kind);
     }
 
     @Override
     public LoadTicket loadBundleAsync(String bundleId) {
-        throw new UnsupportedOperationException("Async loading is not implemented yet");
+        Objects.requireNonNull(bundleId, "bundleId");
+        ResourceBundle bundle = ResourceBundleLoader.loadById(bundlesDirectory, bundleId);
+        return asyncExecutor.loadBundle(bundleId, bundle.resources());
     }
 
     @Override
     public Optional<LoadProgress> activeProgress() {
-        return Optional.empty();
+        return asyncExecutor.activeProgress();
     }
 
     @Override
@@ -142,10 +165,11 @@ public final class ResourceManagerImpl implements ResourceService {
 
     @Override
     public void tick() {
-        // Cooperative async loads are implemented in Task 10.
+        asyncExecutor.tick();
     }
 
     public void dispose() {
+        asyncExecutor.shutdown();
         cache.dispose();
     }
 

@@ -122,6 +122,9 @@ public final class HermesGdxApplication implements ApplicationListener {
         }
 
         try {
+            if (engine != null) {
+                engine.resources().tick();
+            }
             engine.scenes().processPending();
 
             float delta = Gdx.graphics.getDeltaTime();
