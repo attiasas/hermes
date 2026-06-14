@@ -22,6 +22,14 @@ public final class SceneLoader {
     }
 
     /**
+     * Parses top-level scene metadata from JSON without loading entities.
+     */
+    public static SceneLoadMetadata loadMetadataFromString(String json) {
+        SceneDocument document = SceneDocument.parse("", json);
+        return SceneLoadMetadata.fromDocument(document);
+    }
+
+    /**
      * Loads scene JSON from a string (used by tests and {@link #load}).
      */
     public static SceneLoadMetadata loadFromString(
