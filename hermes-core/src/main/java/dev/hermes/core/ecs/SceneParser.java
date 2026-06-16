@@ -55,6 +55,10 @@ final class SceneParser {
         entities.addComponent(sceneEntity.id(), state);
         if (manager != null) {
             document.world().ifPresent(block -> WorldBlockApplier.apply(manager.space(), block));
+            document.camera().ifPresent(block -> {
+                manager.camera().setSceneConfig(block.config());
+                block.followEntity().ifPresent(manager.camera()::bindMain);
+            });
         }
         return SceneLoadMetadata.fromDocument(document);
     }

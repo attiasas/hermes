@@ -4,6 +4,7 @@ import java.util.Optional;
 
 public interface SceneCameraController {
     SceneCameraConfig sceneConfig();
+    void setSceneConfig(SceneCameraConfig config);
     MainCameraBinding mainBinding(); // SCENE | ENTITY
     Optional<String> mainEntityName();
 

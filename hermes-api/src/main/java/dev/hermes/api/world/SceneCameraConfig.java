@@ -13,14 +13,18 @@ public final class SceneCameraConfig {
     }
 
     private Projection projection = Projection.ORTHOGRAPHIC;
-    private boolean active = true;
+    private float x;
+    private float y;
+    private float z;
+    private float rotationX;
+    private float rotationY;
+    private float rotationZ;
     private float zoom = 1f;
     private float fieldOfView = 67f;
     private float near = 0.1f;
     private float far = 3000f;
     private float viewportWidth;
     private float viewportHeight;
-    private String renderTarget;
     private ViewportFitMode fitMode = ViewportFitMode.LETTERBOX;
     private float designAspect;
     private float lookAtX = Float.NaN;
@@ -32,15 +36,55 @@ public final class SceneCameraConfig {
     }
 
     public void setProjection(Projection projection) {
-        this.projection = projection;
-    }   
-
-    public boolean active() {
-        return active;
+        this.projection = projection == null ? Projection.ORTHOGRAPHIC : projection;
     }
 
-    public void setActive(boolean active) {
-        this.active = active;
+    public float x() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float y() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public float z() {
+        return z;
+    }
+
+    public void setZ(float z) {
+        this.z = z;
+    }
+
+    public float rotationX() {
+        return rotationX;
+    }
+
+    public void setRotationX(float rotationX) {
+        this.rotationX = rotationX;
+    }
+
+    public float rotationY() {
+        return rotationY;
+    }
+
+    public void setRotationY(float rotationY) {
+        this.rotationY = rotationY;
+    }
+
+    public float rotationZ() {
+        return rotationZ;
+    }
+
+    public void setRotationZ(float rotationZ) {
+        this.rotationZ = rotationZ;
     }
 
     public float zoom() {
@@ -91,27 +135,18 @@ public final class SceneCameraConfig {
         this.viewportHeight = viewportHeight;
     }
 
-    public String renderTarget() {
-        return renderTarget;
-    }
-
-    public void setRenderTarget(String renderTarget) {
-        this.renderTarget = renderTarget;
-    }
-
     public ViewportFitMode fitMode() {
         return fitMode;
     }
-    
+
     public void setFitMode(ViewportFitMode fitMode) {
-        this.fitMode = fitMode;
+        this.fitMode = fitMode == null ? ViewportFitMode.LETTERBOX : fitMode;
     }
 
     public float designAspect() {
         return designAspect;
     }
-    
-    
+
     public void setDesignAspect(float designAspect) {
         this.designAspect = designAspect;
     }
@@ -119,21 +154,18 @@ public final class SceneCameraConfig {
     public float lookAtX() {
         return lookAtX;
     }
-    
-    
-    public void setLookAtX(float lookAtX) {
-        this.lookAtX = lookAtX;
-    }
 
     public float lookAtY() {
         return lookAtY;
     }
-    
+
     public float lookAtZ() {
         return lookAtZ;
     }
-    
-    public void setLookAtZ(float lookAtZ) {
-        this.lookAtZ = lookAtZ;
+
+    public void setLookAt(float x, float y, float z) {
+        this.lookAtX = x;
+        this.lookAtY = y;
+        this.lookAtZ = z;
     }
 }
