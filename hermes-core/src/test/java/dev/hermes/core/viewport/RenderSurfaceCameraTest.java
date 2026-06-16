@@ -18,7 +18,7 @@ final class RenderSurfaceCameraTest {
         Entity cam = world.create("cam");
         Camera camera = new Camera();
         camera.setProjection(Camera.Projection.PERSPECTIVE);
-        camera.setActive(true);
+        camera.setRenderTarget("sceneColor");
         world.addComponent(cam.id(), camera);
         world.addComponent(cam.id(), new Transform(0f, 0f, 5f));
 
@@ -37,14 +37,12 @@ final class RenderSurfaceCameraTest {
         EntityStoreImpl world = new EntityStoreImpl();
         Entity worldCam = world.create("world-cam");
         Camera c1 = new Camera();
-        c1.setActive(true);
         c1.setRenderTarget("sceneColor");
         world.addComponent(worldCam.id(), c1);
         world.addComponent(worldCam.id(), new Transform(0, 0, 5));
 
         Entity screenCam = world.create("screen-cam");
         Camera c2 = new Camera();
-        c2.setActive(true);
         world.addComponent(screenCam.id(), c2);
         world.addComponent(screenCam.id(), new Transform(0, 0, 10));
 

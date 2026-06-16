@@ -94,7 +94,6 @@ public final class BuiltinComponents {
                 (data, ctx) -> {
                     Camera camera = new Camera();
                     camera.setProjection(parseProjection(data.getString("projection", "orthographic")));
-                    camera.setActive(data.getBoolean("active", true));
                     camera.setZoom(data.getFloat("zoom", 1f));
                     camera.setFieldOfView(data.getFloat("fieldOfView", 67f));
                     camera.setNear(data.getFloat("near", 0.1f));

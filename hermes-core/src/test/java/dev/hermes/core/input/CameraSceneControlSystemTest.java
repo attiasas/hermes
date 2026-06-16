@@ -38,13 +38,14 @@ final class CameraSceneControlSystemTest {
         input = (InputServiceImpl) engine.input();
         manager = new WorldManagerImpl();
         ComponentRegistryImpl registry = (ComponentRegistryImpl) engine.registry();
-        SceneLoader.load("scenes/perspective-orbit-test.json", manager.entities(), registry);
+        SceneLoader.load("scenes/perspective-orbit-test.json", manager, registry);
+        manager.camera().bindMain("cam");
         cameraControl = new CameraSceneControlSystem(input);
     }
 
     @Test
     void emptyClickDrag_orbitsPerspectiveCamera() {
-        Entity cam = CameraResolver.activeCameraEntity(manager.entities()).orElseThrow();
+        Entity cam = CameraResolver.mainCameraEntity(manager).orElseThrow();
         float rotationYBefore = manager.entities().getComponent(cam.id(), Transform.class).rotationY();
 
         input.pollFrame(InputFrame.pointerJustPressed(320, 240, InputButton.LEFT));

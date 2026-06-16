@@ -16,7 +16,7 @@ final class AudioListenerUpdater {
             return;
         }
         ActiveCamera camera =
-                CameraResolver.resolveForPass(manager.entities(), "screen", surfaceWidth, surfaceHeight);
+                CameraResolver.resolveForManager(manager, "screen", surfaceWidth, surfaceHeight);
         backend.setListenerPosition(camera.x(), camera.y(), camera.z());
     }
 }

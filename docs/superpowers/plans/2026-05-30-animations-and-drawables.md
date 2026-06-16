@@ -4,11 +4,15 @@
 
 > **Pre-release policy:** Nothing is shipped. Delete `Mesh` and `Sprite` components; replace with `Drawables`. Update every template, test scene, and doc in the same pass. No migration shims or deprecated aliases.
 
-**Goal:** Replace single-mesh/single-sprite entities with **multi-part drawables** (local transforms per part), **config-driven Hermes clips**, **imported animation files from external tools** (2D atlases/Spine, 3D glTF/g3db skeletal), optional **procedural mesh primitives**, and a small **`AnimationService`** API — so authors build animated characters from exported assets + JSON alone while heavy games can drive clips from Java or custom backends.
+**Goal:** Replace single-mesh/single-sprite entities with **multi-part drawables**, two animation sources — **Hermes keyframe JSON** (2D/3D/props, no external tooling) and **glTF/GLB skeletal clips** (Blender/Maya/etc. exports) — plus optional **procedural mesh primitives** and **`AnimationService`**. Authors build animated games from config + assets alone; heavy projects override any step in Java or via SPI.
 
-**Architecture:** One `Drawables` component holds mesh, sprite, or rigged parts (`rig: gltf | g3db | spine | atlas`). `AnimationController` maps logical clip names to **`AnimationClipRef`** entries (Hermes keyframe JSON **or** a named clip inside an imported file). `AnimationSystem` delegates playback to pluggable **`AnimationBackend`** implementations (Hermes tracks, glTF skeletal, atlas sequences, Spine). Each backend updates either ECS fields (Hermes/atlas) or a core-only **`RigInstance`** cache (skeletal meshes) that `World3dPass` / `SpritesPass` read at draw time. Procedural shapes use libGDX `ModelBuilder`. libGDX and third-party loaders stay in `hermes-core`; clip refs, components, and `AnimationService` stay libGDX-free in `hermes-api`.
+**Architecture:** `Drawables` holds static or **rigged** parts (`rig: gltf`). `AnimationController` maps logical names to **`AnimationClipRef`** (`hermes` path or `gltf` clip name). `AnimationSystem` delegates to exactly **two built-in backends** — `HermesTrackBackend` (ECS keyframes) and `GltfAnimationBackend` (skeletal `ModelInstance`) — registered in an **`AnimationBackendRegistry`** so future formats (Spine, atlas sequences, etc.) plug in without rewriting the system. glTF loading goes through `ResourceKind.GLTF_MODEL` on **`ResourceService`**; skinned instances live in core-only `RigInstanceCache`. API types stay libGDX-free.
 
-**Tech Stack:** Java 11, libGDX 1.14.0 g2d/g3d, **`com.github.mgsx-dev.gdx-gltf:gdx-gltf`** (glTF/GLB), optional **`com.esotericsoftware.spine:spine-libgdx`** (Spine 2D), existing ECS, JUnit 5, Gradle `:hermes-core:test`, `:dogfood-simulation:compileJava`.
+**Platform policy:** Implement on **desktop first**, but **HTML (TeaVM) parity is a merge gate** — same animation JSON, same glTF assets (split `.gltf` where required), `:hermes-launcher-html:compileJava` green, and dogfood animation scene verified in browser before merge.
+
+**Tech Stack:** Java 11, libGDX 1.14.0, **`com.github.mgsx-dev.gdx-gltf:gdx-gltf`**, TeaVM/`gdx-teavm` (HTML), existing ECS, JUnit 5, Gradle `:hermes-core:test`, `:hermes-launcher-html:compileJava`, `:dogfood-simulation` HTML export.
+
+**Plan status:** **Not started** — `Mesh` and `Sprite` remain in `hermes-api`; no `Drawables`, `AnimationController`, or animation backends. Dogfood still uses `SpinMarker` / `BounceMarker` Java systems on `spin-cube`. Prerequisites below are **landed**.
 
 ---
 
@@ -16,13 +20,15 @@
 
 | Area | Today | After this plan |
 |------|-------|-----------------|
-| 3D draw | One `Mesh` per entity → one `ModelInstance` | `Drawables` with N mesh/primitive parts |
-| 2D draw | One `Sprite` per entity → one texture | `Drawables` with N sprite parts + sprite sheets |
-| Animation | Manual Java systems (`SpinMarker`, `PulseMarker`) | Hermes clips + imported files (glTF, atlas, Spine, g3db) |
-| Models | OBJ only via `ModelCache` + `ObjLoader` | OBJ + glTF/GLB + g3db + procedural primitives |
-| External 2D | None | TexturePacker/LibGDX `.atlas` sequences; Spine skeleton exports |
-| External 3D | None | glTF/GLB skeletal from Blender/Maya/etc.; legacy g3db from fbx-conv |
-| Material | One `Material` per entity (required for drawables) | Entity default + optional per-part override |
+| 3D draw | One `Mesh` per entity → one `ModelInstance` via `ResourceService` (`ResourceKind.MODEL`) | `Drawables` with N mesh/primitive parts |
+| 2D draw | One `Sprite` per entity → texture via `ResourceService` (`ResourceKind.TEXTURE`) | `Drawables` with N sprite parts + sprite sheets |
+| Animation | Manual Java systems (`SpinMarker`, `BounceMarker`, template `PulseMarker`) | **Hermes JSON** + **glTF/GLB** clip names |
+| Models | OBJ via `ModelResourceLoader` + `ResourceService` (no `ModelCache`) | OBJ + glTF/GLB + procedural primitives (new loaders on `ResourceService`) |
+| Asset aliases | `resources/catalog.json` `@aliases` (e.g. `@cube`, `@logo` on spin-cube) | Same catalog; add `@hero-gltf`, animation clip aliases as needed |
+| External formats | None | **v1:** Hermes JSON, glTF/GLB only — extensible registry for future backends |
+| HTML animations | Static meshes/sprites compile on TeaVM; no animation system | **Required at merge:** Hermes clips + glTF (split `.gltf` assets) compile and run on TeaVM |
+| 3D lighting | `BuiltinLightingSystem` + `default/lit` shader ([world lighting plan](2026-05-26-world-lighting.md) — **landed**) | Unchanged; lit animated mesh parts use entity `Material` |
+| Material | One `Material` per entity (required for `Mesh`/`Sprite`) | Entity default + optional per-part override |
 | Entity hierarchy | Flat entities only | Flat entities; **part locals** replace child entities for visuals |
 | Validation | `Mesh`/`Sprite` require `Material` | `Drawables` requires `Material` (entity or all parts) |
 
@@ -33,9 +39,11 @@ Relevant existing types to reuse:
 - `EntityFactory` / entity templates — animated enemy as `entities/walker/type.json`
 - `ComponentRegistration` SPI — custom animation drivers or track resolvers
 - `WorldManager` — per-scene simulation root ([entity-types plan](2026-05-21-entity-types-and-world-manager.md) — **landed**)
-- `ModelCache` — extend, do not duplicate
-- `SpritesPass` / `World3dPass` — refactor to part iteration
+- `ResourceService` / `ResourceAccess` / `ResourceKind` / `ResourceRef` — all asset loads ([central resource plan](2026-06-08-central-resource-management.md) — **landed** v1 sync path; extend with `GLTF_MODEL`, `SPRITE_SHEET`, `ANIMATION_CLIP`)
+- `ModelResourceLoader` — extend for procedural generator JSON; do not reintroduce per-pass caches
+- `SpritesPass` / `World3dPass` — already on `ResourceManagerImpl`; refactor to part iteration
 - `SpriteDrawOrder` — sort entities; within entity, parts draw in list order
+- `LightingRuntime` — compiled `Environment` for `default/lit` draws
 
 ---
 
@@ -47,10 +55,11 @@ Relevant existing types to reuse:
 | **Progressive complexity** | Tiers 0–4 (below): shorthand drawable → multi-part → clips → Java control → SPI/custom tracks |
 | **Multi-mesh entities** | `Drawables.parts[]` with per-part `local` transform and optional material |
 | **Generalized animation** | Track path grammar targets Transform, part locals, sprite frames, visibility, material uniforms |
-| **Imported animations** | `AnimationBackend` per format; drop exported files under `assets/` and reference by name in JSON |
-| **Easy to extend** | `AnimationRegistration` SPI registers custom backends; v2 hooks for blend trees, morph targets |
+| **Two animation sources** | Hermes JSON (everything) + glTF/GLB (skeletal 3D); one registry, two v1 backends |
+| **HTML parity** | Same APIs and scene JSON on TeaVM; glTF assets authored for web (split format); CI merge gate |
+| **Easy to extend** | `AnimationBackendRegistry` + `AnimationRegistration` SPI — add Spine/atlas/g3db later without API break |
 | **Maintainable** | libGDX-free clip model in `hermes-api`; one `AnimationSystem`; rendering unchanged at pipeline level |
-| **Performance** | Clip assets cached; runtime evaluation is O(tracks × keyframes) with small N; models cached in `ModelCache` |
+| **Performance** | Clip assets cached via `ResourceService`; runtime evaluation is O(tracks × keyframes) with small N; models/textures ref-counted in shared resource cache |
 
 ### Author complexity tiers
 
@@ -58,12 +67,12 @@ Relevant existing types to reuse:
 |------|---------------|-------------|
 | **0 — Single drawable** | `"Drawables": { "sprite": "logo.png" }` or `{ "mesh": "models/cube.obj" }` | Expands to one default part; same as today's single mesh/sprite |
 | **1 — Multi-part** | `Drawables.parts[]` with `id`, `kind`, `model`/`texture`, `local` | Composes root `Transform` × part `local` at draw time |
-| **2 — Hermes clip** | `AnimationController` + `assets/animations/walk.json` (keyframes) | Engine evaluates tracks on Transform / part locals / frames |
-| **2b — Imported clip** | Export from Blender/Aseprite/Spine → drop file; JSON `{ "type": "gltf", "clip": "Walk" }` | Backend loads file once; plays named clip; no Java |
-| **3 — Java control** | `engine.animation().play(entity.id(), "attack")` in gameplay code | Switches clips; reads `finished()` / `clipTime()` |
-| **4 — Custom / SPI** | `AnimationRegistration` custom backend or track resolver | Procedural IK, custom formats, gameplay-driven tracks |
+| **2 — Hermes clip** | `AnimationController` + `assets/animations/walk.json` | Keyframes on Transform, part locals, sprite frames, uniforms — **primary 2D path** |
+| **2b — glTF clip** | Export `.glb`/`.gltf` from Blender; `{ "type": "gltf", "clip": "Walk" }` | Skeletal 3D; named clips from DCC export |
+| **3 — Java control** | `engine.animation().play(entity.id(), "attack")` | Switch clips; query `finished()` / `clipTime()` |
+| **4 — Custom / SPI** | `AnimationRegistration` new backend or track resolver | Future formats, procedural IK, gameplay tracks |
 
-**Honest v1 limits:** No runtime FBX loading (export to glTF or pre-convert to g3db). No clip cross-fade (instant switch). No JSON animation state machine graph (single active clip + Java switches). Colliders stay on entity root (physics plan) — skeletal bones do not drive hitboxes in v1. HTML/TeaVM: Hermes clips + atlas sequences only; glTF/Spine/g3db **desktop + Android** first (doctor warns on HTML export). Morph targets / shape keys: glTF backend plays them if present in file; not exposed as Hermes track targets in v1.
+**Honest v1 limits:** Only **Hermes JSON** and **glTF/GLB** animation backends ship in tasks (no Spine, atlas-sequence, or g3db backends — add via registry later). No clip cross-fade. No JSON state machine graph. Colliders on entity root only. **HTML:** `.glb` with embedded buffers may fail on TeaVM (libGDX Pixmap limitation) — merge-gate assets use **split `.gltf` + `.bin` + PNG**; desktop may also use `.glb`. glTF skinning uses `DefaultShader`/`default/lit` path compatible with TeaVM custom-shader doctor rules (no PBR-only shaders in stock pipeline).
 
 ---
 
@@ -71,19 +80,43 @@ Relevant existing types to reuse:
 
 | Plan | Status | How this plan uses it |
 |------|--------|------------------------|
+| [Central resource management](2026-06-08-central-resource-management.md) | **Landed** (v1) | **Prerequisite.** Extend `ResourceKind` with `GLTF_MODEL`, `SPRITE_SHEET`, `ANIMATION_CLIP`; register loaders on `ResourceLoaderRegistry`. Passes already use `ResourceManagerImpl` — no private model/texture caches. |
 | [Entity types](2026-05-21-entity-types-and-world-manager.md) | Landed | Animated templates under `assets/entities/<kind>/type.json`; `$ref` still v1 Transform-only |
 | [Unified input](2026-05-21-unified-input-system.md) | Landed | Gameplay code switches clips on `justPressed("attack")` — tier 3 |
-| [World lighting](2026-05-26-world-lighting.md) | Landed / partial | Lit mesh parts use entity `Material` shader `default/lit` |
+| [Unified runtime config](2026-05-24-unified-runtime-config-service.md) | Landed | Boot profiles unchanged; animation assets use same `HermesAssetPaths` / catalog aliases |
+| [Custom UI service](2026-05-29-custom-ui-service.md) | Landed | Independent; Hermes clips can animate UI-adjacent entities (logo pulse) |
+| [World lighting](2026-05-26-world-lighting.md) | **Landed** | Lit mesh parts use entity `Material` shader `default/lit`; glTF skinning must stay on same forward-lit path |
+| [Audio](2026-05-22-audio-system.md) | **Landed** | Independent; sync SFX to clip `events` (v2 hook) |
+| [Dogfood sample games](2026-06-08-dogfood-sample-games.md) | Not landed | v1 samples use static `Mesh`/`Sprite`; M4 adopts sprite-sheet walks after this plan lands |
+| [Localization](2026-05-30-localization-i18n.md) | Not landed | Independent; animated UI text stays literal/`textKey` as today |
 | [Physics & collisions](2026-05-30-physics-and-collisions.md) | Not landed | Collider on entity `Transform`; animated part offsets do not move colliders in v1 |
 | [Debug mode](2026-05-30-debug-mode.md) | Not landed | v2: overlay rows `animation.activeClip`, `animation.clipTime`; uses `SimulationClock` scaled delta when landed |
 | [Save/load](2026-05-22-save-load-sessions.md) | Not landed | v2: persist `AnimationController.currentClip` + `timeSeconds` |
-| [Audio](2026-05-22-audio-system.md) | Landed | Independent; sync SFX to clip `events` (v2 hook) |
+
+**Prerequisites:** [Central resource management](2026-06-08-central-resource-management.md) v1 sync loaders + [world lighting](2026-05-26-world-lighting.md) `default/lit` — both **landed**.
 
 **Recommended order:**
 
-1. Land **world lighting** shader rename (`default/lit`) if not already on branch — lit animated meshes need correct shader id.
-2. Execute **this plan** (drawables → render → clips → animation system → dogfood).
-3. **Physics plan** can follow; document that hitboxes use root transform only until v2 per-part colliders.
+1. Execute **this plan** (drawables → resource loaders → Hermes clips → glTF backend → **HTML merge gate** → dogfood animation scene).
+2. [Dogfood sample games](2026-06-08-dogfood-sample-games.md) M4 can migrate Pac-Man mouth / ghost wobble to Hermes sprite-sheet clips.
+3. **Physics plan** can follow; hitboxes use root transform until v2 per-part colliders.
+
+---
+
+## Merge gate (required before merge)
+
+This feature is **not done** until all checks pass:
+
+| Check | Command / action | Expected |
+|-------|------------------|----------|
+| Unit + integration tests | `./gradlew test -q` | PASS |
+| Desktop compile | `./gradlew :dogfood-simulation:compileJava -q` | PASS |
+| **HTML compile** | `./gradlew :hermes-launcher-html:compileJava -q` | PASS — TeaVM must compile all animation + glTF code paths |
+| **HTML export** | `./gradlew :hermes-launcher-html:buildRelease -q` (or template html export task) | Produces non-empty zip |
+| **Browser smoke** | Open animation-starter scene in TeaVM dev server | Hermes pulse + glTF character animates; no WebGL/shader errors in console |
+| Doctor | `./gradlew doctor` (or CLI) with `html { enabled = true }` | No new HTML shader violations from skinning path |
+
+Implementation order: build and test **desktop paths first** (faster iteration), then **immediately** run HTML compile/export before marking any glTF task complete. Do not defer HTML to a follow-up PR.
 
 ---
 
@@ -94,68 +127,59 @@ Relevant existing types to reuse:
 ```mermaid
 flowchart TB
   subgraph author [Author assets]
-    ET["entities/walker/type.json — Drawables + AnimationController"]
-    AC["animations/walker-walk.json — Hermes keyframes"]
-    GLB["models/hero.glb — Blender export"]
-    AT["sprites/hero.atlas — TexturePacker / Aseprite"]
-    SP["spine/hero.json + hero.atlas — Spine export"]
-    PR["models/primitives/floor.json — optional generator asset"]
+    ET["entities/hero/type.json"]
+    HAC["animations/walk.json — Hermes keyframes"]
+    GLTF["models/hero.gltf + .bin + textures — or hero.glb on desktop"]
+    PR["models/primitives/floor.json"]
   end
 
   subgraph api [hermes-api — no libGDX]
-    DR[Drawables / DrawablePart / rig field]
+    DR[Drawables / DrawablePart]
     ACmp[AnimationController / AnimationClipRef]
-    CL[AnimationClip / AnimationTrack — Hermes only]
+    CL[AnimationClip — Hermes tracks]
+    ACT[AnimationClipType — HERMES | GLTF]
     AS[AnimationService]
     AR[AnimationRegistration SPI]
+    RS[ResourceService / ResourceKind]
   end
 
   subgraph core [hermes-core]
-    BR[BuiltinComponents — Drawables deserializer]
-    AB[AnimationBackend registry]
+    BR[BuiltinComponents]
+    REG[AnimationBackendRegistry]
     HB[HermesTrackBackend]
     GB[GltfAnimationBackend]
-    SB[SpineAnimationBackend]
-    ABk[AtlasSequenceBackend]
-    G3[G3dbAnimationBackend]
     RI[RigInstanceCache]
+    LR[ResourceLoaderRegistry — GLTF_MODEL SPRITE_SHEET ANIMATION_CLIP]
     ANS[AnimationSystem]
     ASI[AnimationServiceImpl]
-    PMG[PrimitiveModelGenerator]
-    MC[ModelCache — OBJ + glTF + g3db + primitives]
-    SPpass[SpritesPass — multi-part + spine/atlas]
-    W3[World3dPass — multi-part + skinned glTF/g3db]
-    TM[TransformComposer]
+    W3[World3dPass — static + skinned]
+    SP[SpritesPass — static parts]
   end
 
-  subgraph tick [Frame loop — ACTIVE_SCENE]
-    ANIM["AnimationSystem — evaluate tracks"]
-    REN["Render passes — draw parts"]
-    ANIM --> REN
+  subgraph platforms [Platforms — same scene JSON]
+    DESK[Desktop LWJGL3 — GLB or glTF]
+    HTML[HTML TeaVM — split glTF + Hermes]
   end
 
   ET --> BR
-  AC --> HB
-  GLB --> GB
-  AT --> ABk
-  SP --> SB
+  HAC --> LR
+  GLTF --> LR --> GB
   ACmp --> ANS
-  ANS --> AB
-  AB --> HB
-  AB --> GB
-  AB --> SB
-  AB --> ABk
-  AB --> G3
+  ANS --> REG
+  REG --> HB
+  REG --> GB
   GB --> RI
-  G3 --> RI
-  SB --> RI
+  HB --> DR
   RI --> W3
-  RI --> SPpass
-  DR --> SPpass
+  DR --> SP
   DR --> W3
-  PMG --> MC
   AS --> ASI --> ANS
-  AR --> ASI
+  AR --> REG
+  W3 --> RS
+  SP --> RS
+  LR --> RS
+  core --> DESK
+  core --> HTML
 ```
 
 ### Core concepts
@@ -183,32 +207,23 @@ No parent/child entity graph in v1. Multiple visual pieces on one logical entity
 - `dev.hermes.api.ecs.DrawablePart` — immutable config + mutable runtime fields (`local`, `spriteFrame`, `visible`)
 - `dev.hermes.api.ecs.LocalTransform` — x/y/z, rotations, scales, `visible`, `spriteFrame`
 - `dev.hermes.api.ecs.DrawableKind` — `MESH`, `SPRITE` (static draw)
-- `dev.hermes.api.ecs.DrawableRig` — optional rig kind on a part: `GLTF`, `G3DB`, `SPINE`, `ATLAS` (see [External animation files](#external-animation-files))
-- `dev.hermes.api.ecs.SpriteSheet` — columns, rows, frame width/height (manual grid; superseded by `rig: atlas` when using TexturePacker)
+- `dev.hermes.api.ecs.DrawableRig` — optional; v1 value **`GLTF`** only (null = static part)
+- `dev.hermes.api.ecs.SpriteSheet` — manual grid for sprite parts (`columns`, `rows`, `frameWidth`, `frameHeight`); animate frames via **Hermes** `parts.<id>.frame` tracks
 
 Shorthand JSON (tier 0) normalizes to a single part with `id: "default"` during deserialize.
 
-#### External animation files
+#### Animation sources (v1: two backends)
 
-Authors export from DCC / animation tools, copy files into `assets/`, and reference clips by **logical name** in `AnimationController`. Hermes auto-selects a backend from the clip ref `type` (or from the rigged part when omitted).
+| Source | `type` | Use for | Author workflow |
+|--------|--------|---------|-----------------|
+| **Hermes JSON** | `hermes` (default) | 2D sprite cycles, prop motion, UI pulse, material tweens, multi-part offsets | Write or generate `assets/animations/*.json` |
+| **glTF / GLB** | `gltf` | Skeletal/skinned **3D** characters and props | Export from Blender/Maya/Mixamo → drop under `assets/models/` |
 
-**Supported formats (v1):**
+Future backends (Spine, LibGDX atlas sequences, g3db) register on the same **`AnimationBackendRegistry`** via SPI — not in v1 task list.
 
-| Backend | `type` | Typical export source | Asset files | Clip identity |
-|---------|--------|----------------------|-------------|---------------|
-| Hermes keyframes | `hermes` (default) | Hand-authored / tooling | `animations/*.json` | Whole file |
-| glTF skeletal | `gltf` | Blender, Maya, Mixamo, etc. | `.gltf` / `.glb` on rigged mesh part | Animation **name** inside file |
-| libGDX g3db | `g3db` | FBX → [fbx-conv](https://github.com/libgdx/fbx-conv) | `.g3db` on rigged mesh part | Animation id / name in model |
-| Texture atlas sequence | `atlas` | TexturePacker, Aseprite (LibGDX atlas export) | `.atlas` + `.png` on sprite part | Sequence / prefix name in atlas |
-| Spine 2D | `spine` | Spine Editor | `.json` or `.skel` + `.atlas` + `.png` | Spine animation name |
+**Not supported at runtime:** raw `.fbx`, `.dae`, `.blend`. Export to glTF or animate with Hermes JSON.
 
-**Not supported at runtime (v1):** raw `.fbx`, `.dae`, `.blend`, video, Lottie. Export to glTF or atlas/Spine instead.
-
-##### Rigged drawable parts
-
-Static parts behave as today. **Rigged** parts declare where imported animations live:
-
-**3D glTF (Blender workflow):**
+##### glTF / GLB (3D skeletal)
 
 ```json
 "Drawables": {
@@ -216,7 +231,7 @@ Static parts behave as today. **Rigged** parts declare where imported animations
     {
       "id": "body",
       "kind": "mesh",
-      "model": "models/hero.glb",
+      "model": "models/hero.gltf",
       "rig": "gltf"
     }
   ]
@@ -232,132 +247,109 @@ Static parts behave as today. **Rigged** parts declare where imported animations
 }
 ```
 
-Export from Blender: **File → Export → glTF 2.0 (.glb)**, enable **Animation** (single or NLA strips → multiple clips). Drop `hero.glb` under `assets/models/`. List clip names with Blender's action list or glTF viewer — those strings are the `clip` values.
+**Blender export:** File → Export → glTF 2.0. Enable **Animation**; each action/NLA strip becomes a named clip. Use **`hero.glb`** on desktop/Android for convenience, or **split `.gltf` + `.bin` + PNG textures** for cross-platform (required for HTML — see below).
 
-**2D atlas sequence (Aseprite / TexturePacker workflow):**
+**Desktop `.glb` shorthand:** `"model": "models/hero.glb"` works on LWJGL3/Android. For projects targeting HTML, prefer split `.gltf` in shared assets so one scene JSON works everywhere.
 
-```json
-"Drawables": {
-  "parts": [
-    {
-      "id": "body",
-      "kind": "sprite",
-      "atlas": "sprites/hero.atlas",
-      "rig": "atlas"
-    }
-  ]
-},
-"AnimationController": {
-  "rigPart": "body",
-  "clips": {
-    "walk": { "type": "atlas", "clip": "walk" },
-    "idle": { "type": "atlas", "clip": "idle" }
-  },
-  "default": "idle"
-}
-```
+##### Hermes JSON (2D and 3D procedural)
 
-Export: Aseprite **File → Export Sprite Sheet → LibGDX** (`.png` + `.atlas` with tagged frames), or TexturePacker with **LibGDX** format and animation tags matching sequence names (`walk_001`, `walk_002`, … → sequence `walk`).
-
-**Spine 2D:**
+Primary **no-code 2D** path: sprite sheet PNG + grid metadata + Hermes clip animating `parts.body.frame`:
 
 ```json
 "Drawables": {
-  "parts": [
-    {
-      "id": "body",
-      "kind": "sprite",
-      "skeleton": "spine/hero.json",
-      "atlas": "spine/hero.atlas",
-      "rig": "spine"
-    }
-  ]
+  "parts": [{
+    "id": "body",
+    "kind": "sprite",
+    "texture": "sprites/hero-sheet.png",
+    "sheet": { "columns": 4, "rows": 1, "frameWidth": 32, "frameHeight": 48 }
+  }]
 },
 "AnimationController": {
-  "rigPart": "body",
-  "clips": {
-    "walk": { "type": "spine", "clip": "walk" },
-    "jump": { "type": "spine", "clip": "jump", "loop": false }
-  },
+  "clips": { "walk": "animations/hero-walk.json" },
   "default": "walk"
 }
 ```
 
-Export from Spine: **Export → JSON** + texture atlas. Requires `spine-libgdx` on the classpath (declared in `hermes-core`; games inherit transitively).
+`animations/hero-walk.json` contains a `parts.body.frame` step track (see [Hermes keyframe clips](#hermes-keyframe-clips-hand-authored-json)). Export the PNG from Aseprite/Photoshop; frame indices are authored in JSON (future Hermes tooling may generate clips from sheet metadata).
 
-**Legacy g3db:**
+##### Platform notes: glTF on HTML (TeaVM)
 
-```json
-"Drawables": {
-  "parts": [{ "id": "body", "kind": "mesh", "model": "models/hero.g3db", "rig": "g3db" }]
-},
-"AnimationController": {
-  "rigPart": "body",
-  "clips": { "walk": { "type": "g3db", "clip": "walk" } }
-}
-```
+| Topic | Desktop / Android | HTML (TeaVM) |
+|-------|-------------------|--------------|
+| Hermes JSON clips | Yes | Yes — pure Java, no platform deps |
+| `.glb` single file | Yes | **Avoid** — embedded buffers hit libGDX Pixmap/TeaVM limits |
+| Split `.gltf` + `.bin` + PNG | Yes | **Yes — merge-gate format** |
+| Skinning shader | `default/lit` + gdx-gltf `DefaultShaderProvider` | Same — must pass `HermesDoctor` html-custom-shaders check |
+| WebGL | 3.x / ES 3.0 | WebGL 2.0 preferred (project baseline) |
 
-Convert: `fbx-conv -o hero.g3db hero.fbx`. Prefer glTF for new projects.
+**Implementation requirements for HTML:**
+
+1. `GltfModelResourceLoader` (`ResourceKind.GLTF_MODEL`) loads via `Gdx.files.internal` — no `Pixmap` from embedded GLB buffers on TeaVM.
+2. Dogfood + test assets ship as **split glTF** under `assets/models/hero.gltf` (+ `hero.bin`, textures).
+3. `hermes-launcher-html` depends on `gdx-gltf` (and any TeaVM reflection config it needs).
+4. Skinned draw path uses the same `DefaultShader`/`default/lit` route as static meshes — **not** stock gdx-gltf PBR shader in v1 (PBR breaks HTML doctor rules and is optional complexity).
 
 ##### AnimationClipRef (API + JSON)
 
-Each entry in `AnimationController.clips` is either a **string** (Hermes shorthand) or an object:
+Each entry in `AnimationController.clips` is a **string** (Hermes path) or **object**:
 
 ```json
-"walk": "animations/hero-walk.json"
+"walk": "animations/hero-walk.json",
 "run": { "type": "gltf", "clip": "Run", "loop": true, "speed": 1.2 }
 ```
 
 | Field | Default | Description |
 |-------|---------|-------------|
-| `type` | `hermes` if string path; else inferred from `rigPart.rig` | Backend id: `hermes`, `gltf`, `g3db`, `atlas`, `spine` |
-| `path` | — | Required for `hermes` only (clip JSON path) |
-| `clip` | — | Animation / sequence name inside imported file |
-| `loop` | backend default (usually `true`) | Override loop for this logical clip |
-| `speed` | controller `speed` | Per-clip speed multiplier |
+| `type` | `hermes` for string paths; else `gltf` | v1: `hermes` \| `gltf` only |
+| `path` | — | Hermes clip JSON path (when `type` is `hermes`) |
+| `clip` | — | glTF animation name (when `type` is `gltf`) |
+| `loop` | `true` | Override loop for this logical clip |
+| `speed` | controller `speed` | Per-clip multiplier |
 
 ```java
 // hermes-api
+public enum AnimationClipType { HERMES, GLTF }
+
 public final class AnimationClipRef {
-    AnimationClipType type();   // HERMES, GLTF, G3DB, ATLAS, SPINE
-    String path();              // hermes JSON path; null for imported
-    String clipName();          // named clip inside glTF/spine/atlas/g3db
+    AnimationClipType type();
+    String path();       // hermes JSON; null for gltf
+    String clipName();   // glTF animation name; null for hermes
     boolean loop();
     float speed();
 }
 ```
 
-##### AnimationBackend (core)
+##### AnimationBackend registry (extensibility)
 
 ```java
 // hermes-core — internal
-interface AnimationBackend {
+public interface AnimationBackend {
     AnimationClipType type();
-    /** Bind runtime state when entity first plays a clip of this type. */
-    void bind(EntityId id, DrawablePart rigPart, EntityStore entities);
-    /** Advance playback; update RigInstance or ECS fields. */
-    void update(EntityId id, AnimationController ctrl, AnimationClipRef clip, float deltaSeconds, EntityStore entities);
+    void bind(EntityId id, DrawablePart rigPart, EntityStore entities, ResourceAccess resources);
+    void update(EntityId id, AnimationController ctrl, AnimationClipRef clip,
+                float deltaSeconds, EntityStore entities, ResourceAccess resources);
     void unbind(EntityId id);
     boolean isFinished(EntityId id, AnimationClipRef clip);
 }
+
+public final class AnimationBackendRegistry {
+    void register(AnimationBackend backend);
+    AnimationBackend require(AnimationClipType type);
+}
 ```
 
-`AnimationSystem` resolves `ctrl.activeRef()` → backend from registry. **HermesTrackBackend** keeps existing keyframe evaluator. **GltfAnimationBackend** uses `gdx-gltf` + libGDX `AnimationController` on a cached `RigInstance`. **AtlasSequenceBackend** maps sequence names to ordered `TextureRegion`s and sets `part.local().spriteFrame`. **SpineAnimationBackend** wraps `SkeletonAnimation`. **G3dbAnimationBackend** uses libGDX `ModelInstance.animationController`.
+**v1 registrations:** `HermesTrackBackend`, `GltfAnimationBackend`.
 
-`RigInstanceCache` (core-only): `EntityId` → skinned `ModelInstance` / `SkeletonAnimation` / atlas player. `World3dPass` / `SpritesPass` call `RigInstanceCache.applyPose(entityId)` before draw when `rig != null`.
+**Future (SPI, not v1 tasks):** `AtlasSequenceBackend`, `SpineAnimationBackend`, `G3dbAnimationBackend` — games implement `AnimationRegistration` and call `registrar.backend(new MyBackend())`.
 
-##### Mixing Hermes tracks with imported clips
+`AnimationSystem` flow:
 
-One entity may use **only one active backend at a time** (v1). Typical patterns:
+1. Read `ctrl.activeRef()`.
+2. `registry.require(ref.type()).update(...)`.
+3. Hermes backend mutates `Transform` / `Drawables` / `Material`.
+4. glTF backend mutates `RigInstanceCache` entry; `World3dPass` draws skinned mesh.
 
-- **Imported locomotion** (`gltf` walk/run) + **Java** for gameplay (`engine.animation().play`).
-- **Separate entities**: glTF character body + Hermes-animated shadow sprite part on a second entity (or Hermes clip targeting `parts.shadow.local` on same entity when not playing skeletal clip — document: shadow bob via Hermes `idle` clip on a static rig-less part while body uses glTF; two controllers not supported — use one Hermes clip on shadow part only by splitting shadow to child-less second part updated by Hermes clip on same entity without AnimationController on body... Actually simpler: allow **per-part** animation only for Hermes tracks; skeletal uses whole rig part. Shadow can use Hermes clip file without AnimationController on whole entity if we allow Drawables-only part animation — too complex.
-
-Simpler rule for v1: **one `AnimationController` per entity, one active clip, one backend per clip**. Multi-part Hermes tracks can still animate non-rigged parts (shadow) in same clip file while body uses glTF — that requires two backends simultaneously.
-
-Refined rule: **each clip ref has one backend**. Hermes clips **may** target any part including rigged part's `local` (for additive bob) but when playing a `gltf` clip, glTF backend owns the rig part; Hermes clip cannot target bones in v1. Authors use glTF for body, Hermes clip targeting `parts.shadow.*` only — AnimationSystem runs **Hermes backend for tracks** and **gltf backend for rig** if we allow composite — too heavy for v1.
-
-**v1 rule:** If active clip `type` is `gltf|g3db|spine|atlas`, only that backend runs. If `hermes`, keyframe tracks run (can target multiple parts). Cannot play glTF and Hermes keyframes simultaneously — switch clips or use separate entities.
+**v1 playback rule:** One active clip, one backend per frame. Switch clips with `AnimationService.play` or scene `default`. To combine glTF body + Hermes shadow bob, use **two entities** (character + shadow decal) or switch clips — composite dual-backend playback is v2.
 
 #### Hermes keyframe clips (hand-authored JSON)
 
@@ -452,7 +444,7 @@ Unknown part id or path → `SceneParseException` at clip load (fail fast).
 | Field | Default | Description |
 |-------|---------|-------------|
 | `clips` | required map | Logical name → Hermes path string **or** `AnimationClipRef` object |
-| `rigPart` | — | Part id with `rig` set; required when any clip `type` is `gltf`/`g3db`/`spine`/`atlas` |
+| `rigPart` | — | Part id with `"rig": "gltf"`; required when any clip has `"type": "gltf"` |
 | `default` | first clip key | Plays on spawn when `autoPlay` true |
 | `speed` | `1.0` | Global playback multiplier (per-clip `speed` stacks) |
 | `autoPlay` | `true` | Start `default` clip at entity creation |
@@ -517,7 +509,7 @@ Referenced as `"model": "models/primitives/floor.json"` on a mesh part (loader d
 | `plane` | `width`, `height` | `1` each (XZ plane, Y-up) |
 | `sphere` | `radius`, `segments` | `0.5`, `16` |
 
-Implementation: `PrimitiveModelGenerator` in core uses `ModelBuilder`; cache key = generator JSON content hash in `ModelCache`.
+Implementation: `PrimitiveModelGenerator` in core uses `ModelBuilder`; procedural JSON and inline primitives route through `ModelResourceLoader` (extend decode/upload) with cache key = generator content hash in `ResourceService`.
 
 ### Rendering pipeline changes
 
@@ -530,14 +522,13 @@ sequenceDiagram
   participant SP as SpritesPass
   participant W3 as World3dPass
 
-  AS->>AB: update imported clip (gltf/spine/atlas)
-  AB->>RI: apply skeletal / atlas pose
-  AS->>ES: apply Hermes keyframe tracks
-  Note over SP,W3: Same frame, after systems, render pass
-  SP->>RI: draw spine/atlas rigged sprites
-  SP->>ES: draw static sprite parts
-  W3->>RI: draw skinned glTF/g3db
+  AS->>AB: update active clip backend
+  AB->>RI: glTF skeletal pose
+  AB->>ES: Hermes keyframe writes
+  Note over SP,W3: Same frame, after systems
+  W3->>RI: draw skinned glTF parts
   W3->>ES: draw static mesh parts
+  SP->>ES: draw sprite parts (Hermes frame index)
 ```
 
 - **Rigged draw:** When `part.rig() != null`, pass delegates to `RigInstanceCache.draw(part, rootTransform, material)` instead of static model/sprite path.
@@ -589,13 +580,11 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 | Feature | Hook |
 |---------|------|
 | Clip cross-fade | `AnimationController` blend weight + two active clips |
-| JSON state machine | `transitions: [{ "from": "idle", "on": "move", "to": "walk" }]` + input events |
-| Composite playback | Hermes tracks layered on imported rig (additive bob while glTF runs) |
-| Per-part colliders | `Collider` array keyed by part id (physics plan extension) |
-| Bone hitboxes | `CollisionTag` bound to glTF bone name |
-| `$ref` on part locals | Extend `ComponentRefResolver` paths |
-| Debug overlay | `AnimationDebugRegistration` clip/time/backend rows |
-| DragonBones / Live2D | New `AnimationBackend` via SPI |
+| JSON state machine | `transitions` table + input events |
+| Composite playback | Hermes + glTF on same entity (dual backend) |
+| **Atlas / Spine / g3db backends** | Register via `AnimationRegistration` — same registry interface |
+| Per-part colliders | Physics plan extension |
+| Debug overlay | `AnimationDebugRegistration` rows |
 
 ---
 
@@ -608,12 +597,12 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 | `dev/hermes/api/ecs/Drawables.java` | Multi-part drawable component |
 | `dev/hermes/api/ecs/DrawablePart.java` | Single part config + runtime fields |
 | `dev/hermes/api/ecs/DrawableKind.java` | `MESH`, `SPRITE` |
-| `dev/hermes/api/ecs/DrawableRig.java` | `GLTF`, `G3DB`, `SPINE`, `ATLAS` enum for rigged parts |
+| `dev/hermes/api/ecs/DrawableRig.java` | v1: `GLTF` only |
 | `dev/hermes/api/ecs/LocalTransform.java` | Part-local pose + visibility + frame |
 | `dev/hermes/api/ecs/SpriteSheet.java` | Sheet layout metadata |
 | `dev/hermes/api/ecs/PartMaterial.java` | Optional per-part shader/uniforms |
 | `dev/hermes/api/ecs/AnimationController.java` | Clip map + runtime playback state |
-| `dev/hermes/api/animation/AnimationClipType.java` | `HERMES`, `GLTF`, `G3DB`, `ATLAS`, `SPINE` |
+| `dev/hermes/api/animation/AnimationClipType.java` | `HERMES`, `GLTF` |
 | `dev/hermes/api/animation/AnimationClipRef.java` | Typed clip reference (path or imported name) |
 | `dev/hermes/api/animation/AnimationClip.java` | Parsed Hermes clip (duration, loop, tracks) |
 | `dev/hermes/api/animation/AnimationTrack.java` | Target path + keyframes |
@@ -624,6 +613,14 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 | `dev/hermes/api/animation/AnimationRegistrar.java` | SPI registrar |
 | `dev/hermes/api/animation/AnimationTrackResolver.java` | SPI custom targets |
 
+**Modify:**
+
+| File | Change |
+|------|--------|
+| `dev/hermes/api/resource/ResourceKind.java` | Add `GLTF_MODEL`, `SPRITE_SHEET`, `ANIMATION_CLIP` |
+| `dev/hermes/api/ecs/HermesEngine.java` | Add `animation()` |
+| `dev/hermes/api/ecs/EntityStore.java` | No change (queries use `Drawables.class`) |
+
 **Delete:**
 
 | File |
@@ -631,29 +628,19 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 | `dev/hermes/api/ecs/Mesh.java` |
 | `dev/hermes/api/ecs/Sprite.java` |
 
-**Modify:**
-
-| File | Change |
-|------|--------|
-| `dev/hermes/api/ecs/HermesEngine.java` | Add `animation()` |
-| `dev/hermes/api/ecs/EntityStore.java` | No change (queries use `Drawables.class`) |
-
 ### New — hermes-core
 
 | File | Responsibility |
 |------|----------------|
-| `dev/hermes/core/animation/AnimationClipLoader.java` | Parse Hermes clip JSON → `AnimationClip` |
-| `dev/hermes/core/animation/AnimationClipCache.java` | Path → Hermes clip cache |
+| `dev/hermes/core/animation/AnimationClipLoader.java` | Parse Hermes clip JSON → `AnimationClip` (used by resource loader) |
 | `dev/hermes/core/animation/AnimationBackend.java` | Internal backend interface |
 | `dev/hermes/core/animation/AnimationBackendRegistry.java` | type → backend |
 | `dev/hermes/core/animation/HermesTrackBackend.java` | Keyframe track playback |
-| `dev/hermes/core/animation/GltfAnimationBackend.java` | glTF/GLB via gdx-gltf |
-| `dev/hermes/core/animation/G3dbAnimationBackend.java` | libGDX g3db `ModelInstance` |
-| `dev/hermes/core/animation/AtlasSequenceBackend.java` | LibGDX atlas frame sequences |
-| `dev/hermes/core/animation/SpineAnimationBackend.java` | spine-libgdx skeleton |
-| `dev/hermes/core/animation/RigInstanceCache.java` | EntityId → runtime rig draw state |
-| `dev/hermes/core/animation/AtlasSequenceCache.java` | atlas path + sequence → regions |
-| `dev/hermes/core/animation/GltfModelCache.java` | glTF scene assets (wraps gdx-gltf) |
+| `dev/hermes/core/animation/GltfAnimationBackend.java` | glTF/GLB skeletal via gdx-gltf |
+| `dev/hermes/core/animation/RigInstanceCache.java` | Per-entity skinned ModelInstance |
+| `dev/hermes/core/resource/loaders/GltfModelResourceLoader.java` | `ResourceKind.GLTF_MODEL` — split glTF + optional `.glb` on desktop |
+| `dev/hermes/core/resource/loaders/AnimationClipResourceLoader.java` | `ResourceKind.ANIMATION_CLIP` — Hermes clip JSON |
+| `dev/hermes/core/resource/loaders/SpriteSheetResourceLoader.java` | `ResourceKind.SPRITE_SHEET` — grid regions from texture |
 | `dev/hermes/core/animation/AnimationTrackEvaluator.java` | Sample keyframes at time t |
 | `dev/hermes/core/animation/AnimationTargetApplier.java` | Apply sampled values to ECS components |
 | `dev/hermes/core/animation/AnimationSystem.java` | Per-frame update |
@@ -661,7 +648,6 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 | `dev/hermes/core/render/TransformComposer.java` | Root × local → libGDX matrix |
 | `dev/hermes/core/render/resource/PrimitiveModelGenerator.java` | box/plane/sphere |
 | `dev/hermes/core/render/resource/PrimitiveModelDocument.java` | Parse generator JSON |
-| `dev/hermes/core/render/resource/SpriteSheetCache.java` | Texture + sheet → `TextureRegion[]` |
 
 **Modify:**
 
@@ -669,11 +655,13 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 |------|--------|
 | `dev/hermes/core/ecs/BuiltinComponents.java` | Remove Mesh/Sprite; register Drawables + AnimationController |
 | `dev/hermes/core/ecs/EntityFactory.java` | Validate `Drawables` + `Material` |
-| `dev/hermes/core/render/pass/World3dPass.java` | Static + skinned parts via `RigInstanceCache` |
-| `dev/hermes/core/render/pass/SpritesPass.java` | Static + atlas/spine via `RigInstanceCache` |
-| `dev/hermes/core/render/resource/ModelCache.java` | OBJ + glTF + g3db + primitives |
-| `hermes-core/build.gradle` | Add `gdx-gltf`, `spine-libgdx` dependencies |
-| `hermes-gradle-plugin/.../launcher/html.gradle` | Document imported 3D/Spine unsupported on TeaVM |
+| `dev/hermes/core/render/pass/World3dPass.java` | Static + skinned parts via `RigInstanceCache`; load models via `ResourceAccess` |
+| `dev/hermes/core/render/pass/SpritesPass.java` | Multi-part sprites; Hermes `spriteFrame`; load textures/sheets via `ResourceAccess` |
+| `dev/hermes/core/resource/loaders/ModelResourceLoader.java` | Extend for procedural generator JSON |
+| `dev/hermes/core/resource/ResourceLoaderRegistry.java` | Register GLTF / clip / sheet loaders at engine startup |
+| `hermes-core/build.gradle` | Add `gdx-gltf` |
+| `hermes-launcher-html/build.gradle` | TeaVM compiles animation + glTF stack |
+| `hermes-gradle-plugin/.../launcher/html.gradle` | `gdx-gltf` on HTML classpath |
 | `dev/hermes/core/ecs/HermesEngineImpl.java` | Wire `AnimationServiceImpl`, load SPI |
 | `dogfood-simulation/.../WaterPass.java` | Query `Drawables` instead of `Mesh` |
 | All test fixtures, templates, scene JSON | Replace Mesh/Sprite with Drawables shorthand |
@@ -682,16 +670,16 @@ Loaded via `ServiceLoader` in `HermesEngineImpl` (same pattern as `ComponentRegi
 
 | File | Change |
 |------|--------|
-| `dogfood-simulation/.../entities/spin-cube/type.json` | `Drawables` + optional clip for bounce |
-| `dogfood-simulation/.../entities/walker/type.json` | **New** — atlas sequence walk cycle |
-| `dogfood-simulation/.../sprites/hero.atlas` | **New** — LibGDX atlas export (walk/idle tags) |
-| `dogfood-simulation/.../animations/logo-pulse.json` | **New** — replaces `PulseMarker` for logo tier-2 demo |
-| `dogfood-simulation/.../scenes/animation-starter.json` | **New** — walker + pulsing logo |
+| `dogfood-simulation/.../entities/spin-cube/type.json` | `Drawables` with `@cube`/`@logo` catalog refs; optional Hermes clip replacing `BounceMarker` |
+| `dogfood-simulation/.../entities/walker/type.json` | **New** — Hermes sprite-sheet walk (2D) |
+| `dogfood-simulation/.../animations/hero-walk.json` | **New** — frame track for walker |
+| `dogfood-simulation/.../animations/logo-pulse.json` | **New** — Hermes scale pulse (replaces `PulseMarker`) |
+| `dogfood-simulation/.../scenes/animation-starter.json` | **New** — walker + logo + glTF character |
+| `dogfood-simulation/.../entities/gltf-character/type.json` | **New** — split glTF rigged character |
+| `dogfood-simulation/.../models/hero.gltf` | **New** — + `hero.bin`, textures (HTML merge-gate asset) |
 | `hermes-templates/minimal/.../entities/logo/type.json` | Drawables shorthand |
-| `hermes-templates/2d/.../scenes/main.json` | Drawables |
-| `dogfood-simulation/.../entities/gltf-character/type.json` | **New** — glTF rigged demo |
-| `dogfood-simulation/.../models/hero.glb` | **New** — minimal rigged test model (or test resource) |
-| `docs/animations.md` | **New** — export workflows (Blender, Aseprite, Spine), backends, tiers |
+| `hermes-templates/2d/.../scenes/main.json` | Drawables + optional Hermes pulse clip |
+| `docs/animations.md` | **New** — Hermes + glTF workflows, HTML asset rules, tiers |
 | `docs/scene-format-v1.md` | Drawables + AnimationController tables; remove Mesh/Sprite |
 | `docs/entity-types.md` | Update examples |
 | `docs/ARCHITECTURE.md` | Animation + drawables section |
@@ -828,7 +816,7 @@ Clip rotates `parts.barrel.local.rotationY` only.
   "components": {
     "Transform": { "x": 0, "y": 0, "z": 0 },
     "Drawables": {
-      "parts": [{ "id": "body", "kind": "mesh", "model": "models/hero.glb", "rig": "gltf" }]
+      "parts": [{ "id": "body", "kind": "mesh", "model": "models/hero.gltf", "rig": "gltf" }]
     },
     "Material": { "shader": "default/lit" },
     "AnimationController": {
@@ -872,26 +860,26 @@ Register system in `onCreate` or scene definition `systems`.
 
 ### Config-only simulation (no Java)
 
-**Hermes keyframe clips:**
+**Hermes keyframe clips (2D and props):**
 
-1. Add sprite sheet PNG under `assets/sprites/` (or use atlas export — see below).
-2. Add clip JSON under `assets/animations/`.
+1. Add sprite sheet PNG under `assets/sprites/`.
+2. Add clip JSON under `assets/animations/` (frame tracks, transforms, etc.).
 3. Define `assets/entities/my-character/type.json` with `Drawables`, `AnimationController`, `Material`.
-4. Place instances in `assets/scenes/main.json` with `"type": "my-character"`.
-5. Run — clips auto-play from `default`.
+4. Place instances in scene JSON with `"type": "my-character"`.
+5. Run — works on **desktop and HTML** identically.
 
-**Imported animations (no Hermes clip JSON required):**
+**glTF skeletal (3D characters):**
 
-| Workflow | Export from | Drop into assets | Entity JSON |
-|----------|-------------|------------------|-------------|
-| 3D character | Blender → glTF 2.0 `.glb` | `assets/models/hero.glb` | `rig: gltf`, clips `{ "type": "gltf", "clip": "Walk" }` |
-| 2D atlas | Aseprite / TexturePacker → LibGDX `.atlas` + `.png` | `assets/sprites/hero.atlas` | `rig: atlas`, clips `{ "type": "atlas", "clip": "walk" }` |
-| 2D skeletal | Spine → JSON + atlas | `assets/spine/hero.json` + `.atlas` | `rig: spine`, clips `{ "type": "spine", "clip": "walk" }` |
-| Legacy 3D | FBX → fbx-conv → `.g3db` | `assets/models/hero.g3db` | `rig: g3db`, clips `{ "type": "g3db", "clip": "walk" }` |
+| Step | Action |
+|------|--------|
+| Export | Blender → glTF 2.0; enable Animation; use **split `.gltf`** for HTML projects |
+| Assets | `assets/models/hero.gltf`, `hero.bin`, textures (or `.glb` desktop-only) |
+| Entity | `"rig": "gltf"` on mesh part; clips `{ "type": "gltf", "clip": "Walk" }` |
+| Verify HTML | `./gradlew :hermes-launcher-html:compileJava` + browser smoke before merge |
 
-Clip names must match names in the exported file (Blender action names, Spine animation names, atlas sequence prefixes). List them once in a template; scene instances only override `Transform`.
+Clip names match Blender action / glTF animation names. Template holds clip map; scene instances override `Transform` only.
 
-Same flow for 3D props with multiple OBJ parts, procedural floor boxes, or a single rigged glTF mesh.
+Same patterns for multi-part OBJ props, procedural floors, or rigged glTF heroes.
 
 ### Template projects
 
@@ -900,6 +888,7 @@ Same flow for 3D props with multiple OBJ parts, procedural floor boxes, or a sin
 | `minimal` | Logo entity uses `Drawables` shorthand |
 | `2d` | Optional `animations/logo-pulse.json` instead of `PulseMarker` (keep `PulseMarker` as tier-4 Java example or remove) |
 | `multi-scene` | Update spin-cube entity type |
+| `dogfood-simulation` | Migrate `spin-cube` (`@cube`/`@logo`); add `animation-starter` scene; retire `SpinMarker`/`BounceMarker` when clips cover motion |
 
 ### Heavy / custom games
 
@@ -1143,7 +1132,7 @@ git commit -m "feat: compose root Transform with part LocalTransform"
 - Modify: `hermes-core/src/main/java/dev/hermes/core/render/pass/World3dPass.java`
 - Modify: `hermes-core/src/test/java/dev/hermes/core/render/World3dPassTest.java` (or create)
 
-- [ ] **Step 1: Write failing test** — entity with two mesh parts collects as one drawable entity; both parts rendered (mock `ModelCache` counting `get` calls = 2).
+- [ ] **Step 1: Write failing test** — entity with two mesh parts collects as one drawable entity; both parts rendered (mock `ResourceAccess` counting model loads = 2).
 
 - [ ] **Step 2: Run — FAIL**
 
@@ -1159,7 +1148,8 @@ for (DrawablePart part : drawables.parts()) {
     if (!part.local().visible() || part.kind() != DrawableKind.MESH) continue;
     Material material = resolveMaterial(entityMaterial, part);
     String modelPath = resolveModelPath(part);
-    ModelInstance instance = new ModelInstance(modelCache.get(modelPath));
+    Model model = resources.require(ResourceRef.of(modelPath), ResourceKind.MODEL);
+    ModelInstance instance = new ModelInstance(model);
     TransformComposer.composeInto(instance.transform, transform, part.local());
     // render with material shader as today
 }
@@ -1182,19 +1172,21 @@ git commit -m "feat: render multi-part mesh Drawables in World3dPass"
 ### Task 5: SpritesPass multi-part + sprite sheets
 
 **Files:**
-- Create: `hermes-core/src/main/java/dev/hermes/core/render/resource/SpriteSheetCache.java`
+- Create: `hermes-core/src/main/java/dev/hermes/core/resource/loaders/SpriteSheetResourceLoader.java`
+- Modify: `hermes-api/src/main/java/dev/hermes/api/resource/ResourceKind.java` — add `SPRITE_SHEET`
+- Modify: `hermes-core/src/main/java/dev/hermes/core/resource/ResourceLoaderRegistry.java` — register loader
 - Modify: `hermes-core/src/main/java/dev/hermes/core/render/pass/SpritesPass.java`
-- Test: `hermes-core/src/test/java/dev/hermes/core/render/SpriteSheetCacheTest.java`
+- Test: `hermes-core/src/test/java/dev/hermes/core/resource/SpriteSheetResourceLoaderTest.java`
 
-- [ ] **Step 1: Write failing test** — sheet 4×1, frame 2 returns correct region offset.
+- [ ] **Step 1: Write failing test** — sheet 4×1, frame 2 returns correct region offset via `ResourceService`.
 
 - [ ] **Step 2: Run — FAIL**
 
-- [ ] **Step 3: Implement `SpriteSheetCache`**
+- [ ] **Step 3: Implement `SpriteSheetResourceLoader`**
 
-Cache key: `texturePath + sheet dimensions`. Return `TextureRegion[]` indexed by frame.
+Register on `ResourceLoaderRegistry`. Cache key: texture path + sheet dimensions. Return `TextureRegion[]` indexed by frame.
 
-Update `SpritesPass.drawSprite` loop over parts where `kind == SPRITE`, use `part.local().spriteFrame()` index, `TransformComposer` for position (2D uses x,y, rotationZ).
+Update `SpritesPass.drawSprite` loop over parts where `kind == SPRITE`, use `part.local().spriteFrame()` index, `TransformComposer` for position (2D uses x,y, rotationZ). Load base texture via existing `ResourceKind.TEXTURE`; load sheet regions via `SPRITE_SHEET` when `DrawablePart.sheet()` is set.
 
 - [ ] **Step 4: Run tests — PASS**
 
@@ -1211,7 +1203,7 @@ git commit -m "feat: multi-part sprites with sprite sheet frames"
 **Files:**
 - Create: `hermes-core/src/main/java/dev/hermes/core/render/resource/PrimitiveModelDocument.java`
 - Create: `hermes-core/src/main/java/dev/hermes/core/render/resource/PrimitiveModelGenerator.java`
-- Modify: `hermes-core/src/main/java/dev/hermes/core/render/resource/ModelCache.java`
+- Modify: `hermes-core/src/main/java/dev/hermes/core/resource/loaders/ModelResourceLoader.java`
 - Test: `hermes-core/src/test/java/dev/hermes/core/render/resource/PrimitiveModelGeneratorTest.java`
 
 - [ ] **Step 1: Write failing test**
@@ -1233,11 +1225,11 @@ void boxGenerator_producesModelWithNodes() {
 
 `PrimitiveModelGenerator` uses `ModelBuilder` + `BoxShapeBuilder`, `SphereShapeBuilder`, etc.
 
-`ModelCache.get(path)`:
-1. Load file text; if JSON with `"generator"`, parse `PrimitiveModelDocument` and generate.
+`ModelResourceLoader.decode/upload`:
+1. Load file text; if JSON with `"generator"`, parse `PrimitiveModelDocument` and generate via `PrimitiveModelGenerator`.
 2. Else existing OBJ load.
 
-`Drawables` deserializer: inline `"primitive": "box", "size": [w,h,d]` sets synthetic cache key `primitive:box:w:h:d` without asset file.
+`Drawables` deserializer: inline `"primitive": "box", "size": [w,h,d]` sets synthetic path key `primitive:box:w:h:d` without asset file (resolved by loader).
 
 - [ ] **Step 4: Run tests — PASS**
 
@@ -1257,14 +1249,15 @@ git commit -m "feat: procedural box plane sphere meshes"
 - Create: `hermes-api/src/main/java/dev/hermes/api/animation/AnimationTrack.java`
 - Create: `hermes-api/src/main/java/dev/hermes/api/animation/AnimationClip.java`
 - Create: `hermes-core/src/main/java/dev/hermes/core/animation/AnimationClipLoader.java`
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/AnimationClipCache.java`
+- Create: `hermes-core/src/main/java/dev/hermes/core/resource/loaders/AnimationClipResourceLoader.java`
+- Modify: `hermes-api/src/main/java/dev/hermes/api/resource/ResourceKind.java` — add `ANIMATION_CLIP`
 - Test: `hermes-core/src/test/java/dev/hermes/core/animation/AnimationClipLoaderTest.java`
 
-- [ ] **Step 1: Write failing test** — load sample clip JSON; assert duration, track count, keyframe values.
+- [ ] **Step 1: Write failing test** — load sample clip JSON via `ResourceService`; assert duration, track count, keyframe values.
 
 - [ ] **Step 2: Run — FAIL**
 
-- [ ] **Step 3: Implement loader** using `JsonReader`; validate `version == 1`; reject unknown targets at load if part ids listed in optional `"parts": ["body"]` validation block, else defer to apply time.
+- [ ] **Step 3: Implement loader** using `JsonReader`; validate `version == 1`; reject unknown targets at load if part ids listed in optional `"parts": ["body"]` validation block, else defer to apply time. Register `AnimationClipResourceLoader` on `ResourceLoaderRegistry`; `HermesTrackBackend` loads clips through `ResourceService` (ref-counted, same lifecycle as textures/models).
 
 - [ ] **Step 4: Run — PASS**
 
@@ -1348,7 +1341,7 @@ Use headless backend + `HermesEngineImpl` test harness pattern from `HermesEngin
 ```java
 public final class AnimationSystem implements System {
     private final AnimationBackendRegistry backends;
-    private final AnimationClipCache hermesClips;
+    private final ResourceAccess resources;
 
     @Override
     public void update(WorldManager manager, float deltaSeconds) {
@@ -1358,13 +1351,13 @@ public final class AnimationSystem implements System {
             if (ctrl == null || !ctrl.playing()) continue;
             AnimationClipRef ref = ctrl.activeRef();
             AnimationBackend backend = backends.require(ref.type());
-            backend.update(entity.id(), ctrl, ref, deltaSeconds * ctrl.speed(), entities);
+            backend.update(entity.id(), ctrl, ref, deltaSeconds * ctrl.speed(), entities, resources);
         }
     }
 }
 ```
 
-`HermesTrackBackend` contains the keyframe loop from the original design (load `AnimationClip` from `hermesClips`, evaluate tracks, apply to ECS). Imported backends ignore Hermes tracks.
+`HermesTrackBackend` loads `AnimationClip` via `ResourceService` (`ResourceKind.ANIMATION_CLIP`). Imported backends ignore Hermes tracks.
 
 On entity add with `autoPlay`, set `currentClip = default`, `playing = true`, `timeSeconds = 0` — hook in deserializer post-step or first system frame (prefer `AnimationController` init method called from deserializer via `ComponentContext`).
 
@@ -1453,23 +1446,23 @@ git commit -m "refactor: migrate scenes and templates from Mesh/Sprite to Drawab
 - Create: `dogfood-simulation/src/main/resources/assets/scenes/animation-starter.json`
 - Modify: `dogfood-simulation/src/main/java/dev/hermes/sample/SampleHermesGame.java` — register scene
 
-- [ ] **Step 1: Add walker template** — `rig: atlas` + `hero.atlas` with `walk`/`idle` sequences (exported from Aseprite or TexturePacker).
+- [ ] **Step 1: Add walker template** — Hermes `hero-walk.json` frame track + sprite sheet grid on `Drawables.parts`.
 
-- [ ] **Step 2: Add logo-pulse Hermes clip** (animates `Transform.scaleX/Y` like old `PulseMarker`).
+- [ ] **Step 2: Add logo-pulse Hermes clip** (animates `Transform.scaleX/Y`).
 
-- [ ] **Step 3: Add gltf-character template** — minimal `hero.glb` with Idle/Walk clips (commit test asset or generate via Blender once).
+- [ ] **Step 3: Add gltf-character template** — `models/hero.gltf` + bin + textures (HTML-safe split export).
 
-- [ ] **Step 4: Add scene** with atlas walker + logo + optional glTF character instance.
+- [ ] **Step 4: Add animation-starter scene** — walker + logo + glTF character.
 
-- [ ] **Step 5: Manual smoke test**
+- [ ] **Step 5: Desktop smoke test**
 
-Run: `./gradlew :dogfood-simulation:run` (or project run task)
-Expected: atlas walker animates; logo pulses; glTF character plays idle/walk when switched via input.
+Run: `./gradlew :dogfood-simulation:run`
+Expected: walker frames cycle; logo pulses; glTF idle plays.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git commit -m "demo: animation-starter with atlas, Hermes clips, and glTF character"
+git commit -m "demo: animation-starter with Hermes 2D walk and glTF character"
 ```
 
 ---
@@ -1482,16 +1475,16 @@ git commit -m "demo: animation-starter with atlas, Hermes clips, and glTF charac
 - Modify: `docs/entity-types.md`
 - Modify: `docs/ARCHITECTURE.md`
 
-- [ ] **Step 1: Write `docs/animations.md`** — tiers, Hermes clip format, **export workflows** (Blender→glTF, Aseprite→atlas, Spine→json+atlas), backend table, track grammar, Java API, SPI, platform limits (HTML).
+- [ ] **Step 1: Write `docs/animations.md`** — Hermes clip format, Blender→glTF export, HTML asset rules (split glTF; cross-link [resource-management.md](../resource-management.md) HTML table), tiers, Java API, SPI extension points.
 
-- [ ] **Step 2: Update scene-format-v1** — Drawables (`rig`, `atlas`, `skeleton`), AnimationController clip refs; remove Mesh/Sprite.
+- [ ] **Step 2: Update scene-format-v1** — Drawables, AnimationController (`hermes` \| `gltf` only); remove Mesh/Sprite.
 
-- [ ] **Step 3: Update entity-types example** — spin-cube with Drawables; add glTF character template example.
+- [ ] **Step 3: Update entity-types example** — spin-cube + glTF character template.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git commit -m "docs: animations including imported glTF, atlas, and Spine formats"
+git commit -m "docs: Hermes and glTF animation guide with HTML parity rules"
 ```
 
 ---
@@ -1523,34 +1516,42 @@ git commit -m "feat: AnimationBackend registry with Hermes track backend"
 
 ---
 
-### Task 16: glTF / GLB skeletal backend
+### Task 16: glTF / GLB skeletal backend (desktop + HTML)
 
 **Files:**
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/GltfModelCache.java`
+- Create: `hermes-core/src/main/java/dev/hermes/core/resource/loaders/GltfModelResourceLoader.java`
 - Create: `hermes-core/src/main/java/dev/hermes/core/animation/GltfAnimationBackend.java`
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/RigInstanceCache.java` (initial: glTF slot)
+- Create: `hermes-core/src/main/java/dev/hermes/core/animation/RigInstanceCache.java`
+- Modify: `hermes-api/src/main/java/dev/hermes/api/resource/ResourceKind.java` — add `GLTF_MODEL`
 - Modify: `hermes-core/src/main/java/dev/hermes/core/render/pass/World3dPass.java`
 - Modify: `hermes-core/build.gradle`
+- Modify: `hermes-launcher-html/build.gradle` (or launcher template) — `gdx-gltf` dependency
 - Test: `hermes-core/src/test/java/dev/hermes/core/animation/GltfAnimationBackendTest.java`
-- Test resource: `hermes-core/src/test/resources/assets/models/simple.glb` (minimal 2-bone idle/walk)
+- Test resource: `hermes-core/src/test/resources/assets/models/simple.gltf` + `simple.bin` (HTML-safe; add optional `simple.glb` desktop test)
 
-**Gradle addition:**
+**Gradle (`hermes-core/build.gradle`):**
 
 ```gradle
 implementation "com.github.mgsx-dev.gdx-gltf:gdx-gltf:2.1.2"
 ```
 
-- [ ] **Step 1: Write failing test** — load test glb; `play` clip `"Idle"`; after `update(0.1f)` rig instance time advances.
+- [ ] **Step 1: Write failing test** — load split test glTF; `play` clip `"Idle"`; after `update(0.1f)` animation time advances.
 
 - [ ] **Step 2: Run — FAIL**
 
-- [ ] **Step 3: Implement `GltfModelCache`** using gdx-gltf `GLTFLoader`; store `Model` + animation names.
+- [ ] **Step 3: Implement `GltfModelResourceLoader`**
+  - Register `ResourceKind.GLTF_MODEL` on `ResourceLoaderRegistry`.
+  - Load `.gltf` + external resources via `Gdx.files.internal` (HTML-safe).
+  - Load `.glb` on desktop via gdx-gltf when file extension is `.glb`.
+  - Use `DefaultShaderProvider` / material conversion compatible with `default/lit` (not stock PBR shader).
 
-- [ ] **Step 4: Implement `GltfAnimationBackend`** — libGDX `AnimationController` on `ModelInstance`; `RigInstanceCache` stores per-entity instance.
+- [ ] **Step 4: Implement `GltfAnimationBackend` + `RigInstanceCache`**
 
-- [ ] **Step 5: Update `World3dPass`** — when `part.rig() == GLTF`, draw via `RigInstanceCache.drawSkinnedMesh(...)`.
+- [ ] **Step 5: Update `World3dPass`** — skinned draw when `part.rig() == GLTF`.
 
-- [ ] **Step 6: Run tests — PASS**
+- [ ] **Step 6: Run desktop tests — PASS**
+
+Run: `./gradlew :hermes-core:test --tests '*Gltf*' -q`
 
 - [ ] **Step 7: Commit**
 
@@ -1560,89 +1561,40 @@ git commit -m "feat: glTF/GLB skeletal animation backend"
 
 ---
 
-### Task 17: Atlas sequence backend (TexturePacker / Aseprite exports)
+### Task 17: HTML platform parity (merge gate)
 
 **Files:**
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/AtlasSequenceCache.java`
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/AtlasSequenceBackend.java`
-- Modify: `hermes-core/src/main/java/dev/hermes/core/render/pass/SpritesPass.java`
-- Modify: `hermes-core/src/main/java/dev/hermes/core/animation/RigInstanceCache.java` (atlas slot)
-- Test: `hermes-core/src/test/java/dev/hermes/core/animation/AtlasSequenceBackendTest.java`
-- Test resource: `hermes-core/src/test/resources/assets/sprites/test.atlas` + `.png`
+- Modify: `hermes-launcher-html/build.gradle` or `hermes-gradle-plugin/.../launcher/html.gradle`
+- Modify: `dogfood-simulation/.../scenes/animation-starter.json` — use split glTF paths
+- Optional: `hermes-gradle-plugin/.../HermesPluginIntegrationTest.java` — extend html compile test
 
-- [ ] **Step 1: Write failing test** — sequence `"walk"` with 4 regions; after full clip duration, frame index cycles 0..3.
+- [ ] **Step 1: Wire gdx-gltf on HTML classpath**
 
-- [ ] **Step 2: Run — FAIL**
+Ensure `hermes-launcher-html` resolves `hermes-core` + `gdx-gltf` without TeaVM errors.
 
-- [ ] **Step 3: Implement `AtlasSequenceCache`** — parse LibGDX atlas; group regions by prefix (`walk/` or `walk_` naming convention documented in `docs/animations.md`).
+- [ ] **Step 2: Run HTML compile (must pass before merge)**
 
-- [ ] **Step 4: Implement `AtlasSequenceBackend`** — advance frame index from clip time; store current region in `RigInstanceCache`.
+Run: `./gradlew :hermes-launcher-html:compileJava -q`
+Expected: PASS
 
-- [ ] **Step 5: Update `SpritesPass`** for `rig: atlas` parts.
+- [ ] **Step 3: Build HTML release**
 
-- [ ] **Step 6: Run tests — PASS**
+Run: `./gradlew :hermes-launcher-html:buildRelease -q`
+Expected: non-empty output zip
 
-- [ ] **Step 7: Commit**
+- [ ] **Step 4: Browser smoke test**
 
-```bash
-git commit -m "feat: LibGDX atlas sequence animation backend"
-```
+Run TeaVM dev server; load animation-starter scene.
+Expected: Hermes logo pulse + glTF character skeletal animation; no WebGL errors.
 
----
+- [ ] **Step 5: Run doctor with HTML enabled**
 
-### Task 18: Spine 2D backend
-
-**Files:**
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/SpineAnimationBackend.java`
-- Modify: `hermes-core/src/main/java/dev/hermes/core/animation/RigInstanceCache.java` (spine slot)
-- Modify: `hermes-core/src/main/java/dev/hermes/core/render/pass/SpritesPass.java`
-- Modify: `hermes-core/build.gradle`
-- Test: `hermes-core/src/test/java/dev/hermes/core/animation/SpineAnimationBackendTest.java`
-- Test resource: minimal Spine export under `hermes-core/src/test/resources/assets/spine/`
-
-**Gradle addition:**
-
-```gradle
-implementation "com.esotericsoftware.spine:spine-libgdx:4.2.7"
-```
-
-- [ ] **Step 1: Write failing test** — load skeleton; set animation `"walk"`; verify `SkeletonAnimation` state after update.
-
-- [ ] **Step 2: Run — FAIL**
-
-- [ ] **Step 3: Implement `SpineAnimationBackend`** — `SkeletonJson` + `Atlas`; `SkeletonAnimation.update(delta)`.
-
-- [ ] **Step 4: Update `SpritesPass`** — draw spine skeleton via `SkeletonRenderer` when `rig: spine`.
-
-- [ ] **Step 5: Run tests — PASS**
+Expected: no new custom-shader violations from skinning path.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git commit -m "feat: Spine 2D skeletal animation backend"
-```
-
----
-
-### Task 19: g3db backend (legacy libGDX pipeline)
-
-**Files:**
-- Create: `hermes-core/src/main/java/dev/hermes/core/animation/G3dbAnimationBackend.java`
-- Modify: `hermes-core/src/main/java/dev/hermes/core/render/resource/ModelCache.java` — load `.g3db` via `G3dModelLoader`
-- Test: `hermes-core/src/test/java/dev/hermes/core/animation/G3dbAnimationBackendTest.java`
-
-- [ ] **Step 1: Write failing test** — load test g3db with one animation; play and advance.
-
-- [ ] **Step 2: Run — FAIL**
-
-- [ ] **Step 3: Implement backend** — reuse `RigInstanceCache` glTF draw path (same `ModelInstance.animationController` API).
-
-- [ ] **Step 4: Run tests — PASS**
-
-- [ ] **Step 5: Commit**
-
-```bash
-git commit -m "feat: g3db animation backend for fbx-conv assets"
+git commit -m "ci: HTML parity for Hermes and glTF animations"
 ```
 
 ---
@@ -1656,15 +1608,16 @@ git commit -m "feat: g3db animation backend for fbx-conv assets"
 | Multi-mesh entities | Tasks 1, 4 |
 | Multi-sprite / sheets | Tasks 1, 5 |
 | Hermes keyframe clips | Tasks 7–10, 15 |
-| **Imported 2D (atlas, Spine)** | Tasks 17, 18 |
-| **Imported 3D (glTF, g3db)** | Tasks 16, 19 |
+| glTF / GLB skeletal | Tasks 16, 17 |
+| **HTML parity (merge gate)** | Task 17 |
 | Java animation control | Task 11 |
 | Mesh generator | Task 6 |
+| ResourceService integration | Tasks 5–7, 16 (`GLTF_MODEL`, `SPRITE_SHEET`, `ANIMATION_CLIP`) |
 | No backward compat / delete Mesh Sprite | Task 2, 12 |
 | Config-first + tiers | Architecture + docs Task 14 |
-| SPI extension | Tasks 11, 15 |
-| Fit entity-types / WorldManager | Throughout (EntityFactory, templates) |
-| Future physics/debug/save hooks | Documented in Architecture v2 |
+| Extensible registry (future formats) | Tasks 15–16, SPI Task 11 |
+| Fit entity-types / WorldManager | Throughout |
+| Prerequisites landed | Central resource + world lighting (baseline table) |
 
 ### Placeholder scan
 
@@ -1674,9 +1627,10 @@ No TBD/TODO steps. Each task includes concrete code or commands.
 
 - Component name `Drawables` in JSON and Java.
 - Track prefix `parts.<id>.local.*` matches deserializer part ids.
-- `AnimationClipRef.type` matches backend registry keys (`hermes`, `gltf`, `g3db`, `atlas`, `spine`).
-- `AnimationController.activeRef()` used consistently in system, service, and backends.
-- `rigPart` on controller aligns with `Drawables.parts[].id` and `rig` field.
+- `AnimationClipRef.type` is `HERMES` or `GLTF` only in v1.
+- `AnimationController.activeRef()` used in system, service, and both backends.
+- `rigPart` aligns with `Drawables.parts[].id` where `rig: gltf`.
+- Merge gate (Task 17) required before feature is complete.
 
 ---
 

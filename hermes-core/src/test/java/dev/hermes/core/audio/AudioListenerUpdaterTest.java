@@ -17,9 +17,9 @@ final class AudioListenerUpdaterTest {
 
         Entity cameraEntity = manager.entities().create("main-camera");
         Camera camera = new Camera();
-        camera.setActive(true);
         manager.entities().addComponent(cameraEntity.id(), camera);
         manager.entities().addComponent(cameraEntity.id(), new Transform(5f, 10f, 3f));
+        manager.camera().bindMain("main-camera");
 
         AudioListenerUpdater.update(backend, manager, 800f, 600f);
 

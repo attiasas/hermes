@@ -2,127 +2,90 @@ package dev.hermes.core.ecs;
 
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
-import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.ecs.Transform;
+import dev.hermes.api.ecs.ViewportFitMode;
+import dev.hermes.api.ecs.WorldManager;
+import dev.hermes.api.world.ActiveCameraView;
+import dev.hermes.api.world.MainCameraBinding;
+import dev.hermes.api.world.SceneCameraConfig;
 
 import java.util.Optional;
 
-/**
- * Selects the active scene camera from ECS entities.
- */
+/** Selects the active scene camera from scene config, bound entities, or auxiliary pass cameras. */
 public final class CameraResolver {
 
-    private CameraResolver() {
+    private CameraResolver() {}
+
+    public static ActiveCamera resolveForManager(
+            WorldManager manager, String passTargetId, float surfaceWidth, float surfaceHeight) {
+        if (manager == null) {
+            return defaultCamera(surfaceWidth, surfaceHeight);
+        }
+        boolean matchTarget =
+                passTargetId != null && !passTargetId.isBlank() && !"screen".equals(passTargetId);
+        if (matchTarget) {
+            Optional<ActiveCamera> renderTarget = resolveRenderTargetCamera(
+                    manager.entities(), passTargetId, surfaceWidth, surfaceHeight);
+            if (renderTarget.isPresent()) {
+                return renderTarget.get();
+            }
+            System.err.println(
+                    "Warning: no Camera with renderTarget '"
+                            + passTargetId
+                            + "'; using main camera.");
+        }
+        return resolveMainCamera(manager, surfaceWidth, surfaceHeight);
     }
 
-    /**
-     * Resolves the camera for a render pass using surface pixel dimensions (not window size).
-     * When {@code passTargetId} is not {@code "screen"}, prefers a camera whose
-     * {@link Camera#renderTarget()} matches the pass target.
-     */
     public static ActiveCamera resolveForPass(
             EntityStore entities, String passTargetId, float surfaceWidth, float surfaceHeight) {
         if (entities == null) {
             return defaultCamera(surfaceWidth, surfaceHeight);
         }
-        Entity renderTargetEntity = null;
-        Camera renderTargetCamera = null;
-        Entity activeEntity = null;
-        Camera activeCamera = null;
-        Entity fallbackEntity = null;
-        Camera fallbackCamera = null;
-        int activeCount = 0;
-        boolean matchTarget = passTargetId != null && !passTargetId.isBlank() && !"screen".equals(passTargetId);
-
-        for (Entity entity : entities.entitiesWith(Camera.class)) {
-            Camera camera = entities.getComponent(entity.id(), Camera.class);
-            if (camera == null) {
-                continue;
-            }
-            if (fallbackEntity == null) {
-                fallbackEntity = entity;
-                fallbackCamera = camera;
-            }
-            if (matchTarget && passTargetId.equals(camera.renderTarget())) {
-                if (renderTargetEntity == null) {
-                    renderTargetEntity = entity;
-                    renderTargetCamera = camera;
-                }
-            }
-            if (camera.active()) {
-                activeCount++;
-                if (activeEntity == null) {
-                    activeEntity = entity;
-                    activeCamera = camera;
-                }
-            }
+        WorldManager manager = WorldManagerRegistry.lookup(entities);
+        if (manager != null) {
+            return resolveForManager(manager, passTargetId, surfaceWidth, surfaceHeight);
         }
-
-        if (activeCount > 1 && renderTargetEntity == null) {
-            System.err.println(
-                    "Warning: multiple active Camera components found; using the first active camera.");
+        boolean matchTarget =
+                passTargetId != null && !passTargetId.isBlank() && !"screen".equals(passTargetId);
+        if (matchTarget) {
+            return resolveRenderTargetCamera(entities, passTargetId, surfaceWidth, surfaceHeight)
+                    .orElseGet(() -> defaultCamera(surfaceWidth, surfaceHeight));
         }
-
-        Entity chosen =
-                renderTargetEntity != null
-                        ? renderTargetEntity
-                        : (activeEntity != null ? activeEntity : fallbackEntity);
-        Camera chosenCamera =
-                renderTargetCamera != null
-                        ? renderTargetCamera
-                        : (activeCamera != null ? activeCamera : fallbackCamera);
-
-        if (chosen == null || chosenCamera == null) {
-            return defaultCamera(surfaceWidth, surfaceHeight);
-        }
-
-        Transform transform = entities.getComponent(chosen.id(), Transform.class);
-        if (transform == null) {
-            throw new IllegalStateException(
-                    "Camera entity '"
-                            + chosen.name()
-                            + "' must have a Transform component on the same entity.");
-        }
-
-        float viewportWidth =
-                chosenCamera.viewportWidth() > 0f ? chosenCamera.viewportWidth() : surfaceWidth;
-        float viewportHeight =
-                chosenCamera.viewportHeight() > 0f ? chosenCamera.viewportHeight() : surfaceHeight;
-
-        return fromComponents(transform, chosenCamera, viewportWidth, viewportHeight);
+        return resolveLegacyEntityMain(entities, surfaceWidth, surfaceHeight);
     }
 
     public static ActiveCamera resolve(EntityStore entities, float windowWidth, float windowHeight) {
         return resolveForPass(entities, "screen", windowWidth, windowHeight);
     }
 
-    /** First active camera entity with Transform, same choice as {@link #resolveForPass}. */
-    public static Optional<Entity> activeCameraEntity(EntityStore entities) {
-        if (entities == null) {
+    /** Main camera entity when bound via {@link dev.hermes.api.world.SceneCameraController#bindMain}. */
+    public static Optional<Entity> mainCameraEntity(WorldManager manager) {
+        if (manager == null || manager.camera().mainBinding() != MainCameraBinding.ENTITY) {
             return Optional.empty();
         }
-        Entity active = null;
-        Entity fallback = null;
+        return manager.camera().mainEntityName().flatMap(name -> Optional.ofNullable(
+                manager.entities().findByName(name)));
+    }
+
+    /** @deprecated use {@link #mainCameraEntity(WorldManager)} */
+    @Deprecated
+    public static Optional<Entity> activeCameraEntity(EntityStore entities) {
+        WorldManager manager = WorldManagerRegistry.lookup(entities);
+        if (manager != null) {
+            return mainCameraEntity(manager);
+        }
         for (Entity entity : entities.entitiesWith(Camera.class)) {
             Camera camera = entities.getComponent(entity.id(), Camera.class);
             if (camera == null || entities.getComponent(entity.id(), Transform.class) == null) {
                 continue;
             }
-            if (fallback == null) {
-                fallback = entity;
-            }
-            if (camera.active()) {
-                active = entity;
-                break;
-            }
+            return Optional.of(entity);
         }
-        Entity chosen = active != null ? active : fallback;
-        return Optional.ofNullable(chosen);
+        return Optional.empty();
     }
 
-    /**
-     * Resolves the camera on a named entity; falls back to {@link #resolveForPass} when not found.
-     */
     public static ActiveCamera resolveNamed(
             EntityStore entities,
             String entityName,
@@ -135,7 +98,7 @@ public final class CameraResolver {
         Entity entity = entities.findByName(entityName);
         if (entity == null) {
             System.err.println(
-                    "Warning: UI pass camera entity '" + entityName + "' not found; using active camera.");
+                    "Warning: camera entity '" + entityName + "' not found; using main camera.");
             return resolveForPass(entities, passTargetId, surfaceWidth, surfaceHeight);
         }
         Camera camera = entities.getComponent(entity.id(), Camera.class);
@@ -153,7 +116,112 @@ public final class CameraResolver {
         return fromComponents(transform, camera, viewportWidth, viewportHeight);
     }
 
-    private static ActiveCamera fromComponents(
+    private static ActiveCamera resolveMainCamera(
+            WorldManager manager, float surfaceWidth, float surfaceHeight) {
+        if (manager.camera().mainBinding() == MainCameraBinding.ENTITY) {
+            Optional<String> name = manager.camera().mainEntityName();
+            if (name.isPresent()) {
+                Entity entity = manager.entities().findByName(name.get());
+                if (entity != null) {
+                    Camera camera = manager.entities().getComponent(entity.id(), Camera.class);
+                    Transform transform = manager.entities().getComponent(entity.id(), Transform.class);
+                    if (camera != null && transform != null) {
+                        float viewportWidth =
+                                camera.viewportWidth() > 0f ? camera.viewportWidth() : surfaceWidth;
+                        float viewportHeight =
+                                camera.viewportHeight() > 0f ? camera.viewportHeight() : surfaceHeight;
+                        return fromComponents(transform, camera, viewportWidth, viewportHeight);
+                    }
+                }
+            }
+        }
+        ActiveCameraView view = manager.camera().resolveMain(surfaceWidth, surfaceHeight);
+        if (view != null) {
+            return fromView(view);
+        }
+        return defaultCamera(surfaceWidth, surfaceHeight);
+    }
+
+    private static Optional<ActiveCamera> resolveRenderTargetCamera(
+            EntityStore entities, String passTargetId, float surfaceWidth, float surfaceHeight) {
+        for (Entity entity : entities.entitiesWith(Camera.class)) {
+            Camera camera = entities.getComponent(entity.id(), Camera.class);
+            if (camera == null || !passTargetId.equals(camera.renderTarget())) {
+                continue;
+            }
+            Transform transform = entities.getComponent(entity.id(), Transform.class);
+            if (transform == null) {
+                throw new IllegalStateException(
+                        "Camera entity '"
+                                + entity.name()
+                                + "' must have a Transform component on the same entity.");
+            }
+            float viewportWidth =
+                    camera.viewportWidth() > 0f ? camera.viewportWidth() : surfaceWidth;
+            float viewportHeight =
+                    camera.viewportHeight() > 0f ? camera.viewportHeight() : surfaceHeight;
+            return Optional.of(fromComponents(transform, camera, viewportWidth, viewportHeight));
+        }
+        return Optional.empty();
+    }
+
+    private static ActiveCamera resolveLegacyEntityMain(
+            EntityStore entities, float surfaceWidth, float surfaceHeight) {
+        Entity fallback = null;
+        Camera fallbackCamera = null;
+        for (Entity entity : entities.entitiesWith(Camera.class)) {
+            Camera camera = entities.getComponent(entity.id(), Camera.class);
+            if (camera == null || entities.getComponent(entity.id(), Transform.class) == null) {
+                continue;
+            }
+            if (camera.renderTarget() != null) {
+                continue;
+            }
+            fallback = entity;
+            fallbackCamera = camera;
+            break;
+        }
+        if (fallback == null || fallbackCamera == null) {
+            return defaultCamera(surfaceWidth, surfaceHeight);
+        }
+        Transform transform = entities.getComponent(fallback.id(), Transform.class);
+        float viewportWidth =
+                fallbackCamera.viewportWidth() > 0f ? fallbackCamera.viewportWidth() : surfaceWidth;
+        float viewportHeight =
+                fallbackCamera.viewportHeight() > 0f ? fallbackCamera.viewportHeight() : surfaceHeight;
+        return fromComponents(transform, fallbackCamera, viewportWidth, viewportHeight);
+    }
+
+    static ActiveCamera fromView(ActiveCameraView view) {
+        return new ActiveCamera(
+                toCameraProjection(view.projection()),
+                view.x(),
+                view.y(),
+                view.z(),
+                view.rotationX(),
+                view.rotationY(),
+                view.rotationZ(),
+                view.zoom(),
+                view.fieldOfView(),
+                view.near(),
+                view.far(),
+                view.viewportWidth(),
+                view.viewportHeight(),
+                view.fitMode(),
+                view.designAspect(),
+                view.lookAtX(),
+                view.lookAtY(),
+                view.lookAtZ(),
+                null);
+    }
+
+    private static Camera.Projection toCameraProjection(SceneCameraConfig.Projection projection) {
+        return projection == SceneCameraConfig.Projection.PERSPECTIVE
+                ? Camera.Projection.PERSPECTIVE
+                : Camera.Projection.ORTHOGRAPHIC;
+    }
+
+    static ActiveCamera fromComponents(
             Transform transform, Camera camera, float viewportWidth, float viewportHeight) {
         return new ActiveCamera(
                 camera.projection(),
@@ -192,7 +260,7 @@ public final class CameraResolver {
                 3000f,
                 windowWidth,
                 windowHeight,
-                dev.hermes.api.ecs.ViewportFitMode.LETTERBOX,
+                ViewportFitMode.LETTERBOX,
                 0f,
                 Float.NaN,
                 Float.NaN,

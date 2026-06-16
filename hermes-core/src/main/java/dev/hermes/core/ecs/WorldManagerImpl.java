@@ -22,7 +22,8 @@ public final class WorldManagerImpl implements WorldManager {
         EntityFactory factory = new EntityFactory(types, registry);
         this.entities = new EntityStoreImpl(factory);
         this.space = new WorldSpaceImpl();
-        this.camera = new SceneCameraControllerImpl();
+        this.camera = new SceneCameraControllerImpl(this);
+        WorldManagerRegistry.register(this);
     }
 
     @Override

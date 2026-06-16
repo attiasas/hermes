@@ -10,6 +10,7 @@ import dev.hermes.api.input.InputButton;
 import dev.hermes.api.input.InputService;
 import dev.hermes.api.input.PickLayer;
 import dev.hermes.api.input.PointerSnapshot;
+import dev.hermes.api.world.SceneCameraConfig;
 import dev.hermes.core.ecs.CameraResolver;
 
 /** GLOBAL system: empty left-drag orbits the active perspective camera around its look-at. */
@@ -32,9 +33,14 @@ public final class CameraSceneControlSystem implements System {
         EntityStore entities = manager.entities();
         PointerSnapshot ptr = input.devices().pointer();
         Camera.Projection mode =
-                CameraResolver.activeCameraEntity(entities)
-                        .map(e -> entities.getComponent(e.id(), Camera.class).projection())
-                        .orElse(Camera.Projection.ORTHOGRAPHIC);
+                CameraResolver.mainCameraEntity(manager)
+                        .map(e -> manager.entities().getComponent(e.id(), Camera.class).projection())
+                        .orElseGet(
+                                () ->
+                                        manager.camera().sceneConfig().projection()
+                                                        == SceneCameraConfig.Projection.PERSPECTIVE
+                                                ? Camera.Projection.PERSPECTIVE
+                                                : Camera.Projection.ORTHOGRAPHIC);
         if (mode != Camera.Projection.PERSPECTIVE) {
             orbiting = false;
             return;
@@ -61,14 +67,15 @@ public final class CameraSceneControlSystem implements System {
         float dy = ptr.screenY() - lastScreenY;
         lastScreenX = ptr.screenX();
         lastScreenY = ptr.screenY();
-        orbitActiveCamera(entities, dx, dy);
+        orbitMainCamera(manager, dx, dy);
     }
 
-    private void orbitActiveCamera(EntityStore entities, float dx, float dy) {
-        Entity cameraEntity = CameraResolver.activeCameraEntity(entities).orElse(null);
+    private void orbitMainCamera(WorldManager manager, float dx, float dy) {
+        Entity cameraEntity = CameraResolver.mainCameraEntity(manager).orElse(null);
         if (cameraEntity == null) {
             return;
         }
+        EntityStore entities = manager.entities();
         Transform transform = entities.getComponent(cameraEntity.id(), Transform.class);
         Camera camera = entities.getComponent(cameraEntity.id(), Camera.class);
         if (transform == null || camera == null) {
