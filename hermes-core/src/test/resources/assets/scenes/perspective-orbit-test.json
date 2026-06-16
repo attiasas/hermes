@@ -1,24 +1,12 @@
 {
-  "entities": [
-    {
-      "id": "cam",
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 2,
-          "z": 5,
-          "rotationY": 0
-        },
-        "Camera": {
-          "projection": "perspective",
-          "fitMode": "stretch",
-          "lookAt": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-          }
-        }
-      }
-    }
-  ]
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 2,
+    "z": 5,
+    "fitMode": "stretch",
+    "lookAt": { "x": 0, "y": 0, "z": 0 }
+  },
+  "entities": []
 }

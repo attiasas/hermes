@@ -1,23 +1,16 @@
 {
   "renderPipeline": "render/advanced-render-pipeline.json",
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 0,
+    "z": 8,
+    "fieldOfView": 60,
+    "fitMode": "letterbox",
+    "lookAt": { "x": 0, "y": 0, "z": 0 }
+  },
   "entities": [
-    {
-      "id": "camera",
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 8
-        },
-        "Camera": {
-          "projection": "perspective",
-          "active": true,
-          "fieldOfView": 60,
-          "fitMode": "letterbox",
-          "lookAt": { "x": 0, "y": 0, "z": 0 }
-        }
-      }
-    },
     {
       "id": "water-plane",
       "components": {

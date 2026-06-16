@@ -50,9 +50,9 @@ final class CameraResolverTest {
     @Test
     void mainCameraEntity_returnsBoundEntity() {
         WorldManagerImpl manager = new WorldManagerImpl();
-        ComponentRegistryImpl registry = new ComponentRegistryImpl();
-        BuiltinComponents.register(registry);
-        SceneLoader.load("scenes/camera-pick-test.json", manager, registry);
+        var entity = manager.entities().create("main-camera");
+        manager.entities().addComponent(entity.id(), new Camera());
+        manager.entities().addComponent(entity.id(), new dev.hermes.api.ecs.Transform(0f, 0f, 5f));
         manager.camera().bindMain("main-camera");
 
         Optional<dev.hermes.api.Entity> cam = CameraResolver.mainCameraEntity(manager);

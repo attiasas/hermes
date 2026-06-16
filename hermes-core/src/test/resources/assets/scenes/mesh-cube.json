@@ -1,19 +1,12 @@
 {
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 2,
+    "z": 5
+  },
   "entities": [
-    {
-      "id": "cam",
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 2,
-          "z": 5
-        },
-        "Camera": {
-          "projection": "perspective",
-          "active": true
-        }
-      }
-    },
     {
       "id": "cube",
       "components": {

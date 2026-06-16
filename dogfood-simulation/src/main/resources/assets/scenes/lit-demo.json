@@ -1,4 +1,12 @@
 {
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 2,
+    "z": 6,
+    "fieldOfView": 60
+  },
   "lighting": {
     "version": 1,
     "ambient": { "color": [0.08, 0.08, 0.12, 1], "intensity": 1 },
@@ -9,17 +17,6 @@
     }
   },
   "entities": [
-    {
-      "id": "cam",
-      "components": {
-        "Transform": { "x": 0, "y": 2, "z": 6 },
-        "Camera": {
-          "projection": "perspective",
-          "active": true,
-          "fieldOfView": 60
-        }
-      }
-    },
     {
       "type": "spin-cube",
       "id": "cube"

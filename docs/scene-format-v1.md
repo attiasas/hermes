@@ -43,6 +43,8 @@ load time with `SceneParseException`.
 | `entities[].components` | No       | Map of component type name → property object. Deep-merged on top of the type template when `"type"`/`"kind"` is set and registered.                                                                                               |
 | `renderPipeline`        | No       | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 | `lighting`              | No       | Scene-wide lighting defaults (version 1). See [World lighting](world-lighting.md) and [Lighting block](#lighting-block) below. |
+| `world`                 | No       | World bounds and spatial index strategy (version 1). See [world-space.md](world-space.md). |
+| `camera`                | No       | Scene-owned main camera (version 1). Replaces `main-camera` entities. See [world-space.md](world-space.md). |
 | `audio`                 | No       | Scene background music and fade settings. See [Audio block](#audio-block) and [audio.md](audio.md). |
 | `preload`               | No       | Resource bundles and paths to load before this scene enters. See [Preload block](#preload-block) and [resource-management.md](resource-management.md). |
 

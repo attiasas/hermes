@@ -3,22 +3,15 @@
     "bundles": ["boot"],
     "async": false
   },
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 0,
+    "z": 5,
+    "fieldOfView": 60
+  },
   "entities": [
-    {
-      "id": "main-camera",
-      "components": {
-        "Transform": {
-          "x": 0,
-          "y": 0,
-          "z": 5
-        },
-        "Camera": {
-          "projection": "perspective",
-          "active": true,
-          "fieldOfView": 60
-        }
-      }
-    },
     {
       "type": "logo",
       "id": "cube"
