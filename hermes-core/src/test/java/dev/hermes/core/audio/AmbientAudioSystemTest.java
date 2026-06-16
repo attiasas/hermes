@@ -11,6 +11,7 @@ import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.TestGdx;
+import dev.hermes.core.resource.ResourceManagerImpl;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,7 @@ final class AmbientAudioSystemTest {
         manager = new WorldManagerImpl(new EntityTypeRegistryImpl(), components);
         backend = new RecordingSoundBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(backend, new AudioMixerImpl(), new SoundCache(backend));
+                new AudioServiceImpl(backend, new AudioMixerImpl(), ResourceManagerImpl.createDefault(backend));
         system = new AmbientAudioSystem(audio);
     }
 
@@ -52,13 +53,13 @@ final class AmbientAudioSystemTest {
         Entity entity = manager.entities().create("campfire");
         manager.entities().addComponent(entity.id(), new Transform(3f, 0f, 2f));
         AmbientSource ambient = new AmbientSource();
-        ambient.setClip("ambient/fire_loop.wav");
+        ambient.setClip("sfx/test.wav");
         ambient.setLoop(true);
         manager.entities().addComponent(entity.id(), ambient);
 
         system.update(manager, 0.016f);
 
-        assertEquals("ambient/fire_loop.wav", backend.lastPath);
+        assertEquals("sfx/test.wav", backend.lastPath);
         assertTrue(backend.lastLoop);
     }
 }

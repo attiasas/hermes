@@ -12,6 +12,7 @@ import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 
+import dev.hermes.core.resource.ResourceManagerImpl;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -79,7 +80,11 @@ final class SceneAudioIntegrationTest {
         RecordingSoundBackend soundBackend = new RecordingSoundBackend();
         RecordingMusicBackend musicBackend = new RecordingMusicBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(soundBackend, musicBackend, new AudioMixerImpl(), new SoundCache(soundBackend));
+                new AudioServiceImpl(
+                        soundBackend,
+                        musicBackend,
+                        new AudioMixerImpl(),
+                        ResourceManagerImpl.createDefault(soundBackend));
 
         SceneAudioConfig config = new SceneAudioConfig("main-menu", null, 2f, 1f, false);
         audio.onSceneEnter("menu", Optional.of(config));
@@ -92,7 +97,11 @@ final class SceneAudioIntegrationTest {
         RecordingSoundBackend soundBackend = new RecordingSoundBackend();
         RecordingMusicBackend musicBackend = new RecordingMusicBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(soundBackend, musicBackend, new AudioMixerImpl(), new SoundCache(soundBackend));
+                new AudioServiceImpl(
+                        soundBackend,
+                        musicBackend,
+                        new AudioMixerImpl(),
+                        ResourceManagerImpl.createDefault(soundBackend));
 
         SceneAudioConfig config = new SceneAudioConfig("main-menu", null, 1f, 0f, false);
         audio.onSceneEnter("menu", Optional.of(config));
@@ -106,7 +115,11 @@ final class SceneAudioIntegrationTest {
         RecordingSoundBackend soundBackend = new RecordingSoundBackend();
         RecordingMusicBackend musicBackend = new RecordingMusicBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(soundBackend, musicBackend, new AudioMixerImpl(), new SoundCache(soundBackend));
+                new AudioServiceImpl(
+                        soundBackend,
+                        musicBackend,
+                        new AudioMixerImpl(),
+                        ResourceManagerImpl.createDefault(soundBackend));
 
         SceneAudioConfig config = new SceneAudioConfig("main-menu", null, 1f, 1f, true);
         audio.onSceneEnter("game", Optional.of(config));
@@ -121,7 +134,11 @@ final class SceneAudioIntegrationTest {
         RecordingSoundBackend soundBackend = new RecordingSoundBackend();
         RecordingMusicBackend musicBackend = new RecordingMusicBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(soundBackend, musicBackend, new AudioMixerImpl(), new SoundCache(soundBackend));
+                new AudioServiceImpl(
+                        soundBackend,
+                        musicBackend,
+                        new AudioMixerImpl(),
+                        ResourceManagerImpl.createDefault(soundBackend));
 
         SceneAudioConfig gameConfig = new SceneAudioConfig("main-menu", null, 1f, 1f, false);
         SceneAudioConfig overlayConfig = new SceneAudioConfig("main-menu", null, 0.5f, 0.5f, false);

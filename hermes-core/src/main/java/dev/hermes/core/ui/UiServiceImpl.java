@@ -16,6 +16,7 @@ import dev.hermes.api.ui.UiNode;
 import dev.hermes.api.ui.UiService;
 import dev.hermes.api.ui.UiWidgetRegistry;
 import dev.hermes.api.viewport.ViewportService;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,11 +30,15 @@ public final class UiServiceImpl implements UiService {
     private final UiDocumentLoader documentLoader = new UiDocumentLoader(widgetTypes);
     private final UiLayoutEngine layoutEngine = new UiLayoutEngine();
     private final UiFontRegistry fontRegistry = new UiFontRegistry();
-    private final UiTextureCache textureCache = new UiTextureCache();
-    private final UiTreeRenderer treeRenderer = new UiTreeRenderer(fontRegistry, textureCache, widgets);
+    private final UiTreeRenderer treeRenderer;
     private final UiBindingResolver bindingResolver = new UiBindingResolver();
     private final Map<String, SceneUiState> sceneStates = new HashMap<>();
     private final Map<EntityId, AttachAnchor> attachAnchors = new HashMap<>();
+
+    public UiServiceImpl(ResourceManagerImpl resources) {
+        java.util.Objects.requireNonNull(resources, "resources");
+        this.treeRenderer = new UiTreeRenderer(fontRegistry, resources, widgets);
+    }
 
     @Override
     public UiDocument load(String assetPath) {
@@ -227,7 +232,7 @@ public final class UiServiceImpl implements UiService {
 
     public void dispose() {
         fontRegistry.dispose();
-        textureCache.dispose();
+        treeRenderer.disposeWhitePixel();
     }
 
     private static float uiScale(SceneUiConfig config, UiDocument document, int surfaceW, int surfaceH) {

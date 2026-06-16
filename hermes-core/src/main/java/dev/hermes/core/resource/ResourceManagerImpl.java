@@ -6,6 +6,8 @@ import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.api.resource.ResourceService;
 import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.audio.AudioBackends;
+import dev.hermes.core.audio.SoundBackend;
 
 import com.badlogic.gdx.files.FileHandle;
 
@@ -46,11 +48,15 @@ public final class ResourceManagerImpl implements ResourceService {
     }
 
     public static ResourceManagerImpl createDefault() {
-        return forProfileBase(DEFAULT_PROFILE_BASE);
+        return createDefault(AudioBackends.gdx());
+    }
+
+    public static ResourceManagerImpl createDefault(SoundBackend soundBackend) {
+        return forProfileBase(DEFAULT_PROFILE_BASE, soundBackend);
     }
 
     public static ResourceManagerImpl forTest(String profileBase) {
-        return forProfileBase(profileBase);
+        return forProfileBase(profileBase, AudioBackends.gdx());
     }
 
     /** Test hook: force cooperative frame-sliced loading instead of the thread pool. */
@@ -59,11 +65,12 @@ public final class ResourceManagerImpl implements ResourceService {
         asyncExecutor.resetStrategy();
     }
 
-    private static ResourceManagerImpl forProfileBase(String profileBase) {
+    private static ResourceManagerImpl forProfileBase(String profileBase, SoundBackend soundBackend) {
         String base = normalizeBase(profileBase);
         ResourceProfile profile = ResourceProfile.defaults();
         ResourceCatalog catalog = loadCatalogOrEmpty(profile.catalog());
-        return new ResourceManagerImpl(profile, catalog, profile.bundlesDirectory(), ResourceLoaderRegistry.withDefaults());
+        return new ResourceManagerImpl(
+                profile, catalog, profile.bundlesDirectory(), ResourceLoaderRegistry.withDefaults(soundBackend));
     }
 
     /** Loads profile JSON and applies catalog + bundle directory settings. Idempotent. */

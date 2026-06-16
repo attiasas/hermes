@@ -12,8 +12,10 @@ import dev.hermes.api.input.InputService;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.core.config.RuntimeConfigServices;
+import dev.hermes.core.audio.AudioBackends;
 import dev.hermes.core.audio.AudioMixerImpl;
 import dev.hermes.core.audio.AudioServiceImpl;
+import dev.hermes.core.audio.SoundBackend;
 import dev.hermes.core.input.InputServiceImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
@@ -40,17 +42,19 @@ public final class HermesEngineImpl implements HermesEngine {
     private final EntityTypeRegistryImpl entityTypes = new EntityTypeRegistryImpl();
     private final ViewportServiceImpl viewport = new ViewportServiceImpl();
     private final InputServiceImpl input;
-    private final UiServiceImpl ui = new UiServiceImpl();
+    private final SoundBackend soundBackend = AudioBackends.gdx();
+    private final ResourceManagerImpl resources = ResourceManagerImpl.createDefault(soundBackend);
+    private final UiServiceImpl ui;
     private final AudioMixerImpl internalMixer = new AudioMixerImpl();
     private final AudioServiceImpl audio;
-    private final ResourceManagerImpl resources = ResourceManagerImpl.createDefault();
     private final List<SystemEntry> systems = new ArrayList<>();
 
     public HermesEngineImpl() {
         this.registry = new ComponentRegistryImpl();
         this.sceneManager = new SceneManagerImpl(registry);
         this.input = new InputServiceImpl(this);
-        this.audio = AudioServiceImpl.createDefault(internalMixer);
+        this.ui = new UiServiceImpl(resources);
+        this.audio = AudioServiceImpl.createDefault(internalMixer, resources, soundBackend);
         BuiltinComponents.register(registry);
         BuiltinComponents.registerSystems(this);
         loadServiceRegistrations();
