@@ -3,7 +3,7 @@ package dev.hermes.core.resource;
 import dev.hermes.api.resource.ResourceKind;
 
 /** Two-phase loader: decode off-thread (Phase A), upload on render thread (Phase B). */
-public interface ResourceLoader {
+public interface ResourceLoader extends dev.hermes.api.resource.ResourceLoader {
 
     ResourceKind kind();
 

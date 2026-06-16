@@ -17,14 +17,20 @@ public final class ResourceLoaderRegistry implements dev.hermes.api.resource.Res
 
     private final Map<ResourceKind, ResourceLoader> loaders = new EnumMap<>(ResourceKind.class);
 
-    public void register(ResourceKind kind, ResourceLoader loader) {
+    @Override
+    public void register(ResourceKind kind, dev.hermes.api.resource.ResourceLoader loader) {
         Objects.requireNonNull(kind, "kind");
         Objects.requireNonNull(loader, "loader");
-        if (loader.kind() != kind) {
+        if (!(loader instanceof ResourceLoader)) {
             throw new IllegalArgumentException(
-                    "Loader kind " + loader.kind() + " does not match registration kind " + kind);
+                    "loader must implement dev.hermes.core.resource.ResourceLoader");
         }
-        loaders.put(kind, loader);
+        ResourceLoader coreLoader = (ResourceLoader) loader;
+        if (coreLoader.kind() != kind) {
+            throw new IllegalArgumentException(
+                    "Loader kind " + coreLoader.kind() + " does not match registration kind " + kind);
+        }
+        loaders.put(kind, coreLoader);
     }
 
     public ResourceLoader require(ResourceKind kind) {

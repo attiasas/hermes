@@ -5,5 +5,6 @@ package dev.hermes.api.resource;
  * <p>Implemented in hermes-core; exposed here for SPI registration signatures.
  */
 public interface ResourceLoaderRegistry {
-    // implemented in hermes-core (Task 18)
+
+    void register(ResourceKind kind, ResourceLoader loader);
 }
