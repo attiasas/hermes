@@ -141,9 +141,8 @@ public final class HermesGdxApplication implements ApplicationListener {
 
             SceneManagerImpl scenes = (SceneManagerImpl) engine.scenes();
             if (scenes.loadingScreen().isVisible()) {
-                batch.begin();
+                // BuiltinLoadingScreen owns batch begin/end for this overlay path.
                 scenes.loadingScreen().render(batch, width, height);
-                batch.end();
                 return;
             }
 
