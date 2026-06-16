@@ -39,7 +39,6 @@ Omit `"world"` for an unbounded open world with brute-force spatial queries.
     "fitMode": "stretch",
     "lookAt": { "x": 0, "y": 0, "z": 0 },
     "controls": {
-      "mode": "orbit",
       "rotateButton": "LEFT",
       "translateButton": "RIGHT",
       "forwardButton": "MIDDLE",
@@ -52,12 +51,10 @@ Omit `"world"` for an unbounded open world with brute-force spatial queries.
 
 | `controls` field | Description |
 |------------------|-------------|
-| `mode` | `"orbit"` (default) or `"firstPerson"` |
 | `enabled` | `false` to disable built-in controls (default off for orthographic cameras) |
 | `rotateButton` / `translateButton` / `forwardButton` | `LEFT` / `RIGHT` / `MIDDLE` |
 | `scrollZoom` | Scroll wheel dolly when `true` |
 | `rotateAngle`, `translateUnits`, `scrollFactor` | Sensitivity (libGDX defaults) |
-| `velocity`, `degreesPerPixel` | First-person mode speed / look sensitivity |
 
 The scene `"camera"` block drives the main view. Entity `Camera` components are for auxiliary passes (`renderTarget`, e.g. minimap) or runtime `bindMain("entity-id")`.
 

@@ -55,7 +55,7 @@ Pointer hardware reports **SCREEN** coordinates (window bottom-left). Picking an
 | System | When it runs | Behavior |
 |--------|----------------|----------|
 | `SelectionSystem` | `actions.justPressed("select")` | Picks at pointer; sets `Selected` on hit, clears selection on miss. |
-| `CameraControlSystem` | Perspective scene camera with controls enabled | Left-drag orbit, right-drag pan, middle dolly, scroll zoom; optional first-person mode. Target = selected entity or `lookAt`. |
+| `CameraControlSystem` | Perspective scene camera with controls enabled | Left-drag orbit, right-drag pan, middle dolly, scroll zoom around scene `lookAt` (or origin). |
 | `EntityDragSystem` | Active camera is **orthographic** | Left-drag moves the entity with `Selected`. |
 
 Stock scenes in [dogfood-simulation](../dogfood-simulation/) and [hermes-templates](../hermes-templates/) ship
@@ -91,7 +91,7 @@ Perspective scenes enable built-in controls automatically (`CameraControlSystem`
 | Middle drag | Dolly along view |
 | Scroll | Zoom |
 
-Orbit target is the **selected** entity position when one has `Selected`; otherwise scene `lookAt` (or origin). Click still selects via `select` action; drag always drives the camera.
+Orbit target is the scene `lookAt` point (or world origin when unset). Entity selection (`Selected`) does not affect the camera.
 
 Scene JSON:
 
@@ -104,7 +104,6 @@ Scene JSON:
   "z": 5,
   "lookAt": { "x": 0, "y": 0, "z": 0 },
   "controls": {
-    "mode": "orbit",
     "rotateButton": "LEFT",
     "translateButton": "RIGHT",
     "forwardButton": "MIDDLE",
@@ -112,8 +111,6 @@ Scene JSON:
   }
 }
 ```
-
-Optional `"mode": "firstPerson"` enables [FirstPersonCameraController](https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/g3d/utils/FirstPersonCameraController.java)-style look (left drag) and WASD/QE movement via `camera_forward` / `camera_backward` / … actions in `input/profile.json`.
 
 ### 2D drag selected entity
 
