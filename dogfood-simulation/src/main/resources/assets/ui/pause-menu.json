@@ -17,7 +17,7 @@
       {
         "type": "image",
         "id": "pause-badge",
-        "texture": "hermes-logo.png",
+        "texture": "@logo",
         "layout": { "anchor": "center", "offsetY": -40, "width": 160, "height": 160 }
       },
       {
