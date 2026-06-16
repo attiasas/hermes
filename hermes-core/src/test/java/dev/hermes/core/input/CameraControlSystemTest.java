@@ -92,6 +92,24 @@ final class CameraControlSystemTest {
     }
 
     @Test
+    void pointerMoveWithoutButton_doesNotMoveCamera() {
+        SceneLoader.load(
+                "scenes/perspective-orbit-test.json",
+                manager,
+                (ComponentRegistryImpl) engine.registry());
+        float rotationYBefore = manager.camera().sceneConfig().rotationY();
+        float zBefore = manager.camera().sceneConfig().z();
+
+        input.pollFrame(InputFrame.builder().pointer(320f, 240f).build());
+        cameraControl.update(manager, 0f);
+        input.pollFrame(InputFrame.builder().pointer(360f, 280f).build());
+        cameraControl.update(manager, 0f);
+
+        assertEquals(rotationYBefore, manager.camera().sceneConfig().rotationY(), 0.001f);
+        assertEquals(zBefore, manager.camera().sceneConfig().z(), 0.001f);
+    }
+
+    @Test
     void scrollZoom_movesSceneCameraCloser() {
         SceneLoader.load(
                 "scenes/perspective-orbit-test.json",

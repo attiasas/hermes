@@ -21,6 +21,8 @@ final class GdxInputReaders {
     private final Set<Integer> previousPointerPressed = new HashSet<>();
     private final Set<Integer> previousGamepadPressed = new HashSet<>();
 
+    private final ScrollWheelCapture scrollWheel = ScrollWheelCapture.shared();
+
     GdxInputReaders(InputProfile profile) {
         Set<Integer> keys = new LinkedHashSet<>();
         Set<Integer> buttons = new LinkedHashSet<>();
@@ -58,11 +60,12 @@ final class GdxInputReaders {
     }
 
     InputFrame poll() {
+        scrollWheel.installIfNeeded();
         InputFrame.Builder builder = InputFrame.builder();
         pollKeyboard(builder);
         pollPointer(builder);
         pollGamepad(builder);
-        builder.scroll(Gdx.input.getDeltaX(), Gdx.input.getDeltaY());
+        builder.scroll(scrollWheel.takeScrollX(), scrollWheel.takeScrollY());
         return builder.build();
     }
 
