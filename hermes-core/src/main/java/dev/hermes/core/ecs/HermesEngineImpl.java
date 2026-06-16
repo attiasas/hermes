@@ -21,6 +21,7 @@ import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 import dev.hermes.api.ui.UiService;
 import dev.hermes.api.ui.UiWidgetRegistration;
+import dev.hermes.api.resource.ResourceLoaderRegistration;
 import dev.hermes.api.resource.ResourceService;
 import dev.hermes.api.viewport.ViewportService;
 import dev.hermes.core.resource.ResourceManagerImpl;
@@ -51,6 +52,7 @@ public final class HermesEngineImpl implements HermesEngine {
 
     public HermesEngineImpl() {
         this.registry = new ComponentRegistryImpl();
+        this.registry.setResources(resources);
         this.sceneManager = new SceneManagerImpl(registry);
         this.input = new InputServiceImpl(this);
         this.ui = new UiServiceImpl(resources);
@@ -78,6 +80,10 @@ public final class HermesEngineImpl implements HermesEngine {
         for (UiWidgetRegistration registration : ServiceLoader.load(UiWidgetRegistration.class)) {
             log.debug("Loading UI widget registration: " + registration.getClass().getName());
             registration.register(ui.widgets());
+        }
+        for (ResourceLoaderRegistration registration : ServiceLoader.load(ResourceLoaderRegistration.class)) {
+            log.debug("Loading resource loader registration: " + registration.getClass().getName());
+            registration.register(resources.loaderRegistry());
         }
     }
 

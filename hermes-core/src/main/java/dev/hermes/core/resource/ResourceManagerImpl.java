@@ -132,9 +132,18 @@ public final class ResourceManagerImpl implements ResourceService {
         return cache;
     }
 
+    /** Loader registry for built-in and SPI-registered kinds. */
+    public ResourceLoaderRegistry loaderRegistry() {
+        return registry;
+    }
+
     @Override
     public ResourceRef resolve(String pathOrAlias) {
-        return ResourceRef.of(pathOrAlias);
+        ResourceRef ref = ResourceRef.of(pathOrAlias);
+        if (ref.alias()) {
+            catalog.resolve(ref);
+        }
+        return ref;
     }
 
     @Override

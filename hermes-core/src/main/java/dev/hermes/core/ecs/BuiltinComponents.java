@@ -23,6 +23,8 @@ import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
 import dev.hermes.api.audio.AudioBus;
+import dev.hermes.api.ecs.ComponentContext;
+import dev.hermes.api.resource.ResourceService;
 import dev.hermes.core.audio.AmbientAudioSystem;
 import dev.hermes.core.audio.AudioActionSystem;
 import dev.hermes.core.audio.AudioServiceImpl;
@@ -83,7 +85,7 @@ public final class BuiltinComponents {
                 Sprite.class,
                 (data, ctx) -> {
                     Sprite sprite = new Sprite();
-                    sprite.setTexture(data.getString("texture", ""));
+                    sprite.setTexture(resolveResourcePath(data.getString("texture", ""), ctx));
                     return sprite;
                 });
         registry.register(
@@ -120,9 +122,9 @@ public final class BuiltinComponents {
                 Mesh.class,
                 (data, ctx) -> {
                     Mesh mesh = new Mesh();
-                    mesh.setModel(data.getString("model", ""));
+                    mesh.setModel(resolveResourcePath(data.getString("model", ""), ctx));
                     if (data.has("texture")) {
-                        mesh.setTexture(data.getString("texture", ""));
+                        mesh.setTexture(resolveResourcePath(data.getString("texture", ""), ctx));
                     }
                     return mesh;
                 });
@@ -296,6 +298,21 @@ public final class BuiltinComponents {
     @FunctionalInterface
     private interface DirectionSetter {
         void setDirection(float x, float y, float z);
+    }
+
+    private static String resolveResourcePath(String value, ComponentContext ctx) {
+        if (value == null || value.isBlank()) {
+            return value == null ? "" : value;
+        }
+        String trimmed = value.trim();
+        if (!trimmed.startsWith("@")) {
+            return trimmed;
+        }
+        ResourceService resources = ctx.resources();
+        if (resources == null) {
+            return trimmed;
+        }
+        return resources.resolve(trimmed).raw();
     }
 
     private static void applyColor(ComponentData data, ColorSetter setter) {

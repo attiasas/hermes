@@ -7,6 +7,7 @@ import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
 import dev.hermes.api.ecs.ComponentData;
+import dev.hermes.api.resource.ResourceService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,8 +17,17 @@ public final class ComponentRegistryImpl implements ComponentRegistry {
     private static final Logger log = Logs.get(ComponentRegistryImpl.class);
 
     private final Map<String, Registration> registrations = new HashMap<>();
+    private ResourceService resources;
 
     public ComponentRegistryImpl() {
+    }
+
+    public void setResources(ResourceService resources) {
+        this.resources = resources;
+    }
+
+    ResourceService resources() {
+        return resources;
     }
 
     @Override
