@@ -1,0 +1,11 @@
+{
+  "preload": {
+    "bundles": ["test-bundle"],
+    "async": true
+  },
+  "entities": [
+    {
+      "id": "async-marker"
+    }
+  ]
+}

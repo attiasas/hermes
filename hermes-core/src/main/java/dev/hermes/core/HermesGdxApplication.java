@@ -14,6 +14,7 @@ import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
+import dev.hermes.core.ecs.SceneManagerImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.log.CachingLoggerProvider;
 import dev.hermes.core.log.GdxLogSink;
@@ -126,6 +127,14 @@ public final class HermesGdxApplication implements ApplicationListener {
                 engine.resources().tick();
             }
             engine.scenes().processPending();
+
+            SceneManagerImpl scenes = (SceneManagerImpl) engine.scenes();
+            if (scenes.loadingScreen().isVisible()) {
+                batch.begin();
+                scenes.loadingScreen().render(batch, width, height);
+                batch.end();
+                return;
+            }
 
             float delta = Gdx.graphics.getDeltaTime();
             engine.input().poll(delta);

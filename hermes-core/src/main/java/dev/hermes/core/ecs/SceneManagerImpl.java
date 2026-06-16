@@ -12,6 +12,7 @@ import dev.hermes.api.scene.SceneRegistry;
 import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.scene.SceneInstance;
 import dev.hermes.core.scene.SceneStack;
+import dev.hermes.core.resource.LoadingScreenController;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public final class SceneManagerImpl implements SceneManager {
     private final ComponentRegistryImpl registry;
     private final SceneRegistryImpl sceneRegistry;
     private final SceneStack stack;
+    private final LoadingScreenController loadingScreen = new LoadingScreenController();
     private final Deque<SceneChangeRequest> pending = new ArrayDeque<>();
     private SceneStackPolicy stackPolicy = SceneStackPolicy.defaults();
     private HermesEngine engine;
@@ -43,7 +45,11 @@ public final class SceneManagerImpl implements SceneManager {
     void bind(HermesEngine engine, HermesSession session) {
         this.engine = engine;
         this.session = session == null ? HermesSession.EMPTY : session;
-        stack.bind(engine, session);
+        stack.bind(engine, session, loadingScreen);
+    }
+
+    public LoadingScreenController loadingScreen() {
+        return loadingScreen;
     }
 
     @Override
@@ -54,6 +60,12 @@ public final class SceneManagerImpl implements SceneManager {
 
     @Override
     public void processPending() {
+        if (stack.hasPendingTransition()) {
+            stack.tickAsyncTransition();
+            if (stack.hasPendingTransition()) {
+                return;
+            }
+        }
         while (!pending.isEmpty()) {
             SceneChangeRequest request = pending.removeFirst();
             log.debug("Processing scene change request: " + request.kind() + " for scene: " + request.sceneId());
@@ -69,6 +81,9 @@ public final class SceneManagerImpl implements SceneManager {
                     break;
                 default:
                     throw new IllegalStateException("Unhandled scene change kind: " + request.kind());
+            }
+            if (stack.hasPendingTransition()) {
+                return;
             }
         }
     }
