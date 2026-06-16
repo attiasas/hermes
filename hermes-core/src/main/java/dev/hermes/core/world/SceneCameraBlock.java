@@ -15,7 +15,7 @@ public final class SceneCameraBlock {
     public SceneCameraBlock(
             SceneCameraConfig config, CameraControlsConfig controls, Optional<String> followEntity) {
         this.config = config;
-        this.controls = controls == null ? CameraControlsConfig.orbitDefaults() : controls;
+        this.controls = controls == null ? CameraControlsConfig.defaults() : controls;
         this.followEntity = followEntity == null ? Optional.empty() : followEntity;
     }
 

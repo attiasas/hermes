@@ -8,11 +8,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.mock.graphics.MockGraphics;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
-import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.input.InputButton;
 import dev.hermes.api.world.CameraControlsConfig;
-import dev.hermes.api.world.CameraControlsMode;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.CameraResolver;
@@ -59,7 +57,7 @@ final class CameraControlSystemTest {
         manager.entities().addComponent(cam.id(), camera);
         manager.entities().addComponent(cam.id(), new Transform(0f, 2f, 5f));
         manager.camera().bindMain("cam");
-        manager.camera().setControls(CameraControlsConfig.orbitDefaults());
+        manager.camera().setControls(CameraControlsConfig.defaults());
 
         Entity camEntity = CameraResolver.mainCameraEntity(manager).orElseThrow();
         float rotationYBefore =
@@ -81,7 +79,6 @@ final class CameraControlSystemTest {
                 "scenes/perspective-orbit-test.json",
                 manager,
                 (ComponentRegistryImpl) engine.registry());
-        manager.camera().controls().setMode(CameraControlsMode.ORBIT);
 
         float rotationYBefore = manager.camera().sceneConfig().rotationY();
 
@@ -92,24 +89,6 @@ final class CameraControlSystemTest {
 
         float rotationYAfter = manager.camera().sceneConfig().rotationY();
         assertNotEquals(rotationYBefore, rotationYAfter, 0.01f);
-    }
-
-    @Test
-    void leftDragWithSelectedEntity_keepsTargetNearEntity() {
-        SceneLoader.load(
-                "scenes/perspective-pick-test.json",
-                manager,
-                (ComponentRegistryImpl) engine.registry());
-        Entity cube = manager.entities().findByName("cube");
-        manager.entities().addComponent(cube.id(), new Selected());
-
-        input.pollFrame(InputFrame.pointerJustPressed(320, 240, InputButton.LEFT));
-        cameraControl.update(manager, 0f);
-        input.pollFrame(InputFrame.pointerDrag(360, 240, InputButton.LEFT));
-        cameraControl.update(manager, 0f);
-
-        assertEquals(0f, manager.camera().sceneConfig().lookAtX(), 0.15f);
-        assertEquals(0f, manager.camera().sceneConfig().lookAtY(), 0.15f);
     }
 
     @Test

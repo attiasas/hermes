@@ -38,7 +38,7 @@ final class GdxCameraControllerTest {
                         0f,
                         GdxCameraController.normalizeDeltaX(20f, 640),
                         0f,
-                        CameraControlsConfig.orbitDefaults());
+                        CameraControlsConfig.defaults());
         assertNotEquals(before.rotationY(), after.rotationY(), 0.01f);
     }
 
@@ -49,7 +49,7 @@ final class GdxCameraControllerTest {
                         0f, 0f, 5f, 0f, 0f, 0f, 0f, 0f, 0f, 640f, 480f);
         GdxCameraController ctrl = new GdxCameraController(640, 480);
         ActiveCamera after =
-                ctrl.scrollZoom(before, 0f, 0f, 0f, -1f, CameraControlsConfig.orbitDefaults());
+                ctrl.scrollZoom(before, 0f, 0f, 0f, -1f, CameraControlsConfig.defaults());
         assertTrue(after.z() < before.z());
     }
 

@@ -3,13 +3,11 @@ package dev.hermes.core.world;
 import dev.hermes.api.ecs.ViewportFitMode;
 import dev.hermes.api.input.InputButton;
 import dev.hermes.api.world.CameraControlsConfig;
-import dev.hermes.api.world.CameraControlsMode;
 import dev.hermes.api.world.SceneCameraConfig;
 import dev.hermes.core.ecs.SceneParseException;
 
 import com.badlogic.gdx.utils.JsonValue;
 
-import java.util.Locale;
 import java.util.Optional;
 
 /** Parses scene JSON {@code "camera"} block (version 1). */
@@ -68,7 +66,7 @@ public final class SceneCameraBlockParser {
         JsonValue controlsValue = cameraValue.get("controls");
         if (controlsValue == null || controlsValue.isNull()) {
             return projection == SceneCameraConfig.Projection.PERSPECTIVE
-                    ? CameraControlsConfig.orbitDefaults()
+                    ? CameraControlsConfig.defaults()
                     : CameraControlsConfig.disabled();
         }
         if (!controlsValue.isObject()) {
@@ -76,9 +74,8 @@ public final class SceneCameraBlockParser {
         }
         CameraControlsConfig controls =
                 projection == SceneCameraConfig.Projection.PERSPECTIVE
-                        ? CameraControlsConfig.orbitDefaults()
+                        ? CameraControlsConfig.defaults()
                         : CameraControlsConfig.disabled();
-        controls.setMode(parseControlsMode(scenePath, controlsValue.getString("mode", "orbit")));
         if (controlsValue.has("enabled")) {
             controls.setEnabled(controlsValue.getBoolean("enabled", controls.enabled()));
         }
@@ -97,27 +94,7 @@ public final class SceneCameraBlockParser {
         controls.setTranslateUnits(controlsValue.getFloat("translateUnits", controls.translateUnits()));
         controls.setScrollFactor(controlsValue.getFloat("scrollFactor", controls.scrollFactor()));
         controls.setScrollZoom(controlsValue.getBoolean("scrollZoom", controls.scrollZoom()));
-        controls.setTranslateTarget(controlsValue.getBoolean("translateTarget", controls.translateTarget()));
-        controls.setForwardTarget(controlsValue.getBoolean("forwardTarget", controls.forwardTarget()));
-        controls.setScrollTarget(controlsValue.getBoolean("scrollTarget", controls.scrollTarget()));
-        controls.setVelocity(controlsValue.getFloat("velocity", controls.velocity()));
-        controls.setDegreesPerPixel(controlsValue.getFloat("degreesPerPixel", controls.degreesPerPixel()));
         return controls;
-    }
-
-    private static CameraControlsMode parseControlsMode(String scenePath, String value) {
-        if (value == null || value.isBlank()) {
-            return CameraControlsMode.ORBIT;
-        }
-        String normalized = value.trim().toLowerCase(Locale.ROOT);
-        if ("orbit".equals(normalized)) {
-            return CameraControlsMode.ORBIT;
-        }
-        if ("firstperson".equals(normalized) || "first_person".equals(normalized)) {
-            return CameraControlsMode.FIRST_PERSON;
-        }
-        throw new SceneParseException(
-                "Scene '" + scenePath + "': \"camera.controls.mode\" must be \"orbit\" or \"firstPerson\".");
     }
 
     private static int parseButton(String scenePath, String value, String field) {

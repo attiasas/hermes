@@ -2,10 +2,9 @@ package dev.hermes.api.world;
 
 import dev.hermes.api.input.InputButton;
 
-/** Built-in perspective camera pointer/keyboard controls (libGDX CameraInputController parity). */
+/** Built-in perspective camera pointer controls (libGDX CameraInputController parity). */
 public final class CameraControlsConfig {
 
-    private CameraControlsMode mode = CameraControlsMode.ORBIT;
     private boolean enabled = true;
     private int rotateButton = InputButton.LEFT;
     private int translateButton = InputButton.RIGHT;
@@ -14,34 +13,15 @@ public final class CameraControlsConfig {
     private float translateUnits = 10f;
     private float scrollFactor = -0.1f;
     private boolean scrollZoom = true;
-    private boolean translateTarget = true;
-    private boolean forwardTarget = true;
-    private boolean scrollTarget = false;
-    private float velocity = 5f;
-    private float degreesPerPixel = 0.5f;
 
-    public static CameraControlsConfig orbitDefaults() {
+    public static CameraControlsConfig defaults() {
         return new CameraControlsConfig();
-    }
-
-    public static CameraControlsConfig firstPersonDefaults() {
-        CameraControlsConfig config = new CameraControlsConfig();
-        config.mode = CameraControlsMode.FIRST_PERSON;
-        return config;
     }
 
     public static CameraControlsConfig disabled() {
         CameraControlsConfig config = new CameraControlsConfig();
         config.enabled = false;
         return config;
-    }
-
-    public CameraControlsMode mode() {
-        return mode;
-    }
-
-    public void setMode(CameraControlsMode mode) {
-        this.mode = mode == null ? CameraControlsMode.ORBIT : mode;
     }
 
     public boolean enabled() {
@@ -106,45 +86,5 @@ public final class CameraControlsConfig {
 
     public void setScrollZoom(boolean scrollZoom) {
         this.scrollZoom = scrollZoom;
-    }
-
-    public boolean translateTarget() {
-        return translateTarget;
-    }
-
-    public void setTranslateTarget(boolean translateTarget) {
-        this.translateTarget = translateTarget;
-    }
-
-    public boolean forwardTarget() {
-        return forwardTarget;
-    }
-
-    public void setForwardTarget(boolean forwardTarget) {
-        this.forwardTarget = forwardTarget;
-    }
-
-    public boolean scrollTarget() {
-        return scrollTarget;
-    }
-
-    public void setScrollTarget(boolean scrollTarget) {
-        this.scrollTarget = scrollTarget;
-    }
-
-    public float velocity() {
-        return velocity;
-    }
-
-    public void setVelocity(float velocity) {
-        this.velocity = velocity;
-    }
-
-    public float degreesPerPixel() {
-        return degreesPerPixel;
-    }
-
-    public void setDegreesPerPixel(float degreesPerPixel) {
-        this.degreesPerPixel = degreesPerPixel;
     }
 }

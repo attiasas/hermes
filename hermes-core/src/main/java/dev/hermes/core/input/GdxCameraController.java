@@ -10,7 +10,7 @@ import dev.hermes.core.viewport.BoundCamera;
 import dev.hermes.core.viewport.RenderSurface;
 import dev.hermes.core.viewport.ViewportCameraBinder;
 
-/** libGDX camera math adapter (CameraInputController / FirstPersonCameraController parity). */
+/** libGDX camera math adapter (CameraInputController parity). */
 public final class GdxCameraController {
 
     private final ViewportCameraBinder binder = new ViewportCameraBinder();
@@ -48,16 +48,13 @@ public final class GdxCameraController {
             float targetZ,
             float deltaX,
             float deltaY,
-            CameraControlsConfig cfg,
-            boolean lockTarget) {
+            CameraControlsConfig cfg) {
         PerspectiveCamera cam = bindPerspective(in);
         cam.translate(tmpV1.set(cam.direction).crs(cam.up).nor().scl(-deltaX * cfg.translateUnits()));
         cam.translate(tmp.set(cam.up).scl(-deltaY * cfg.translateUnits()));
-        if (cfg.translateTarget() && !lockTarget) {
-            targetX += tmpV1.x + tmp.x;
-            targetY += tmpV1.y + tmp.y;
-            targetZ += tmpV1.z + tmp.z;
-        }
+        targetX += tmpV1.x + tmp.x;
+        targetY += tmpV1.y + tmp.y;
+        targetZ += tmpV1.z + tmp.z;
         cam.update();
         return fromGdx(cam, in, targetX, targetY, targetZ);
     }
@@ -71,11 +68,9 @@ public final class GdxCameraController {
             CameraControlsConfig cfg) {
         PerspectiveCamera cam = bindPerspective(in);
         cam.translate(tmp.set(cam.direction).scl(deltaY * cfg.translateUnits()));
-        if (cfg.forwardTarget()) {
-            targetX += tmp.x;
-            targetY += tmp.y;
-            targetZ += tmp.z;
-        }
+        targetX += tmp.x;
+        targetY += tmp.y;
+        targetZ += tmp.z;
         cam.update();
         return fromGdx(cam, in, targetX, targetY, targetZ);
     }
@@ -88,43 +83,6 @@ public final class GdxCameraController {
             float scrollAmount,
             CameraControlsConfig cfg) {
         return dolly(in, targetX, targetY, targetZ, scrollAmount * cfg.scrollFactor(), cfg);
-    }
-
-    public ActiveCamera firstPersonLook(ActiveCamera in, float deltaX, float deltaY, CameraControlsConfig cfg) {
-        PerspectiveCamera cam = bindPerspective(in);
-        cam.direction.rotate(cam.up, deltaX * cfg.degreesPerPixel());
-        tmp.set(cam.direction).crs(cam.up).nor();
-        cam.direction.rotate(tmp, deltaY * cfg.degreesPerPixel());
-        cam.update();
-        float lookAtX = cam.position.x + cam.direction.x;
-        float lookAtY = cam.position.y + cam.direction.y;
-        float lookAtZ = cam.position.z + cam.direction.z;
-        return fromGdx(cam, in, lookAtX, lookAtY, lookAtZ);
-    }
-
-    public ActiveCamera firstPersonMove(
-            ActiveCamera in,
-            float forward,
-            float strafe,
-            float vertical,
-            float deltaSeconds,
-            CameraControlsConfig cfg) {
-        PerspectiveCamera cam = bindPerspective(in);
-        float speed = cfg.velocity() * deltaSeconds;
-        if (forward != 0f) {
-            cam.translate(tmp.set(cam.direction).nor().scl(forward * speed));
-        }
-        if (strafe != 0f) {
-            cam.translate(tmp.set(cam.direction).crs(cam.up).nor().scl(strafe * speed));
-        }
-        if (vertical != 0f) {
-            cam.translate(tmp.set(cam.up).nor().scl(vertical * speed));
-        }
-        cam.update();
-        float lookAtX = cam.position.x + cam.direction.x;
-        float lookAtY = cam.position.y + cam.direction.y;
-        float lookAtZ = cam.position.z + cam.direction.z;
-        return fromGdx(cam, in, lookAtX, lookAtY, lookAtZ);
     }
 
     public static float normalizeDeltaX(float pixelDelta, float surfaceWidth) {

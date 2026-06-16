@@ -4,7 +4,6 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.WorldManager;
-import dev.hermes.api.world.CameraControlsConfig;
 import dev.hermes.api.world.SceneCameraConfig;
 import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.CameraResolver;
@@ -20,11 +19,10 @@ public final class MainCameraWriter {
             ActiveCamera active,
             float targetX,
             float targetY,
-            float targetZ,
-            CameraControlsConfig cfg) {
+            float targetZ) {
         Optional<Entity> entity = CameraResolver.mainCameraEntity(manager);
         if (entity.isPresent()) {
-            writeEntity(manager, entity.get(), active, targetX, targetY, targetZ, cfg);
+            writeEntity(manager, entity.get(), active, targetX, targetY, targetZ);
         } else {
             writeScene(manager, active, targetX, targetY, targetZ);
         }
@@ -48,8 +46,7 @@ public final class MainCameraWriter {
             ActiveCamera active,
             float targetX,
             float targetY,
-            float targetZ,
-            CameraControlsConfig cfg) {
+            float targetZ) {
         Transform transform = manager.entities().getComponent(entity.id(), Transform.class);
         Camera camera = manager.entities().getComponent(entity.id(), Camera.class);
         if (transform == null || camera == null) {

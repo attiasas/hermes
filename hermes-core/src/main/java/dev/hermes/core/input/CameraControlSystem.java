@@ -11,7 +11,6 @@ import dev.hermes.api.ui.UiNode;
 import dev.hermes.api.viewport.RenderSurfaceDesc;
 import dev.hermes.api.viewport.ViewportService;
 import dev.hermes.api.world.CameraControlsConfig;
-import dev.hermes.api.world.CameraControlsMode;
 import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.CameraResolver;
 import dev.hermes.core.ecs.HermesEngineImpl;
@@ -22,7 +21,7 @@ import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.BackbufferSize;
 import java.util.Optional;
 
-/** GLOBAL system: built-in perspective camera controls (orbit / pan / dolly / FPS). */
+/** GLOBAL system: built-in perspective camera controls (orbit / pan / dolly / scroll). */
 public final class CameraControlSystem implements dev.hermes.api.ecs.System {
 
     private final InputService input;
@@ -55,15 +54,10 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
             return;
         }
         CameraControlsConfig cfg = manager.camera().controls();
-        if (!cfg.enabled()) {
+        if (!cfg.enabled() || pointerOverUi(manager)) {
             activeButton = -1;
             return;
         }
-        if (pointerOverUi(manager)) {
-            activeButton = -1;
-            return;
-        }
-
         float surfaceW = BackbufferSize.width();
         float surfaceH = BackbufferSize.height();
         if (surfaceW <= 0 || surfaceH <= 0) {
@@ -73,43 +67,19 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
         PointerSnapshot ptr = input.devices().pointer();
         trackActiveButton(ptr, cfg);
 
-        if (cfg.mode() == CameraControlsMode.FIRST_PERSON) {
-            updateFirstPerson(manager, deltaSeconds, cfg, ptr, surfaceW, surfaceH);
-            return;
-        }
-        updateOrbit(manager, deltaSeconds, cfg, ptr, surfaceW, surfaceH);
-    }
-
-    private void updateOrbit(
-            WorldManager manager,
-            float deltaSeconds,
-            CameraControlsConfig cfg,
-            PointerSnapshot ptr,
-            float surfaceW,
-            float surfaceH) {
         GdxCameraController gdx = new GdxCameraController(surfaceW, surfaceH);
-        CameraControlTarget target = CameraControlTarget.resolve(manager);
         ActiveCamera active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
+        float targetX = lookAtX(active);
+        float targetY = lookAtY(active);
+        float targetZ = lookAtZ(active);
 
         if (cfg.scrollZoom() && Math.abs(ptr.scrollY()) > 1e-6f) {
-            active =
-                    gdx.scrollZoom(
-                            active,
-                            target.x(),
-                            target.y(),
-                            target.z(),
-                            ptr.scrollY(),
-                            cfg);
-            write(manager, active, target, cfg);
-        }
-
-        float forward = axis(input, "camera_forward") - axis(input, "camera_backward");
-        if (forward != 0f) {
-            active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
-            target = CameraControlTarget.resolve(manager);
-            active =
-                    gdx.dolly(active, target.x(), target.y(), target.z(), forward * deltaSeconds, cfg);
-            write(manager, active, target, cfg);
+            active = gdx.scrollZoom(active, targetX, targetY, targetZ, ptr.scrollY(), cfg);
+            MainCameraWriter.write(
+                    manager, active, active.lookAtX(), active.lookAtY(), active.lookAtZ());
+            targetX = active.lookAtX();
+            targetY = active.lookAtY();
+            targetZ = active.lookAtZ();
         }
 
         if (activeButton < 0 || !ptr.pressed(activeButton)) {
@@ -127,95 +97,36 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
             return;
         }
 
+        active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
+        targetX = lookAtX(active);
+        targetY = lookAtY(active);
+        targetZ = lookAtZ(active);
+
         float normDx = GdxCameraController.normalizeDeltaX(dx, surfaceW);
         float normDy = GdxCameraController.normalizeDeltaY(dy, surfaceH);
-        active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
-        target = CameraControlTarget.resolve(manager);
 
         ActiveCamera updated = active;
         if (activeButton == cfg.rotateButton()) {
-            updated =
-                    gdx.orbit(
-                            active,
-                            target.x(),
-                            target.y(),
-                            target.z(),
-                            normDx,
-                            normDy,
-                            cfg);
+            updated = gdx.orbit(active, targetX, targetY, targetZ, normDx, normDy, cfg);
         } else if (activeButton == cfg.translateButton()) {
-            updated =
-                    gdx.pan(
-                            active,
-                            target.x(),
-                            target.y(),
-                            target.z(),
-                            normDx,
-                            normDy,
-                            cfg,
-                            target.fromSelection());
+            updated = gdx.pan(active, targetX, targetY, targetZ, normDx, normDy, cfg);
         } else if (activeButton == cfg.forwardButton()) {
-            updated =
-                    gdx.dolly(
-                            active,
-                            target.x(),
-                            target.y(),
-                            target.z(),
-                            normDy,
-                            cfg);
+            updated = gdx.dolly(active, targetX, targetY, targetZ, normDy, cfg);
         }
-        write(manager, updated, target, cfg);
+        MainCameraWriter.write(
+                manager, updated, updated.lookAtX(), updated.lookAtY(), updated.lookAtZ());
     }
 
-    private void updateFirstPerson(
-            WorldManager manager,
-            float deltaSeconds,
-            CameraControlsConfig cfg,
-            PointerSnapshot ptr,
-            float surfaceW,
-            float surfaceH) {
-        GdxCameraController gdx = new GdxCameraController(surfaceW, surfaceH);
-        ActiveCamera active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
-        CameraControlTarget target = CameraControlTarget.resolve(manager);
-
-        if (activeButton == cfg.rotateButton() && ptr.pressed(activeButton)) {
-            float dx = ptr.screenX() - lastScreenX;
-            float dy = lastScreenY - ptr.screenY();
-            lastScreenX = ptr.screenX();
-            lastScreenY = ptr.screenY();
-            if (dx != 0f || dy != 0f) {
-                active =
-                        gdx.firstPersonLook(
-                                active,
-                                -dx * cfg.degreesPerPixel(),
-                                -dy * cfg.degreesPerPixel(),
-                                cfg);
-            }
-        }
-
-        float forward = axis(input, "camera_forward") - axis(input, "camera_backward");
-        float strafe = axis(input, "camera_right") - axis(input, "camera_left");
-        float vertical = axis(input, "camera_up") - axis(input, "camera_down");
-        if (forward != 0f || strafe != 0f || vertical != 0f) {
-            active = gdx.firstPersonMove(active, forward, strafe, vertical, deltaSeconds, cfg);
-        }
-
-        write(manager, active, target, cfg);
+    private static float lookAtX(ActiveCamera active) {
+        return active.hasLookAt() ? active.lookAtX() : 0f;
     }
 
-    private static void write(
-            WorldManager manager,
-            ActiveCamera active,
-            CameraControlTarget target,
-            CameraControlsConfig cfg) {
-        float lookX = target.fromSelection() ? target.x() : active.lookAtX();
-        float lookY = target.fromSelection() ? target.y() : active.lookAtY();
-        float lookZ = target.fromSelection() ? target.z() : active.lookAtZ();
-        MainCameraWriter.write(manager, active, lookX, lookY, lookZ, cfg);
+    private static float lookAtY(ActiveCamera active) {
+        return active.hasLookAt() ? active.lookAtY() : 0f;
     }
 
-    private static float axis(InputService input, String action) {
-        return input.actions().pressed(action) ? 1f : 0f;
+    private static float lookAtZ(ActiveCamera active) {
+        return active.hasLookAt() ? active.lookAtZ() : 0f;
     }
 
     private void trackActiveButton(PointerSnapshot ptr, CameraControlsConfig cfg) {
