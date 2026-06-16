@@ -19,6 +19,7 @@ import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Selectable;
 import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
+import dev.hermes.api.ecs.TileMap;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
@@ -45,6 +46,7 @@ public final class BuiltinComponents {
 
     static final String TRANSFORM = "Transform";
     static final String SPRITE = "Sprite";
+    static final String TILE_MAP = "TileMap";
     static final String CAMERA = "Camera";
     static final String MESH = "Mesh";
     static final String MATERIAL = "Material";
@@ -87,6 +89,15 @@ public final class BuiltinComponents {
                     Sprite sprite = new Sprite();
                     sprite.setTexture(resolveResourcePath(data.getString("texture", ""), ctx));
                     return sprite;
+                });
+        registry.register(
+                TILE_MAP,
+                TileMap.class,
+                (data, ctx) -> {
+                    TileMap tileMap = new TileMap();
+                    tileMap.setMap(resolveResourcePath(data.getString("map", ""), ctx));
+                    tileMap.setLayer(data.getString("layer", "ground"));
+                    return tileMap;
                 });
         registry.register(
                 CAMERA,

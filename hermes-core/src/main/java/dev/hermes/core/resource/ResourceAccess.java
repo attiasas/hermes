@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceLoadException;
 import dev.hermes.api.resource.ResourceRef;
+import dev.hermes.core.world.tilemap.TileMapAsset;
 
 /** Typed GPU access for core consumers (render passes, UI, audio). */
 public final class ResourceAccess {
@@ -18,6 +19,10 @@ public final class ResourceAccess {
 
     public static Model model(ResourceManagerImpl mgr, ResourceRef ref) {
         return require(mgr, ref, ResourceKind.MODEL, Model.class);
+    }
+
+    public static TileMapAsset tileMap(ResourceManagerImpl mgr, ResourceRef ref) {
+        return require(mgr, ref, ResourceKind.TILEMAP, TileMapAsset.class);
     }
 
     private static <T> T require(
