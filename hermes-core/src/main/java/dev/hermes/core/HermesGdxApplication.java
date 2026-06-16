@@ -15,6 +15,7 @@ import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
 import dev.hermes.core.ecs.SceneManagerImpl;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.log.CachingLoggerProvider;
 import dev.hermes.core.log.GdxLogSink;
@@ -62,6 +63,15 @@ public final class HermesGdxApplication implements ApplicationListener {
             engine = new HermesEngineImpl();
             engine.bindApplication(application);
             batch = new SpriteBatch();
+
+            String resourceProfile = runtimeConfig.gameResourceProfile();
+            ((ResourceManagerImpl) engine.resources()).loadProfile(resourceProfile);
+
+            String loadingScreenPath = runtimeConfig.gameLoadingScreen();
+            if (loadingScreenPath != null && !loadingScreenPath.isBlank()) {
+                ((SceneManagerImpl) engine.scenes()).configureLoadingScreen(loadingScreenPath);
+            }
+
             RenderPassRegistry passRegistry = new RenderPassRegistry();
             application.configureRendering(new HermesRenderConfigurator(passRegistry));
             renderPipeline =

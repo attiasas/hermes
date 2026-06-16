@@ -30,7 +30,7 @@ public final class SceneManagerImpl implements SceneManager {
     private final ComponentRegistryImpl registry;
     private final SceneRegistryImpl sceneRegistry;
     private final SceneStack stack;
-    private final LoadingScreenController loadingScreen = new LoadingScreenController();
+    private LoadingScreenController loadingScreen = new LoadingScreenController();
     private final Deque<SceneChangeRequest> pending = new ArrayDeque<>();
     private SceneStackPolicy stackPolicy = SceneStackPolicy.defaults();
     private HermesEngine engine;
@@ -50,6 +50,18 @@ public final class SceneManagerImpl implements SceneManager {
 
     public LoadingScreenController loadingScreen() {
         return loadingScreen;
+    }
+
+    /** Replaces the loading overlay with a custom UI document path when configured at boot. */
+    public void configureLoadingScreen(String customUiPath) {
+        if (customUiPath == null || customUiPath.isBlank()) {
+            return;
+        }
+        loadingScreen.dispose();
+        loadingScreen = new LoadingScreenController(customUiPath);
+        if (engine != null) {
+            stack.bind(engine, session, loadingScreen);
+        }
     }
 
     @Override

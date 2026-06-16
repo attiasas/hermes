@@ -16,7 +16,14 @@ import java.util.Set;
 public final class HermesGameConfigParser {
 
     private static final Set<String> KNOWN_KEYS =
-            Set.of("title", "scene", "renderPipeline", "inputProfile", "audioProfile");
+            Set.of(
+                    "title",
+                    "scene",
+                    "renderPipeline",
+                    "inputProfile",
+                    "audioProfile",
+                    "resourceProfile",
+                    "loadingScreen");
     private static final Gson GSON = new Gson();
 
     private HermesGameConfigParser() {
@@ -63,6 +70,18 @@ public final class HermesGameConfigParser {
                 String audioProfile = root.get("audioProfile").getAsString();
                 if (!audioProfile.isBlank()) {
                     config.setAudioProfile(audioProfile);
+                }
+            }
+            if (root.has("resourceProfile")) {
+                String resourceProfile = root.get("resourceProfile").getAsString();
+                if (!resourceProfile.isBlank()) {
+                    config.setResourceProfile(resourceProfile);
+                }
+            }
+            if (root.has("loadingScreen")) {
+                String loadingScreen = root.get("loadingScreen").getAsString();
+                if (!loadingScreen.isBlank()) {
+                    config.setLoadingScreen(loadingScreen);
                 }
             }
             return config;

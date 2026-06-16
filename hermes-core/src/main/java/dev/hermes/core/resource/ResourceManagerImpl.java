@@ -16,24 +16,27 @@ import java.util.Optional;
 public final class ResourceManagerImpl implements ResourceService {
 
     private static final String DEFAULT_PROFILE_BASE = "resources/";
-    private static final int DEFAULT_COOPERATIVE_ASSETS_PER_FRAME = 1;
+    private static final String DEFAULT_PROFILE_PATH = "resources/profile.json";
 
-    private final ResourceCatalog catalog;
-    private final ResourcePathResolver resolver;
+    private ResourceCatalog catalog;
+    private ResourcePathResolver resolver;
     private final ResourceLoaderRegistry registry;
     private final ResourceCache cache;
     private final SyncLoadPipeline syncPipeline;
-    private final AsyncLoadExecutor asyncExecutor;
-    private final String bundlesDirectory;
+    private AsyncLoadExecutor asyncExecutor;
+    private String bundlesDirectory;
+    private ResourceProfile profile;
 
     private boolean forceCooperativeForTests;
 
     private ResourceManagerImpl(
+            ResourceProfile profile,
             ResourceCatalog catalog,
             String bundlesDirectory,
             ResourceLoaderRegistry registry) {
+        this.profile = Objects.requireNonNull(profile, "profile");
         this.catalog = Objects.requireNonNull(catalog, "catalog");
-        this.bundlesDirectory = normalizeBase(bundlesDirectory);
+        this.bundlesDirectory = normalizeBundlesDirectory(bundlesDirectory);
         this.registry = Objects.requireNonNull(registry, "registry");
         this.resolver = new ResourcePathResolver(catalog);
         this.cache = new ResourceCache();
@@ -58,8 +61,33 @@ public final class ResourceManagerImpl implements ResourceService {
 
     private static ResourceManagerImpl forProfileBase(String profileBase) {
         String base = normalizeBase(profileBase);
-        ResourceCatalog catalog = loadCatalogOrEmpty(base + "catalog.json");
-        return new ResourceManagerImpl(catalog, base + "bundles", ResourceLoaderRegistry.withDefaults());
+        ResourceProfile profile = ResourceProfile.defaults();
+        ResourceCatalog catalog = loadCatalogOrEmpty(profile.catalog());
+        return new ResourceManagerImpl(profile, catalog, profile.bundlesDirectory(), ResourceLoaderRegistry.withDefaults());
+    }
+
+    /** Loads profile JSON and applies catalog + bundle directory settings. Idempotent. */
+    public void loadProfile(String profilePath) {
+        ResourceProfile loaded = resolveProfile(profilePath);
+        this.profile = loaded;
+        this.catalog = loadCatalogOrEmpty(loaded.catalog());
+        this.bundlesDirectory = normalizeBundlesDirectory(loaded.bundlesDirectory());
+        this.resolver = new ResourcePathResolver(catalog);
+        asyncExecutor.shutdown();
+        asyncExecutor = new AsyncLoadExecutor(cache, registry, resolver, this::createLoadStrategy);
+    }
+
+    public ResourceProfile profile() {
+        return profile;
+    }
+
+    private static ResourceProfile resolveProfile(String profilePath) {
+        String path = profilePath == null || profilePath.isBlank() ? DEFAULT_PROFILE_PATH : profilePath.trim();
+        FileHandle handle = HermesAssetPaths.internal(path);
+        if (!handle.exists()) {
+            return ResourceProfile.defaults();
+        }
+        return ResourceProfileLoader.load(path);
     }
 
     private static ResourceCatalog loadCatalogOrEmpty(String catalogPath) {
@@ -78,9 +106,17 @@ public final class ResourceManagerImpl implements ResourceService {
         return trimmed.endsWith("/") ? trimmed : trimmed + "/";
     }
 
+    private static String normalizeBundlesDirectory(String directory) {
+        String trimmed = Objects.requireNonNull(directory, "bundlesDirectory").trim();
+        if (trimmed.isEmpty()) {
+            throw new IllegalArgumentException("bundlesDirectory must not be blank");
+        }
+        return trimmed.endsWith("/") ? trimmed.substring(0, trimmed.length() - 1) : trimmed;
+    }
+
     private LoadExecutionStrategy createLoadStrategy() {
         if (forceCooperativeForTests || ResourcePlatform.isHtmlPlatform()) {
-            return new CooperativeLoadStrategy(DEFAULT_COOPERATIVE_ASSETS_PER_FRAME);
+            return new CooperativeLoadStrategy(profile.cooperativeAssetsPerFrame());
         }
         return new ThreadPoolLoadStrategy();
     }

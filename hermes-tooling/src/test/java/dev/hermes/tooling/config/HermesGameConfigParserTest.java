@@ -113,4 +113,40 @@ class HermesGameConfigParserTest {
 
         assertTrue(error.getMessage().contains("Invalid hermes.json"));
     }
+
+    @Test
+    void parse_readsResourceProfileAndLoadingScreen(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("hermes.json");
+        Files.writeString(
+                file,
+                "{\n"
+                        + "  \"renderPipeline\": \"render/pipeline.json\",\n"
+                        + "  \"inputProfile\": \"input/profile.json\",\n"
+                        + "  \"resourceProfile\": \"resources/custom-profile.json\",\n"
+                        + "  \"loadingScreen\": \"ui/custom-loading.json\"\n"
+                        + "}\n",
+                StandardCharsets.UTF_8);
+
+        HermesGameConfig config = HermesGameConfigParser.parse(file.toFile());
+
+        assertEquals("resources/custom-profile.json", config.getResourceProfile());
+        assertEquals("ui/custom-loading.json", config.getLoadingScreen());
+    }
+
+    @Test
+    void parse_omittedResourceProfileAndLoadingScreenUseDefaults(@TempDir Path dir) throws IOException {
+        Path file = dir.resolve("hermes.json");
+        Files.writeString(
+                file,
+                "{\n"
+                        + "  \"renderPipeline\": \"render/pipeline.json\",\n"
+                        + "  \"inputProfile\": \"input/profile.json\"\n"
+                        + "}\n",
+                StandardCharsets.UTF_8);
+
+        HermesGameConfig config = HermesGameConfigParser.parse(file.toFile());
+
+        assertEquals("resources/profile.json", config.getResourceProfile());
+        assertEquals(null, config.getLoadingScreen());
+    }
 }

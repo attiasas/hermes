@@ -10,6 +10,8 @@ public final class HermesGameConfig {
     private String renderPipeline = "render/pipeline.json";
     private String inputProfile = "input/profile.json";
     private String audioProfile = "audio/profile.json";
+    private String resourceProfile = "resources/profile.json";
+    private String loadingScreen;
 
     public String getTitle() {
         return title;
@@ -49,5 +51,21 @@ public final class HermesGameConfig {
 
     public void setAudioProfile(String audioProfile) {
         this.audioProfile = audioProfile;
+    }
+
+    public String getResourceProfile() {
+        return resourceProfile;
+    }
+
+    public void setResourceProfile(String resourceProfile) {
+        this.resourceProfile = resourceProfile;
+    }
+
+    public String getLoadingScreen() {
+        return loadingScreen;
+    }
+
+    public void setLoadingScreen(String loadingScreen) {
+        this.loadingScreen = loadingScreen;
     }
 }
