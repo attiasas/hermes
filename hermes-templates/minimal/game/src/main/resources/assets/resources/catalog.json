@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "entries": {
+    "@logo": { "path": "hermes-logo.png", "kind": "texture" },
+    "@cube": { "path": "models/cube.obj", "kind": "model" }
+  }
+}

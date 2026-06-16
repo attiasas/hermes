@@ -1,4 +1,8 @@
 {
+  "preload": {
+    "bundles": ["boot"],
+    "async": false
+  },
   "entities": [
     {
       "id": "main-camera",

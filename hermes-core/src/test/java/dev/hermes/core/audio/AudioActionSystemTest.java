@@ -3,14 +3,24 @@ package dev.hermes.core.audio;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.hermes.api.input.InputActions;
+import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.EntityTypeRegistryImpl;
+import dev.hermes.core.resource.ResourceManagerImpl;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 final class AudioActionSystemTest {
+
+    private static final String CLIP = "sfx/test.wav";
+
+    @BeforeAll
+    static void initGdx() {
+        TestGdx.initClasspathFiles();
+    }
 
     private RecordingSoundBackend backend;
     private FakeInputActions actions;
@@ -20,9 +30,9 @@ final class AudioActionSystemTest {
     void setUp() {
         backend = new RecordingSoundBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(backend, new AudioMixerImpl(), new SoundCache(backend));
+                new AudioServiceImpl(backend, new AudioMixerImpl(), ResourceManagerImpl.createDefault(backend));
         audio.loadProfileFromJson(
-                "{\"version\":1,\"clips\":{\"c\":\"sfx/c.wav\"},"
+                "{\"version\":1,\"clips\":{\"c\":\"" + CLIP + "\"},"
                         + "\"actionSounds\":{\"ui.click\":\"c\"}}");
         actions = new FakeInputActions();
         system = new AudioActionSystem(actions, audio);
@@ -32,7 +42,7 @@ final class AudioActionSystemTest {
     void playsClipOnJustPressedAction() {
         actions.pressJust("ui.click");
         system.update(new WorldManagerImpl(new EntityTypeRegistryImpl(), new ComponentRegistryImpl()), 0.016f);
-        assertEquals("sfx/c.wav", backend.lastPath);
+        assertEquals(CLIP, backend.lastPath);
     }
 
     private static final class FakeInputActions implements InputActions {

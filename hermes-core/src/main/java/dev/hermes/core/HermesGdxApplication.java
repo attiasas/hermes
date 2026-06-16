@@ -14,6 +14,8 @@ import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneHandle;
 import dev.hermes.api.scene.SceneStackPolicy;
 import dev.hermes.core.ecs.HermesEngineImpl;
+import dev.hermes.core.ecs.SceneManagerImpl;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.log.CachingLoggerProvider;
 import dev.hermes.core.log.GdxLogSink;
@@ -61,6 +63,15 @@ public final class HermesGdxApplication implements ApplicationListener {
             engine = new HermesEngineImpl();
             engine.bindApplication(application);
             batch = new SpriteBatch();
+
+            String resourceProfile = runtimeConfig.gameResourceProfile();
+            ((ResourceManagerImpl) engine.resources()).loadProfile(resourceProfile);
+
+            String loadingScreenPath = runtimeConfig.gameLoadingScreen();
+            if (loadingScreenPath != null && !loadingScreenPath.isBlank()) {
+                ((SceneManagerImpl) engine.scenes()).configureLoadingScreen(loadingScreenPath);
+            }
+
             RenderPassRegistry passRegistry = new RenderPassRegistry();
             application.configureRendering(new HermesRenderConfigurator(passRegistry));
             renderPipeline =
@@ -69,7 +80,8 @@ public final class HermesGdxApplication implements ApplicationListener {
                             HermesLauncherSupport.gameRenderPipelinePath(),
                             passRegistry,
                             (ViewportServiceImpl) engine.viewport(),
-                            (UiServiceImpl) engine.ui());
+                            (UiServiceImpl) engine.ui(),
+                            (ResourceManagerImpl) engine.resources());
 
             String scenePath = HermesLauncherSupport.gameScenePath();
             if (scenePath != null && !scenePath.isBlank()) {
@@ -122,7 +134,17 @@ public final class HermesGdxApplication implements ApplicationListener {
         }
 
         try {
+            if (engine != null) {
+                engine.resources().tick();
+            }
             engine.scenes().processPending();
+
+            SceneManagerImpl scenes = (SceneManagerImpl) engine.scenes();
+            if (scenes.loadingScreen().isVisible()) {
+                // BuiltinLoadingScreen owns batch begin/end for this overlay path.
+                scenes.loadingScreen().render(batch, width, height);
+                return;
+            }
 
             float delta = Gdx.graphics.getDeltaTime();
             engine.input().poll(delta);

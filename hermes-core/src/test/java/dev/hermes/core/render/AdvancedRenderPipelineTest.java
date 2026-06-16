@@ -12,6 +12,7 @@ import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.api.scene.SceneLoadContext;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -57,7 +58,13 @@ final class AdvancedRenderPipelineTest {
                     @Override
                     public void dispose() {}
                 });
-        PipelineCache cache = new PipelineCache(passes, new ViewportServiceImpl());
+        PipelineCache cache =
+                new PipelineCache(
+                        null,
+                        passes,
+                        new ViewportServiceImpl(),
+                        null,
+                        ResourceManagerImpl.createDefault());
         cache.resize(640, 480);
         RenderGraph graph = cache.get("render/advanced-render-pipeline.json");
 

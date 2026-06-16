@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.render.RenderPassRegistry;
 import dev.hermes.api.scene.SceneHandle;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.scene.SceneInstance;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.BackbufferSize;
@@ -29,7 +30,7 @@ public final class RenderPipelineExecutor {
             String projectDefaultPipelinePath,
             RenderPassRegistry passRegistry,
             ViewportServiceImpl viewport) {
-        this(batch, projectDefaultPipelinePath, passRegistry, viewport, null);
+        this(batch, projectDefaultPipelinePath, passRegistry, viewport, null, null);
     }
 
     public RenderPipelineExecutor(
@@ -38,13 +39,23 @@ public final class RenderPipelineExecutor {
             RenderPassRegistry passRegistry,
             ViewportServiceImpl viewport,
             UiServiceImpl ui) {
+        this(batch, projectDefaultPipelinePath, passRegistry, viewport, ui, null);
+    }
+
+    public RenderPipelineExecutor(
+            SpriteBatch batch,
+            String projectDefaultPipelinePath,
+            RenderPassRegistry passRegistry,
+            ViewportServiceImpl viewport,
+            UiServiceImpl ui,
+            ResourceManagerImpl resources) {
         this.projectDefaultPipelinePath =
                 Objects.requireNonNull(projectDefaultPipelinePath, "projectDefaultPipelinePath");
         if (this.projectDefaultPipelinePath.isBlank()) {
             throw new IllegalArgumentException("project default render pipeline path is required");
         }
         this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
-        this.cache = new PipelineCache(batch, passRegistry, this.viewport, ui);
+        this.cache = new PipelineCache(batch, passRegistry, this.viewport, ui, resources);
     }
 
     public ViewportServiceImpl viewport() {

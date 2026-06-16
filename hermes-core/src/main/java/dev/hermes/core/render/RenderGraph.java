@@ -2,7 +2,6 @@ package dev.hermes.core.render;
 
 import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.core.viewport.BackbufferSize;
-import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
@@ -15,35 +14,31 @@ public final class RenderGraph {
 
     private final float[] clearColor;
     private final List<RenderGraphPass> passes;
-    private final ModelCache sharedModelCache;
     private final ShaderRegistry shaderRegistry;
     private final FramebufferPool framebufferPool;
     private final ViewportServiceImpl viewport;
     private int backbufferWidth = -1;
     private int backbufferHeight = -1;
 
-    RenderGraph(float[] clearColor, List<RenderGraphPass> passes, ModelCache sharedModelCache) {
-        this(clearColor, passes, sharedModelCache, null, null, new ViewportServiceImpl());
+    RenderGraph(float[] clearColor, List<RenderGraphPass> passes) {
+        this(clearColor, passes, null, null, new ViewportServiceImpl());
     }
 
     RenderGraph(
             float[] clearColor,
             List<RenderGraphPass> passes,
-            ModelCache sharedModelCache,
             ShaderRegistry shaderRegistry) {
-        this(clearColor, passes, sharedModelCache, shaderRegistry, null, new ViewportServiceImpl());
+        this(clearColor, passes, shaderRegistry, null, new ViewportServiceImpl());
     }
 
     RenderGraph(
             float[] clearColor,
             List<RenderGraphPass> passes,
-            ModelCache sharedModelCache,
             ShaderRegistry shaderRegistry,
             FramebufferPool framebufferPool,
             ViewportServiceImpl viewport) {
         this.clearColor = clearColor.clone();
         this.passes = List.copyOf(passes);
-        this.sharedModelCache = sharedModelCache;
         this.shaderRegistry = shaderRegistry;
         this.framebufferPool = framebufferPool;
         this.viewport = viewport;
@@ -112,9 +107,6 @@ public final class RenderGraph {
     public void dispose() {
         for (RenderGraphPass pass : passes) {
             pass.dispose();
-        }
-        if (sharedModelCache != null) {
-            sharedModelCache.dispose();
         }
         if (shaderRegistry != null) {
             shaderRegistry.dispose();

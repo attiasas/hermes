@@ -18,6 +18,7 @@ import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 import dev.hermes.core.ecs.WorldManagerImpl;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ final class UiAttachSystemTest {
         ComponentRegistryImpl registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
         manager = new WorldManagerImpl(new EntityTypeRegistryImpl(), registry);
-        ui = new UiServiceImpl();
+        ui = new UiServiceImpl(ResourceManagerImpl.createDefault());
         viewport = new RecordingViewport(400f, 300f);
         attachSystem = new UiAttachSystem(ui, viewport);
     }

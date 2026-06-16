@@ -40,7 +40,7 @@ final class EntityFactory {
         Entity entity = store.create(name, entityKind);
         Map<Class<? extends Component>, Component> built = new HashMap<>();
         ComponentContextImpl context =
-                new ComponentContextImpl(entity.id(), entityKind, name, built);
+                new ComponentContextImpl(entity.id(), entityKind, name, built, registry.resources());
         for (JsonValue entry : merged) {
             Component component =
                     registry.deserialize(

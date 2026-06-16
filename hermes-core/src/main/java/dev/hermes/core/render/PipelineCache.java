@@ -2,6 +2,7 @@ package dev.hermes.core.render;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import dev.hermes.api.render.RenderPassRegistry;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
@@ -21,7 +22,7 @@ public final class PipelineCache {
     private final Map<String, RuntimeException> failures = new HashMap<>();
 
     public PipelineCache(SpriteBatch batch, RenderPassRegistry passRegistry, ViewportServiceImpl viewport) {
-        this(batch, passRegistry, viewport, null);
+        this(batch, passRegistry, viewport, null, null);
     }
 
     public PipelineCache(
@@ -29,10 +30,19 @@ public final class PipelineCache {
             RenderPassRegistry passRegistry,
             ViewportServiceImpl viewport,
             UiServiceImpl ui) {
+        this(batch, passRegistry, viewport, ui, null);
+    }
+
+    public PipelineCache(
+            SpriteBatch batch,
+            RenderPassRegistry passRegistry,
+            ViewportServiceImpl viewport,
+            UiServiceImpl ui,
+            ResourceManagerImpl resources) {
         this.batch = batch;
         this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
         this.ui = ui;
-        this.builder = new RenderGraphBuilder(passRegistry, this.viewport, ui);
+        this.builder = new RenderGraphBuilder(resources, passRegistry, this.viewport, ui);
     }
 
     /**

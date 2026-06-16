@@ -46,10 +46,6 @@ final class SceneParser {
         SceneLightingState state = new SceneLightingState();
         document.lighting().ifPresent(spec -> LightingDefaultsMapper.apply(spec, state));
         entities.addComponent(sceneEntity.id(), state);
-        return new SceneLoadMetadata(
-                document.renderPipeline(),
-                document.inputContext(),
-                document.uiConfig(),
-                document.audioConfig());
+        return SceneLoadMetadata.fromDocument(document);
     }
 }

@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "id": "boot",
+  "resources": [
+    { "ref": "@logo", "kind": "texture" },
+    { "ref": "@cube", "kind": "model" }
+  ]
+}

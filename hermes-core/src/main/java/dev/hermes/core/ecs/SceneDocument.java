@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.JsonValue;
 import dev.hermes.api.scene.SceneAudioConfig;
 import dev.hermes.api.scene.SceneUiConfig;
 import dev.hermes.core.lighting.SceneLightingBlock;
+import dev.hermes.core.resource.ScenePreloadSpec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ final class SceneDocument {
     private final SceneUiConfig uiConfig;
     private final SceneAudioConfig audioConfig;
     private final Optional<SceneLightingBlock> lighting;
+    private final Optional<ScenePreloadSpec> preload;
 
     private SceneDocument(
             List<EntitySpec> entities,
@@ -29,13 +31,15 @@ final class SceneDocument {
             String inputContext,
             SceneUiConfig uiConfig,
             SceneAudioConfig audioConfig,
-            Optional<SceneLightingBlock> lighting) {
+            Optional<SceneLightingBlock> lighting,
+            Optional<ScenePreloadSpec> preload) {
         this.entities = entities;
         this.renderPipeline = renderPipeline;
         this.inputContext = inputContext;
         this.uiConfig = uiConfig;
         this.audioConfig = audioConfig;
         this.lighting = lighting;
+        this.preload = preload;
     }
 
     static SceneDocument parse(String scenePath, String json) {
@@ -97,7 +101,11 @@ final class SceneDocument {
             if (root.has("lighting")) {
                 lighting = Optional.of(parseLighting(scenePath, root.get("lighting")));
             }
-            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig, audioConfig, lighting);
+            Optional<ScenePreloadSpec> preload = Optional.empty();
+            if (root.has("preload")) {
+                preload = Optional.of(ScenePreloadSpec.parse(scenePath, root.get("preload")));
+            }
+            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig, audioConfig, lighting, preload);
         } catch (SceneParseException e) {
             throw e;
         } catch (Exception e) {
@@ -127,6 +135,10 @@ final class SceneDocument {
 
     Optional<SceneLightingBlock> lighting() {
         return lighting;
+    }
+
+    Optional<ScenePreloadSpec> preload() {
+        return preload;
     }
 
     private static SceneAudioConfig parseAudioConfig(String scenePath, JsonValue audioValue) {

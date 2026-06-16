@@ -1,7 +1,5 @@
 package dev.hermes.core.render.pass;
 
-import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
@@ -13,19 +11,21 @@ import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
-import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.api.resource.ResourceKind;
+import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.ecs.ActiveCamera;
 import dev.hermes.core.ecs.SpriteDrawOrder;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.resource.ResourceAccess;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.viewport.BoundCamera;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -35,16 +35,17 @@ public final class SpritesPass {
 
     private final SpriteBatch batch;
     private final ShaderRegistry shaderRegistry;
-    private final Map<String, TextureRegion> regions = new HashMap<>();
+    private final ResourceManagerImpl resources;
     private final Vector3 projected = new Vector3();
 
-    public SpritesPass(SpriteBatch batch) {
-        this(batch, null);
+    public SpritesPass(SpriteBatch batch, ResourceManagerImpl resources) {
+        this(batch, null, resources);
     }
 
-    public SpritesPass(SpriteBatch batch, ShaderRegistry shaderRegistry) {
+    public SpritesPass(SpriteBatch batch, ShaderRegistry shaderRegistry, ResourceManagerImpl resources) {
         this.batch = batch;
         this.shaderRegistry = shaderRegistry;
+        this.resources = Objects.requireNonNull(resources, "resources");
     }
 
     public void resize(int width, int height) {
@@ -77,13 +78,9 @@ public final class SpritesPass {
         if (texturePath == null || texturePath.isBlank()) {
             return;
         }
-        TextureRegion region =
-                regions.computeIfAbsent(
-                        texturePath,
-                        path -> {
-                            FileHandle file = HermesAssetPaths.internal(path);
-                            return new TextureRegion(new Texture(file));
-                        });
+        ResourceRef ref = ResourceRef.of(texturePath);
+        resources.loadSync(ref, ResourceKind.TEXTURE);
+        TextureRegion region = ResourceAccess.textureRegion(resources, ref);
 
         ShaderProgram previousShader = batch.getShader();
         Material material = entities.getComponent(entity.id(), Material.class);
@@ -161,9 +158,5 @@ public final class SpritesPass {
     }
 
     public void dispose() {
-        for (TextureRegion region : regions.values()) {
-            region.getTexture().dispose();
-        }
-        regions.clear();
     }
 }

@@ -11,6 +11,8 @@ public final class RuntimeConfigKeys {
     public static final String GAME_RENDER_PIPELINE = "hermes.game.renderPipeline";
     public static final String GAME_INPUT_PROFILE = "hermes.game.inputProfile";
     public static final String GAME_AUDIO_PROFILE = "hermes.game.audioProfile";
+    public static final String GAME_RESOURCE_PROFILE = "hermes.game.resourceProfile";
+    public static final String GAME_LOADING_SCREEN = "hermes.game.loadingScreen";
     public static final String LOG_MIN_LEVEL = "hermes.log.minLevel";
     public static final String LOG_PATTERN_TYPE = "hermes.log.patternType";
     public static final String LOG_PATTERNS = "hermes.log.patterns";

@@ -21,6 +21,10 @@ public interface RuntimeConfigService {
 
     String gameAudioProfile();
 
+    String gameResourceProfile();
+
+    String gameLoadingScreen();
+
     String logMinLevel();
 
     int logMinSeverity();

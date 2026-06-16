@@ -1,6 +1,7 @@
 package dev.hermes.tooling.doctor;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -249,6 +251,207 @@ public final class HermesDoctorSupport {
                         + "or use only shaders/default.vert, shaders/default.frag, and "
                         + "shaders/default-unlit.frag in every referenced render pipeline "
                         + "(TeaVM supports builtin shaders only in v1).");
+    }
+
+    /**
+     * When the HTML platform is enabled, scans resource bundle JSON for TeaVM-incompatible entries:
+     * {@code .glb} paths fail the check; {@code kind: sound} entries warn (audio not supported on HTML v1).
+     */
+    public static CheckResult checkResourceBundles(Path projectRoot) {
+        if (projectRoot == null || !Files.isDirectory(projectRoot)) {
+            return new CheckResult(
+                    "html-resource-bundles", Status.OK, "No project root; skipped bundle check.", null);
+        }
+        if (!isHtmlPlatformEnabled(projectRoot)) {
+            return new CheckResult(
+                    "html-resource-bundles",
+                    Status.OK,
+                    "HTML platform disabled; bundle checks skipped.",
+                    null);
+        }
+        String gameModule = resolveGameModule(projectRoot);
+        Path gameRoot = projectRoot.resolve(gameModule);
+        Path assets = gameRoot.resolve("src/main/resources/assets");
+        ResourceAssetPaths resourcePaths = resolveResourceAssetPaths(gameRoot, assets);
+        Path bundlesDir = assets.resolve(resourcePaths.bundlesDirectory());
+        if (!Files.isDirectory(bundlesDir)) {
+            return new CheckResult(
+                    "html-resource-bundles",
+                    Status.OK,
+                    "No bundles directory; HTML bundle check skipped.",
+                    null);
+        }
+        Map<String, String> catalogPaths = loadCatalogPaths(assets.resolve(resourcePaths.catalog()));
+        List<String> glbPaths = new ArrayList<>();
+        List<String> soundRefs = new ArrayList<>();
+        try (Stream<Path> bundleFiles = Files.list(bundlesDir)) {
+            bundleFiles
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                    .forEach(
+                            bundleFile ->
+                                    scanBundleForHtmlViolations(
+                                            bundleFile, catalogPaths, glbPaths, soundRefs));
+        } catch (IOException e) {
+            return new CheckResult(
+                    "html-resource-bundles",
+                    Status.FAIL,
+                    "Failed to scan resource bundles: " + e.getMessage(),
+                    "Ensure resources/bundles/*.json is readable.");
+        }
+        if (!glbPaths.isEmpty()) {
+            return new CheckResult(
+                    "html-resource-bundles",
+                    Status.FAIL,
+                    "HTML platform is enabled but bundles reference .glb assets: "
+                            + glbPaths.stream().distinct().sorted().collect(Collectors.joining(", ")),
+                    "Use split .gltf + .bin + PNG for web, or disable HTML in settings.gradle.");
+        }
+        if (!soundRefs.isEmpty()) {
+            return new CheckResult(
+                    "html-resource-bundles",
+                    Status.WARN,
+                    "HTML platform is enabled but bundles include sound entries (skipped at runtime on web): "
+                            + soundRefs.stream().distinct().sorted().collect(Collectors.joining(", ")),
+                    "Remove sound entries from bundles for HTML, or accept silent preload until TeaVM audio lands.");
+        }
+        return new CheckResult(
+                "html-resource-bundles",
+                Status.OK,
+                "HTML enabled; resource bundles pass HTML compatibility checks.",
+                null);
+    }
+
+    private static final class ResourceAssetPaths {
+        private final String catalog;
+        private final String bundlesDirectory;
+
+        private ResourceAssetPaths(String catalog, String bundlesDirectory) {
+            this.catalog = catalog;
+            this.bundlesDirectory = bundlesDirectory;
+        }
+
+        private static ResourceAssetPaths defaults() {
+            return new ResourceAssetPaths("resources/catalog.json", "resources/bundles");
+        }
+
+        private String catalog() {
+            return catalog;
+        }
+
+        private String bundlesDirectory() {
+            return bundlesDirectory;
+        }
+    }
+
+    private static ResourceAssetPaths resolveResourceAssetPaths(Path gameRoot, Path assets) {
+        ResourceAssetPaths paths = ResourceAssetPaths.defaults();
+        Path hermesJson = gameRoot.resolve("hermes.json");
+        String profileRel = "resources/profile.json";
+        if (Files.isRegularFile(hermesJson)) {
+            try {
+                HermesGameConfig config = HermesGameConfigParser.parse(hermesJson.toFile());
+                if (config.getResourceProfile() != null && !config.getResourceProfile().isBlank()) {
+                    profileRel = config.getResourceProfile().trim();
+                }
+            } catch (HermesConfigException ignored) {
+                // hermes.json validity is reported by a separate check
+            }
+        }
+        Path profileFile = assets.resolve(profileRel);
+        if (!Files.isRegularFile(profileFile)) {
+            return paths;
+        }
+        try {
+            JsonObject root =
+                    GSON.fromJson(Files.readString(profileFile, StandardCharsets.UTF_8), JsonObject.class);
+            if (root == null) {
+                return paths;
+            }
+            String catalog = paths.catalog();
+            String bundlesDirectory = paths.bundlesDirectory();
+            if (root.has("catalog")) {
+                catalog = root.get("catalog").getAsString().trim();
+            }
+            if (root.has("bundlesDirectory")) {
+                bundlesDirectory = root.get("bundlesDirectory").getAsString().trim();
+            }
+            return new ResourceAssetPaths(catalog, bundlesDirectory);
+        } catch (IOException | JsonParseException | IllegalStateException ignored) {
+            return paths;
+        }
+    }
+
+    private static Map<String, String> loadCatalogPaths(Path catalogFile) {
+        Map<String, String> paths = new HashMap<>();
+        if (!Files.isRegularFile(catalogFile)) {
+            return paths;
+        }
+        try {
+            JsonObject root =
+                    GSON.fromJson(Files.readString(catalogFile, StandardCharsets.UTF_8), JsonObject.class);
+            if (root == null || !root.has("entries") || !root.get("entries").isJsonObject()) {
+                return paths;
+            }
+            JsonObject entries = root.getAsJsonObject("entries");
+            for (Map.Entry<String, JsonElement> entry : entries.entrySet()) {
+                if (!entry.getValue().isJsonObject()) {
+                    continue;
+                }
+                JsonObject def = entry.getValue().getAsJsonObject();
+                if (def.has("path")) {
+                    paths.put(entry.getKey(), def.get("path").getAsString().trim());
+                }
+            }
+        } catch (IOException | JsonParseException | IllegalStateException ignored) {
+            // invalid catalog is handled elsewhere; proceed without alias resolution
+        }
+        return paths;
+    }
+
+    private static void scanBundleForHtmlViolations(
+            Path bundleFile,
+            Map<String, String> catalogPaths,
+            List<String> glbPaths,
+            List<String> soundRefs) {
+        try {
+            JsonObject root =
+                    GSON.fromJson(Files.readString(bundleFile, StandardCharsets.UTF_8), JsonObject.class);
+            if (root == null || !root.has("resources") || !root.get("resources").isJsonArray()) {
+                return;
+            }
+            JsonArray resources = root.getAsJsonArray("resources");
+            for (JsonElement element : resources) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+                JsonObject entry = element.getAsJsonObject();
+                String ref = entry.has("ref") ? entry.get("ref").getAsString().trim() : "";
+                String kind =
+                        entry.has("kind")
+                                ? entry.get("kind").getAsString().trim().toLowerCase(Locale.ROOT)
+                                : "";
+                String path = resolveBundleRefPath(ref, catalogPaths);
+                if (path != null && path.toLowerCase(Locale.ROOT).endsWith(".glb")) {
+                    glbPaths.add(path);
+                }
+                if ("sound".equals(kind)) {
+                    soundRefs.add(ref.isEmpty() ? path : ref);
+                }
+            }
+        } catch (IOException | JsonParseException | IllegalStateException ignored) {
+            // invalid bundle JSON is handled elsewhere
+        }
+    }
+
+    private static String resolveBundleRefPath(String ref, Map<String, String> catalogPaths) {
+        if (ref.isEmpty()) {
+            return null;
+        }
+        if (ref.startsWith("@")) {
+            return catalogPaths.get(ref);
+        }
+        return ref;
     }
 
     static List<String> findNonBuiltinShaderPathsInReferencedPipelines(

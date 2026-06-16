@@ -1,12 +1,18 @@
 package dev.hermes.core.ui;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import dev.hermes.api.math.Rect4;
+import dev.hermes.api.resource.ResourceKind;
+import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.api.ui.UiNode;
+import dev.hermes.core.resource.ResourceAccess;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,17 +23,19 @@ import java.util.function.Function;
 public final class UiTreeRenderer {
 
     private final UiFontRegistry fonts;
-    private final UiTextureCache textures;
+    private final ResourceManagerImpl resources;
     private final UiWidgetRegistryImpl customWidgets;
     private final GlyphLayout glyphLayout = new GlyphLayout();
+    private TextureRegion whitePixel;
 
-    public UiTreeRenderer(UiFontRegistry fonts, UiTextureCache textures) {
-        this(fonts, textures, null);
+    public UiTreeRenderer(UiFontRegistry fonts, ResourceManagerImpl resources) {
+        this(fonts, resources, null);
     }
 
-    public UiTreeRenderer(UiFontRegistry fonts, UiTextureCache textures, UiWidgetRegistryImpl customWidgets) {
+    public UiTreeRenderer(
+            UiFontRegistry fonts, ResourceManagerImpl resources, UiWidgetRegistryImpl customWidgets) {
         this.fonts = Objects.requireNonNull(fonts, "fonts");
-        this.textures = Objects.requireNonNull(textures, "textures");
+        this.resources = Objects.requireNonNull(resources, "resources");
         this.customWidgets = customWidgets;
     }
 
@@ -41,6 +49,34 @@ public final class UiTreeRenderer {
     public void draw(UiNode root, UiLayoutResult layout, SpriteBatch batch, Function<String, Object> bindings) {
         Function<String, Object> resolve = bindings == null ? key -> null : bindings;
         drawTree(root, layout, Objects.requireNonNull(batch, "batch"), resolve);
+    }
+
+    void disposeWhitePixel() {
+        if (whitePixel != null) {
+            whitePixel.getTexture().dispose();
+            whitePixel = null;
+        }
+    }
+
+    private TextureRegion whitePixel() {
+        if (whitePixel == null) {
+            Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+            pixmap.setColor(Color.WHITE);
+            pixmap.fill();
+            Texture texture = new Texture(pixmap);
+            pixmap.dispose();
+            whitePixel = new TextureRegion(texture);
+        }
+        return whitePixel;
+    }
+
+    private TextureRegion texture(String assetPath) {
+        if (assetPath == null || assetPath.isBlank()) {
+            return whitePixel();
+        }
+        ResourceRef ref = ResourceRef.of(assetPath);
+        resources.loadSync(ref, ResourceKind.TEXTURE);
+        return ResourceAccess.textureRegion(resources, ref);
     }
 
     private void drawTree(
@@ -106,15 +142,15 @@ public final class UiTreeRenderer {
         if (texturePath != null && Boolean.TRUE.equals(node.prop("nineSlice"))) {
             drawNineSlice(node, bounds, batch, texturePath);
         } else if (texturePath != null) {
-            batch.draw(textures.texture(texturePath), bounds.x, bounds.y, bounds.width, bounds.height);
+            batch.draw(texture(texturePath), bounds.x, bounds.y, bounds.width, bounds.height);
         } else {
-            batch.draw(textures.whitePixel(), bounds.x, bounds.y, bounds.width, bounds.height);
+            batch.draw(whitePixel(), bounds.x, bounds.y, bounds.width, bounds.height);
         }
         batch.setColor(Color.WHITE);
     }
 
     private void drawNineSlice(UiNode node, Rect4 bounds, SpriteBatch batch, String texturePath) {
-        TextureRegion region = textures.texture(texturePath);
+        TextureRegion region = texture(texturePath);
         float left = floatProp(node, "sliceLeft", 8f);
         float right = floatProp(node, "sliceRight", 8f);
         float top = floatProp(node, "sliceTop", 8f);
@@ -136,7 +172,7 @@ public final class UiTreeRenderer {
         if (texturePath == null) {
             return;
         }
-        batch.draw(textures.texture(texturePath), bounds.x, bounds.y, bounds.width, bounds.height);
+        batch.draw(texture(texturePath), bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
     private void drawLabel(UiNode node, Rect4 bounds, SpriteBatch batch) {
@@ -159,9 +195,9 @@ public final class UiTreeRenderer {
         batch.setColor(bg);
         String texturePath = texturePath(node);
         if (texturePath != null) {
-            batch.draw(textures.texture(texturePath), bounds.x, bounds.y, bounds.width, bounds.height);
+            batch.draw(texture(texturePath), bounds.x, bounds.y, bounds.width, bounds.height);
         } else {
-            batch.draw(textures.whitePixel(), bounds.x, bounds.y, bounds.width, bounds.height);
+            batch.draw(whitePixel(), bounds.x, bounds.y, bounds.width, bounds.height);
         }
         batch.setColor(Color.WHITE);
         String text = stringProp(node, "text", "");
@@ -183,9 +219,9 @@ public final class UiTreeRenderer {
         float fraction = max > 0f ? Math.min(1f, Math.max(0f, value / max)) : 0f;
 
         batch.setColor(0.15f, 0.15f, 0.15f, 0.9f);
-        batch.draw(textures.whitePixel(), bounds.x, bounds.y, bounds.width, bounds.height);
+        batch.draw(whitePixel(), bounds.x, bounds.y, bounds.width, bounds.height);
         batch.setColor(0.2f, 0.75f, 0.35f, 1f);
-        batch.draw(textures.whitePixel(), bounds.x, bounds.y, bounds.width * fraction, bounds.height);
+        batch.draw(whitePixel(), bounds.x, bounds.y, bounds.width * fraction, bounds.height);
         batch.setColor(Color.WHITE);
     }
 

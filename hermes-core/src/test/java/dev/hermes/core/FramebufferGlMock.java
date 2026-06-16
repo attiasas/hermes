@@ -58,6 +58,7 @@ public final class FramebufferGlMock {
                     return GL20.GL_FRAMEBUFFER_COMPLETE;
                 case "glGenTexture":
                     return nextTextureId++;
+                case "glGenBuffer":
                 case "glGenBuffers":
                     return nextBufferId++;
                 case "glBindBuffer":
