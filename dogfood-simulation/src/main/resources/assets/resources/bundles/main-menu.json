@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "id": "main-menu",
+  "resources": [
+    { "ref": "@logo", "kind": "texture" },
+    { "ref": "@main-menu-music", "kind": "sound" },
+    { "ref": "@ui-click", "kind": "sound" }
+  ]
+}

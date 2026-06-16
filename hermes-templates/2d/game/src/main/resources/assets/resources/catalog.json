@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "entries": {
+    "@logo": { "path": "hermes-logo.png", "kind": "texture" }
+  }
+}

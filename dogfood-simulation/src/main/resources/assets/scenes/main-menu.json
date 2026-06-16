@@ -1,4 +1,8 @@
 {
+  "preload": {
+    "bundles": ["main-menu"],
+    "async": true
+  },
   "renderPipeline": "render/ui-overlay.json",
   "inputContext": "menu",
   "ui": "ui/main-menu.json",
