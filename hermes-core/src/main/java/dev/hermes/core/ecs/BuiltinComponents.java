@@ -279,6 +279,7 @@ public final class BuiltinComponents {
             engine.addSystem(new AudioActionSystem(engine.input().actions(), audio), SystemScope.GLOBAL);
         }
         engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
+        engine.addSystem(new SpatialIndexSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
