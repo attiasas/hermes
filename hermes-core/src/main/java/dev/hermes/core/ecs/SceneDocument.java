@@ -7,6 +7,8 @@ import dev.hermes.api.scene.SceneAudioConfig;
 import dev.hermes.api.scene.SceneUiConfig;
 import dev.hermes.core.lighting.SceneLightingBlock;
 import dev.hermes.core.resource.ScenePreloadSpec;
+import dev.hermes.core.world.WorldBlock;
+import dev.hermes.core.world.WorldBlockParser;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +26,7 @@ final class SceneDocument {
     private final SceneAudioConfig audioConfig;
     private final Optional<SceneLightingBlock> lighting;
     private final Optional<ScenePreloadSpec> preload;
+    private final Optional<WorldBlock> world;
 
     private SceneDocument(
             List<EntitySpec> entities,
@@ -32,7 +35,8 @@ final class SceneDocument {
             SceneUiConfig uiConfig,
             SceneAudioConfig audioConfig,
             Optional<SceneLightingBlock> lighting,
-            Optional<ScenePreloadSpec> preload) {
+            Optional<ScenePreloadSpec> preload,
+            Optional<WorldBlock> world) {
         this.entities = entities;
         this.renderPipeline = renderPipeline;
         this.inputContext = inputContext;
@@ -40,6 +44,7 @@ final class SceneDocument {
         this.audioConfig = audioConfig;
         this.lighting = lighting;
         this.preload = preload;
+        this.world = world;
     }
 
     static SceneDocument parse(String scenePath, String json) {
@@ -105,7 +110,14 @@ final class SceneDocument {
             if (root.has("preload")) {
                 preload = Optional.of(ScenePreloadSpec.parse(scenePath, root.get("preload")));
             }
-            return new SceneDocument(entities, renderPipeline, inputContext, uiConfig, audioConfig, lighting, preload);
+            Optional<WorldBlock> world = Optional.empty();
+            if (root.has("world")) {
+                world = Optional.of(
+                        WorldBlockParser.parse(
+                                scenePath, root.get("world"), Optional.ofNullable(uiConfig)));
+            }
+            return new SceneDocument(
+                    entities, renderPipeline, inputContext, uiConfig, audioConfig, lighting, preload, world);
         } catch (SceneParseException e) {
             throw e;
         } catch (Exception e) {
@@ -139,6 +151,10 @@ final class SceneDocument {
 
     Optional<ScenePreloadSpec> preload() {
         return preload;
+    }
+
+    Optional<WorldBlock> world() {
+        return world;
     }
 
     private static SceneAudioConfig parseAudioConfig(String scenePath, JsonValue audioValue) {
