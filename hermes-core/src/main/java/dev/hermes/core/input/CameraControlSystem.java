@@ -24,12 +24,15 @@ import java.util.Optional;
 /** GLOBAL system: built-in perspective camera controls (orbit / pan / dolly / scroll). */
 public final class CameraControlSystem implements dev.hermes.api.ecs.System {
 
+    private static final float DRAG_THRESHOLD_PX_SQ = 4f;
+
     private final InputService input;
     private final UiServiceImpl ui;
     private final SceneManagerImpl scenes;
     private final ViewportService viewport;
 
     private int activeButton = -1;
+    private boolean pointerDragging;
     private float lastScreenX;
     private float lastScreenY;
 
@@ -50,12 +53,12 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
     @Override
     public void update(WorldManager manager, float deltaSeconds) {
         if (CameraResolver.mainCameraProjection(manager) != Camera.Projection.PERSPECTIVE) {
-            activeButton = -1;
+            clearPointerDrag();
             return;
         }
         CameraControlsConfig cfg = manager.camera().controls();
         if (!cfg.enabled() || pointerOverUi(manager)) {
-            activeButton = -1;
+            clearPointerDrag();
             return;
         }
         float surfaceW = BackbufferSize.width();
@@ -66,12 +69,21 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
 
         PointerSnapshot ptr = input.devices().pointer();
         trackActiveButton(ptr, cfg);
+        endPointerDragIfNeeded(ptr);
 
         GdxCameraController gdx = new GdxCameraController(surfaceW, surfaceH);
         ActiveCamera active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
         float targetX = lookAtX(active);
         float targetY = lookAtY(active);
         float targetZ = lookAtZ(active);
+
+        ActiveCamera keyboardUpdated = applyKeyboardMovement(manager, gdx, active, deltaSeconds, cfg);
+        if (keyboardUpdated != active) {
+            active = keyboardUpdated;
+            targetX = active.lookAtX();
+            targetY = active.lookAtY();
+            targetZ = active.lookAtZ();
+        }
 
         if (cfg.scrollZoom() && Math.abs(ptr.scrollY()) > 1e-6f) {
             active = gdx.scrollZoom(active, targetX, targetY, targetZ, ptr.scrollY(), cfg);
@@ -83,19 +95,24 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
         }
 
         if (activeButton < 0 || !ptr.pressed(activeButton)) {
-            if (!ptr.pressed(activeButton)) {
-                activeButton = -1;
-            }
             return;
         }
 
         float dx = ptr.screenX() - lastScreenX;
         float dy = lastScreenY - ptr.screenY();
-        lastScreenX = ptr.screenX();
-        lastScreenY = ptr.screenY();
+        if (!pointerDragging) {
+            if (dx * dx + dy * dy < DRAG_THRESHOLD_PX_SQ) {
+                return;
+            }
+            pointerDragging = true;
+        }
+
         if (dx == 0f && dy == 0f) {
             return;
         }
+
+        lastScreenX = ptr.screenX();
+        lastScreenY = ptr.screenY();
 
         active = CameraResolver.resolveForManager(manager, "screen", surfaceW, surfaceH);
         targetX = lookAtX(active);
@@ -117,6 +134,53 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
                 manager, updated, updated.lookAtX(), updated.lookAtY(), updated.lookAtZ());
     }
 
+    private ActiveCamera applyKeyboardMovement(
+            WorldManager manager,
+            GdxCameraController gdx,
+            ActiveCamera active,
+            float deltaSeconds,
+            CameraControlsConfig cfg) {
+        float forward = axis("camera_move_forward") - axis("camera_move_backward");
+        float strafe = axis("camera_move_right") - axis("camera_move_left");
+        float lookX = axis("camera_look_at_right") - axis("camera_look_at_left");
+        float lookZ = axis("camera_look_at_forward") - axis("camera_look_at_backward");
+        float lookY = axis("camera_look_at_up") - axis("camera_look_at_down");
+
+        ActiveCamera updated = active;
+        boolean changed = false;
+        if (forward != 0f || strafe != 0f) {
+            updated = gdx.translateView(updated, forward, strafe, deltaSeconds, cfg);
+            changed = true;
+        }
+        if (lookX != 0f || lookY != 0f || lookZ != 0f) {
+            updated = gdx.moveLookAt(updated, lookX, lookY, lookZ, deltaSeconds, cfg);
+            changed = true;
+        }
+        if (changed) {
+            MainCameraWriter.write(
+                    manager, updated, updated.lookAtX(), updated.lookAtY(), updated.lookAtZ());
+        }
+        return updated;
+    }
+
+    private float axis(String action) {
+        return input.actions().pressed(action) ? 1f : 0f;
+    }
+
+    private void clearPointerDrag() {
+        activeButton = -1;
+        pointerDragging = false;
+    }
+
+    private void endPointerDragIfNeeded(PointerSnapshot ptr) {
+        if (activeButton < 0) {
+            return;
+        }
+        if (!ptr.pressed(activeButton) || ptr.justReleased(activeButton)) {
+            clearPointerDrag();
+        }
+    }
+
     private static float lookAtX(ActiveCamera active) {
         return active.hasLookAt() ? active.lookAtX() : 0f;
     }
@@ -132,14 +196,17 @@ public final class CameraControlSystem implements dev.hermes.api.ecs.System {
     private void trackActiveButton(PointerSnapshot ptr, CameraControlsConfig cfg) {
         if (ptr.justPressed(cfg.rotateButton())) {
             activeButton = cfg.rotateButton();
+            pointerDragging = false;
             lastScreenX = ptr.screenX();
             lastScreenY = ptr.screenY();
         } else if (ptr.justPressed(cfg.translateButton())) {
             activeButton = cfg.translateButton();
+            pointerDragging = false;
             lastScreenX = ptr.screenX();
             lastScreenY = ptr.screenY();
         } else if (ptr.justPressed(cfg.forwardButton())) {
             activeButton = cfg.forwardButton();
+            pointerDragging = false;
             lastScreenX = ptr.screenX();
             lastScreenY = ptr.screenY();
         }

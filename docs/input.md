@@ -90,6 +90,9 @@ Perspective scenes enable built-in controls automatically (`CameraControlSystem`
 | Right drag | Pan |
 | Middle drag | Dolly along view |
 | Scroll | Zoom |
+| WASD | Translate camera (view angle unchanged) |
+| Q / E | Move look-at target down / up |
+| Arrow keys | Move look-at target on world XZ plane |
 
 Orbit target is the scene `lookAt` point (or world origin when unset). Entity selection (`Selected`) does not affect the camera.
 

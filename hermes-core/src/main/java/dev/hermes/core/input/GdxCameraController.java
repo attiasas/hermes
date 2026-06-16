@@ -85,6 +85,68 @@ public final class GdxCameraController {
         return dolly(in, targetX, targetY, targetZ, scrollAmount * cfg.scrollFactor(), cfg);
     }
 
+    /** Moves camera and look-at together; view angles stay unchanged. */
+    public ActiveCamera translateView(
+            ActiveCamera in,
+            float forward,
+            float strafe,
+            float deltaSeconds,
+            CameraControlsConfig cfg) {
+        PerspectiveCamera cam = bindPerspective(in);
+        float speed = cfg.translateUnits() * deltaSeconds;
+        if (forward != 0f) {
+            cam.translate(tmp.set(cam.direction).nor().scl(forward * speed));
+        }
+        if (strafe != 0f) {
+            cam.translate(tmp.set(cam.direction).crs(cam.up).nor().scl(strafe * speed));
+        }
+        cam.update();
+        float dx = cam.position.x - in.x();
+        float dy = cam.position.y - in.y();
+        float dz = cam.position.z - in.z();
+        float lookAtX = in.hasLookAt() ? in.lookAtX() + dx : Float.NaN;
+        float lookAtY = in.hasLookAt() ? in.lookAtY() + dy : Float.NaN;
+        float lookAtZ = in.hasLookAt() ? in.lookAtZ() + dz : Float.NaN;
+        return new ActiveCamera(
+                Camera.Projection.PERSPECTIVE,
+                cam.position.x,
+                cam.position.y,
+                cam.position.z,
+                in.rotationX(),
+                in.rotationY(),
+                in.rotationZ(),
+                in.zoom(),
+                in.fieldOfView(),
+                in.near(),
+                in.far(),
+                in.viewportWidth(),
+                in.viewportHeight(),
+                in.fitMode(),
+                in.designAspect(),
+                lookAtX,
+                lookAtY,
+                lookAtZ,
+                in.renderTarget());
+    }
+
+    /** Moves the orbit target in world space; camera position stays fixed. */
+    public ActiveCamera moveLookAt(
+            ActiveCamera in,
+            float worldDx,
+            float worldDy,
+            float worldDz,
+            float deltaSeconds,
+            CameraControlsConfig cfg) {
+        float speed = cfg.translateUnits() * deltaSeconds;
+        float lookAtX = (in.hasLookAt() ? in.lookAtX() : 0f) + worldDx * speed;
+        float lookAtY = (in.hasLookAt() ? in.lookAtY() : 0f) + worldDy * speed;
+        float lookAtZ = (in.hasLookAt() ? in.lookAtZ() : 0f) + worldDz * speed;
+        PerspectiveCamera cam = bindPerspective(in);
+        cam.lookAt(lookAtX, lookAtY, lookAtZ);
+        cam.update();
+        return fromGdx(cam, in, lookAtX, lookAtY, lookAtZ);
+    }
+
     public static float normalizeDeltaX(float pixelDelta, float surfaceWidth) {
         return pixelDelta / Math.max(surfaceWidth, 1f);
     }

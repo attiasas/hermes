@@ -15,6 +15,8 @@ public interface PointerSnapshot {
 
     boolean pressed(int button);
 
+    boolean justReleased(int button);
+
     /** Horizontal scroll wheel delta this frame (0 if none). */
     default float scrollX() {
         return 0f;

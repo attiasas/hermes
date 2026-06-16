@@ -110,6 +110,90 @@ final class CameraControlSystemTest {
     }
 
     @Test
+    void pointerRelease_stopsFurtherRotation() {
+        SceneLoader.load(
+                "scenes/perspective-orbit-test.json",
+                manager,
+                (ComponentRegistryImpl) engine.registry());
+
+        input.pollFrame(InputFrame.pointerJustPressed(320, 240, InputButton.LEFT));
+        cameraControl.update(manager, 0f);
+        input.pollFrame(InputFrame.pointerDrag(360, 240, InputButton.LEFT));
+        cameraControl.update(manager, 0f);
+        float rotationAfterDrag = manager.camera().sceneConfig().rotationY();
+
+        input.pollFrame(
+                InputFrame.builder()
+                        .pointer(360f, 240f)
+                        .pointerJustReleased(InputButton.LEFT)
+                        .build());
+        cameraControl.update(manager, 0f);
+        input.pollFrame(InputFrame.builder().pointer(420f, 240f).build());
+        cameraControl.update(manager, 0f);
+
+        assertEquals(rotationAfterDrag, manager.camera().sceneConfig().rotationY(), 0.001f);
+    }
+
+    @Test
+    void clickWithoutDrag_doesNotRotate() {
+        SceneLoader.load(
+                "scenes/perspective-orbit-test.json",
+                manager,
+                (ComponentRegistryImpl) engine.registry());
+        float rotationBefore = manager.camera().sceneConfig().rotationY();
+
+        input.pollFrame(InputFrame.pointerJustPressed(320, 240, InputButton.LEFT));
+        cameraControl.update(manager, 0f);
+        input.pollFrame(InputFrame.pointerDrag(321, 240, InputButton.LEFT));
+        cameraControl.update(manager, 0f);
+        input.pollFrame(
+                InputFrame.builder()
+                        .pointer(321f, 240f)
+                        .pointerJustReleased(InputButton.LEFT)
+                        .build());
+        cameraControl.update(manager, 0f);
+
+        assertEquals(rotationBefore, manager.camera().sceneConfig().rotationY(), 0.001f);
+    }
+
+    @Test
+    void wasd_translatesWithoutChangingRotation() {
+        InputProfile profile =
+                InputProfileLoader.parse(
+                        "{"
+                                + "\"version\":1,"
+                                + "\"context\":\"gameplay\","
+                                + "\"actions\":{"
+                                + "\"camera_move_forward\":{\"type\":\"button\"},"
+                                + "\"camera_move_backward\":{\"type\":\"button\"},"
+                                + "\"camera_move_left\":{\"type\":\"button\"},"
+                                + "\"camera_move_right\":{\"type\":\"button\"}"
+                                + "},"
+                                + "\"bindings\":["
+                                + "{\"action\":\"camera_move_forward\",\"source\":\"keyboard\",\"key\":\"W\",\"when\":\"pressed\"},"
+                                + "{\"action\":\"camera_move_backward\",\"source\":\"keyboard\",\"key\":\"S\",\"when\":\"pressed\"},"
+                                + "{\"action\":\"camera_move_left\",\"source\":\"keyboard\",\"key\":\"A\",\"when\":\"pressed\"},"
+                                + "{\"action\":\"camera_move_right\",\"source\":\"keyboard\",\"key\":\"D\",\"when\":\"pressed\"}"
+                                + "]"
+                                + "}");
+        InputServiceImpl cameraInput = new InputServiceImpl(engine, profile);
+        CameraControlSystem system = new CameraControlSystem(cameraInput);
+
+        SceneLoader.load(
+                "scenes/perspective-orbit-test.json",
+                manager,
+                (ComponentRegistryImpl) engine.registry());
+        float rotationYBefore = manager.camera().sceneConfig().rotationY();
+        float zBefore = manager.camera().sceneConfig().z();
+
+        cameraInput.pollFrame(InputFrame.withKeyboardPressed(dev.hermes.api.input.InputKey.W));
+        system.update(manager, 0.1f);
+
+        assertNotEquals(zBefore, manager.camera().sceneConfig().z(), 0.01f);
+        assertEquals(rotationYBefore, manager.camera().sceneConfig().rotationY(), 0.001f);
+    }
+
+    @Test
     void scrollZoom_movesSceneCameraCloser() {
         SceneLoader.load(
                 "scenes/perspective-orbit-test.json",

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.utils.Array;
+import dev.hermes.api.input.InputButton;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -52,6 +53,9 @@ final class GdxInputReaders {
                     break;
             }
         }
+        buttons.add(InputButton.LEFT);
+        buttons.add(InputButton.RIGHT);
+        buttons.add(InputButton.MIDDLE);
         keyboardKeys = keys.stream().mapToInt(Integer::intValue).toArray();
         pointerButtons = buttons.stream().mapToInt(Integer::intValue).toArray();
         gamepadButtons = padButtons.stream().mapToInt(Integer::intValue).toArray();

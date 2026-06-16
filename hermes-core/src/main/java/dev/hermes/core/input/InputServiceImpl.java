@@ -163,6 +163,11 @@ public final class InputServiceImpl implements InputService {
                 }
 
                 @Override
+                public boolean justReleased(int button) {
+                    return currentFrame.pointerJustReleased(button);
+                }
+
+                @Override
                 public float scrollX() {
                     return currentFrame.scrollX();
                 }
