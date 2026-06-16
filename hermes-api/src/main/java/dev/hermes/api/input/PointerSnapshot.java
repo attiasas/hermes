@@ -14,4 +14,14 @@ public interface PointerSnapshot {
     boolean justPressed(int button);
 
     boolean pressed(int button);
+
+    /** Horizontal scroll wheel delta this frame (0 if none). */
+    default float scrollX() {
+        return 0f;
+    }
+
+    /** Vertical scroll wheel delta this frame (0 if none). */
+    default float scrollY() {
+        return 0f;
+    }
 }

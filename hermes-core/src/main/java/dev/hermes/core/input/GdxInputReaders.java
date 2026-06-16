@@ -62,6 +62,7 @@ final class GdxInputReaders {
         pollKeyboard(builder);
         pollPointer(builder);
         pollGamepad(builder);
+        builder.scroll(Gdx.input.getDeltaX(), Gdx.input.getDeltaY());
         return builder.build();
     }
 

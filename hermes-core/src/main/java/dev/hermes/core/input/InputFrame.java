@@ -22,6 +22,8 @@ public final class InputFrame {
     private final Set<Integer> gamepadJustPressed;
     private final Set<Integer> gamepadJustReleased;
     private final int connectedGamepadCount;
+    private final float scrollX;
+    private final float scrollY;
 
     private InputFrame(Builder builder) {
         this.keyboardPressed = Set.copyOf(builder.keyboardPressed);
@@ -37,6 +39,8 @@ public final class InputFrame {
         this.gamepadJustPressed = Set.copyOf(builder.gamepadJustPressed);
         this.gamepadJustReleased = Set.copyOf(builder.gamepadJustReleased);
         this.connectedGamepadCount = builder.connectedGamepadCount;
+        this.scrollX = builder.scrollX;
+        this.scrollY = builder.scrollY;
     }
 
     public int connectedGamepadCount() {
@@ -70,6 +74,18 @@ public final class InputFrame {
 
     public static InputFrame withGamepadAxis(int axis, float value) {
         return builder().gamepadAxis(axis, value).build();
+    }
+
+    public static InputFrame pointerScroll(float x, float y, float scrollY) {
+        return builder().pointer(x, y).scroll(0f, scrollY).build();
+    }
+
+    public float scrollX() {
+        return scrollX;
+    }
+
+    public float scrollY() {
+        return scrollY;
     }
 
     public boolean keyboardPressed(int key) {
@@ -141,6 +157,8 @@ public final class InputFrame {
         private final Set<Integer> gamepadJustPressed = new HashSet<>();
         private final Set<Integer> gamepadJustReleased = new HashSet<>();
         private int connectedGamepadCount;
+        private float scrollX;
+        private float scrollY;
 
         public Builder connectedGamepadCount(int count) {
             connectedGamepadCount = Math.max(0, count);
@@ -182,6 +200,12 @@ public final class InputFrame {
 
         public Builder pointerJustReleased(int button) {
             pointerJustReleased.add(button);
+            return this;
+        }
+
+        public Builder scroll(float scrollX, float scrollY) {
+            this.scrollX = scrollX;
+            this.scrollY = scrollY;
             return this;
         }
 

@@ -161,6 +161,16 @@ public final class InputServiceImpl implements InputService {
                 public boolean pressed(int button) {
                     return currentFrame.pointerPressed(button);
                 }
+
+                @Override
+                public float scrollX() {
+                    return currentFrame.scrollX();
+                }
+
+                @Override
+                public float scrollY() {
+                    return currentFrame.scrollY();
+                }
             };
 
     private final GamepadSnapshot gamepadView =
