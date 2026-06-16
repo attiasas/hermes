@@ -32,10 +32,7 @@ public final class EntityDragSystem implements System {
     public void update(WorldManager manager, float deltaSeconds) {
         EntityStore entities = manager.entities();
         PointerSnapshot ptr = input.devices().pointer();
-        Camera.Projection mode =
-                CameraResolver.activeCameraEntity(entities)
-                        .map(e -> entities.getComponent(e.id(), Camera.class).projection())
-                        .orElse(Camera.Projection.ORTHOGRAPHIC);
+        Camera.Projection mode = CameraResolver.mainCameraProjection(manager);
         if (mode != Camera.Projection.ORTHOGRAPHIC) {
             return;
         }

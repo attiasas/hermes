@@ -85,31 +85,31 @@ public final class ActiveCamera {
         return z;
     }
 
-    float rotationX() {
+    public float rotationX() {
         return rotationX;
     }
 
-    float rotationY() {
+    public float rotationY() {
         return rotationY;
     }
 
-    float rotationZ() {
+    public float rotationZ() {
         return rotationZ;
     }
 
-    float zoom() {
+    public float zoom() {
         return zoom;
     }
 
-    float fieldOfView() {
+    public float fieldOfView() {
         return fieldOfView;
     }
 
-    float near() {
+    public float near() {
         return near;
     }
 
-    float far() {
+    public float far() {
         return far;
     }
 

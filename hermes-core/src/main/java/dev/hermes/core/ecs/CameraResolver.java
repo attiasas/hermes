@@ -61,13 +61,19 @@ public final class CameraResolver {
         return resolveForPass(entities, "screen", windowWidth, windowHeight);
     }
 
-    /** Main camera entity when bound via {@link dev.hermes.api.world.SceneCameraController#bindMain}. */
     public static Optional<Entity> mainCameraEntity(WorldManager manager) {
         if (manager == null || manager.camera().mainBinding() != MainCameraBinding.ENTITY) {
             return Optional.empty();
         }
         return manager.camera().mainEntityName().flatMap(name -> Optional.ofNullable(
                 manager.entities().findByName(name)));
+    }
+
+    public static Camera.Projection mainCameraProjection(WorldManager manager) {
+        if (manager == null) {
+            return Camera.Projection.ORTHOGRAPHIC;
+        }
+        return resolveForManager(manager, "screen", 1f, 1f).projection();
     }
 
     /** @deprecated use {@link #mainCameraEntity(WorldManager)} */

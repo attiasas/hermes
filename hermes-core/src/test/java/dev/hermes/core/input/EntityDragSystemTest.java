@@ -56,6 +56,29 @@ final class EntityDragSystemTest {
         assertEquals(120f, t.x(), 0.5f);
     }
 
+    @Test
+    void dragIgnoredWhenSceneCameraIsPerspective() {
+        ComponentRegistryImpl registry = (ComponentRegistryImpl) engine.registry();
+        WorldManagerImpl perspectiveManager = new WorldManagerImpl();
+        SceneLoader.load(
+                "scenes/perspective-orbit-test.json",
+                perspectiveManager,
+                registry);
+
+        Entity target = perspectiveManager.entities().create("cube");
+        perspectiveManager.entities().addComponent(target.id(), new Transform(0f, 0f, 0f));
+        perspectiveManager.entities().addComponent(target.id(), new Selected());
+
+        input.pollFrame(InputFrame.pointerJustPressed(320, 240, InputButton.LEFT));
+        dragSystem.update(perspectiveManager, 0f);
+        input.pollFrame(InputFrame.pointerDrag(360, 240, InputButton.LEFT));
+        dragSystem.update(perspectiveManager, 0f);
+
+        Transform transform = perspectiveManager.entities().getComponent(target.id(), Transform.class);
+        assertEquals(0f, transform.x(), 0.001f);
+        assertEquals(0f, transform.y(), 0.001f);
+    }
+
     private static final class ResizableMockGraphics extends MockGraphics {
         private final int width;
         private final int height;

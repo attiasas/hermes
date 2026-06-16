@@ -31,7 +31,7 @@ import dev.hermes.core.audio.AudioActionSystem;
 import dev.hermes.core.audio.AudioServiceImpl;
 import dev.hermes.core.audio.FootstepSystem;
 import dev.hermes.core.audio.SoundEmitterSystem;
-import dev.hermes.core.input.CameraSceneControlSystem;
+import dev.hermes.core.input.CameraControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
 import dev.hermes.core.lighting.BuiltinLightingSystem;
@@ -292,7 +292,11 @@ public final class BuiltinComponents {
         engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SpatialIndexSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
-        engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
+        if (engine instanceof HermesEngineImpl) {
+            engine.addSystem(new CameraControlSystem((HermesEngineImpl) engine), SystemScope.GLOBAL);
+        } else {
+            engine.addSystem(new CameraControlSystem(engine.input()), SystemScope.GLOBAL);
+        }
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
         if (engine instanceof HermesEngineImpl) {
             HermesEngineImpl impl = (HermesEngineImpl) engine;

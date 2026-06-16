@@ -1,0 +1,20 @@
+{
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 0,
+    "z": 5,
+    "fitMode": "stretch",
+    "lookAt": { "x": 0, "y": 0, "z": 0 }
+  },
+  "entities": [
+    {
+      "id": "cube",
+      "components": {
+        "Transform": { "x": 0, "y": 0, "z": 0 },
+        "Selectable": { "radius": 1.5, "layer": "WORLD" }
+      }
+    }
+  ]
+}
