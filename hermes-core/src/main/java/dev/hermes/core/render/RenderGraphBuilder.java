@@ -7,8 +7,8 @@ import dev.hermes.core.render.pass.SpritesPass;
 import dev.hermes.core.render.pass.UiRenderPass;
 import dev.hermes.core.render.pass.World3dPass;
 import dev.hermes.core.lighting.LightingBudgets;
-import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.ui.UiServiceImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -23,38 +24,47 @@ import java.util.Set;
  */
 public final class RenderGraphBuilder {
 
-    private final ModelCache sharedModelCache = new ModelCache();
+    private final ResourceManagerImpl resources;
     private final RenderPassRegistry passRegistry;
     private final ViewportServiceImpl viewport;
     private final UiServiceImpl ui;
 
     public RenderGraphBuilder() {
-        this(new RenderPassRegistry(), new ViewportServiceImpl(), null);
+        this(null, new RenderPassRegistry(), new ViewportServiceImpl(), null);
     }
 
     public RenderGraphBuilder(RenderPassRegistry passRegistry) {
-        this(passRegistry, new ViewportServiceImpl(), null);
+        this(null, passRegistry, new ViewportServiceImpl(), null);
     }
 
     RenderGraphBuilder(RenderPassRegistry passRegistry, ViewportServiceImpl viewport) {
-        this(passRegistry, viewport, null);
+        this(null, passRegistry, viewport, null);
     }
 
     RenderGraphBuilder(RenderPassRegistry passRegistry, ViewportServiceImpl viewport, UiServiceImpl ui) {
+        this(null, passRegistry, viewport, ui);
+    }
+
+    RenderGraphBuilder(
+            ResourceManagerImpl resources,
+            RenderPassRegistry passRegistry,
+            ViewportServiceImpl viewport,
+            UiServiceImpl ui) {
+        this.resources = resources;
         this.passRegistry = passRegistry == null ? new RenderPassRegistry() : passRegistry;
         this.viewport = viewport == null ? new ViewportServiceImpl() : viewport;
         this.ui = ui;
     }
 
     public RenderGraph build(PipelineDocument document, SpriteBatch batch) {
+        Objects.requireNonNull(resources, "resources");
         LightingBudgets budgets = PipelineDocument.maxWorld3dLightingBudgets(document);
         ShaderRegistry shaderRegistry = new ShaderRegistry(document.shaders(), budgets);
         FramebufferPool pool = new FramebufferPool(document.framebuffers());
         validatePassTargets(document);
         validateCustomHandlers(document);
         List<RenderGraphPass> passes = createPasses(document, batch, shaderRegistry, pool);
-        return new RenderGraph(
-                document.clearColor(), passes, sharedModelCache, shaderRegistry, pool, viewport);
+        return new RenderGraph(document.clearColor(), passes, shaderRegistry, pool, viewport);
     }
 
     /**
@@ -65,7 +75,7 @@ public final class RenderGraphBuilder {
         validatePassTargets(document);
         validateCustomHandlers(document);
         List<RenderGraphPass> passes = createStubPasses(document, pool);
-        return new RenderGraph(document.clearColor(), passes, null, null, pool, viewport);
+        return new RenderGraph(document.clearColor(), passes, null, pool, viewport);
     }
 
     private List<RenderGraphPass> createPasses(
@@ -139,12 +149,15 @@ public final class RenderGraphBuilder {
             case WORLD3D:
                 return new World3dGraphPass(
                         passDef.id(),
-                        new World3dPass(sharedModelCache, shaderRegistry, false),
+                        new World3dPass(resources, shaderRegistry),
                         layers,
                         passDef.depthTest());
             case SPRITES:
                 return new SpritesGraphPass(
-                        passDef.id(), new SpritesPass(batch, shaderRegistry), layers, passDef.depthTest());
+                        passDef.id(),
+                        new SpritesPass(batch, shaderRegistry, resources),
+                        layers,
+                        passDef.depthTest());
             case UI:
                 return new UiGraphPass(passDef.id(), new UiRenderPass(ui, batch), passDef.depthTest());
             case CUSTOM:

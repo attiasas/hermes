@@ -17,11 +17,14 @@ import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
+import dev.hermes.api.resource.ResourceKind;
+import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.lighting.LightingRuntime;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
-import dev.hermes.core.render.resource.ModelCache;
 import dev.hermes.core.render.resource.ShaderRegistry;
+import dev.hermes.core.resource.ResourceAccess;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.viewport.BoundCamera;
 
 import java.util.ArrayList;
@@ -29,6 +32,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -36,31 +40,21 @@ import java.util.Set;
  */
 public final class World3dPass {
 
-    private final ModelCache modelCache;
+    private final ResourceManagerImpl resources;
     private final ShaderRegistry shaderRegistry;
-    private final boolean disposeModelCache;
     private final ModelBatch modelBatch;
     private final Matrix4 instanceTransform = new Matrix4();
     private final Map<String, Shader> g3dShaderCache = new HashMap<>();
     private final RenderablePool renderablePool = new RenderablePool();
     private final Array<Renderable> renderableScratch = new Array<>(1);
 
-    public World3dPass(ModelCache modelCache) {
-        this(modelCache, null, true);
+    public World3dPass(ResourceManagerImpl resources) {
+        this(resources, null);
     }
 
-    public World3dPass(ModelCache modelCache, ShaderRegistry shaderRegistry) {
-        this(modelCache, shaderRegistry, true);
-    }
-
-    public World3dPass(ModelCache modelCache, boolean disposeModelCache) {
-        this(modelCache, null, disposeModelCache);
-    }
-
-    public World3dPass(ModelCache modelCache, ShaderRegistry shaderRegistry, boolean disposeModelCache) {
-        this.modelCache = modelCache;
+    public World3dPass(ResourceManagerImpl resources, ShaderRegistry shaderRegistry) {
+        this.resources = Objects.requireNonNull(resources, "resources");
         this.shaderRegistry = shaderRegistry;
-        this.disposeModelCache = disposeModelCache;
         this.modelBatch = new ModelBatch();
     }
 
@@ -102,7 +96,9 @@ public final class World3dPass {
             throw new ShaderCompileException("shader not registered: " + shaderId);
         }
 
-        ModelInstance instance = new ModelInstance(modelCache.get(modelPath));
+        ResourceRef ref = ResourceRef.of(modelPath);
+        resources.loadSync(ref, ResourceKind.MODEL);
+        ModelInstance instance = new ModelInstance(ResourceAccess.model(resources, ref));
         applyTransform(instance.transform, transform);
 
         Shader g3dShader = resolveG3dShader(shaderId, instance, environment);
@@ -194,9 +190,6 @@ public final class World3dPass {
         }
         g3dShaderCache.clear();
         modelBatch.dispose();
-        if (disposeModelCache) {
-            modelCache.dispose();
-        }
     }
 
     private static final class RenderablePool extends FlushablePool<Renderable> {

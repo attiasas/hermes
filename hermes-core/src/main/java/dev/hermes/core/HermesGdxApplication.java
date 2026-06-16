@@ -80,7 +80,8 @@ public final class HermesGdxApplication implements ApplicationListener {
                             HermesLauncherSupport.gameRenderPipelinePath(),
                             passRegistry,
                             (ViewportServiceImpl) engine.viewport(),
-                            (UiServiceImpl) engine.ui());
+                            (UiServiceImpl) engine.ui(),
+                            (ResourceManagerImpl) engine.resources());
 
             String scenePath = HermesLauncherSupport.gameScenePath();
             if (scenePath != null && !scenePath.isBlank()) {
