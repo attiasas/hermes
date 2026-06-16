@@ -57,6 +57,7 @@ final class SceneParser {
             document.world().ifPresent(block -> WorldBlockApplier.apply(manager.space(), block));
             document.camera().ifPresent(block -> {
                 manager.camera().setSceneConfig(block.config());
+                manager.camera().setControls(block.controls());
                 block.followEntity().ifPresent(manager.camera()::bindMain);
             });
         }

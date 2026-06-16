@@ -5,6 +5,7 @@ import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.world.ActiveCameraView;
+import dev.hermes.api.world.CameraControlsConfig;
 import dev.hermes.api.world.MainCameraBinding;
 import dev.hermes.api.world.SceneCameraConfig;
 import dev.hermes.api.world.SceneCameraController;
@@ -15,6 +16,7 @@ public class SceneCameraControllerImpl implements SceneCameraController {
 
     private final WorldManager owner;
     private SceneCameraConfig sceneConfig = new SceneCameraConfig();
+    private CameraControlsConfig controls = CameraControlsConfig.disabled();
     private boolean sceneConfigSet;
     private MainCameraBinding mainBinding = MainCameraBinding.SCENE;
     private String mainEntityName;
@@ -36,6 +38,16 @@ public class SceneCameraControllerImpl implements SceneCameraController {
     public void setSceneConfig(SceneCameraConfig config) {
         this.sceneConfig = config == null ? new SceneCameraConfig() : config;
         this.sceneConfigSet = true;
+    }
+
+    @Override
+    public CameraControlsConfig controls() {
+        return controls;
+    }
+
+    @Override
+    public void setControls(CameraControlsConfig controls) {
+        this.controls = controls == null ? CameraControlsConfig.disabled() : controls;
     }
 
     @Override
