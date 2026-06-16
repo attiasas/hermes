@@ -11,6 +11,7 @@
 | [coordinate-spaces.md](coordinate-spaces.md) | SCREEN / SURFACE / WORLD / NORMALIZED and `ViewportService`                                    |
 | [input-format-v1.md](input-format-v1.md)   | Input profile JSON v1: actions, bindings, context, keyboard/pointer/gamepad                      |
 | [runtime-config.md](runtime-config.md)     | Unified runtime config: Gradle DSL, `hermes-runtime.properties`, logging, platform alignment       |
+| [resource-management.md](resource-management.md) | Central resource loading: bundles, catalog, async preload, loading screen, HTML cooperative async |
 | [ARCHITECTURE.md](ARCHITECTURE.md)         | Module graph, libGDX boundary, `HERMES_HOME` / Maven local, `.hermes/platforms/`, tooling layout |
 | [CONTRIBUTING.md](CONTRIBUTING.md)         | JDK 17, Gradle test commands, doctor/export smoke, dogfood desktop run                           |
 
