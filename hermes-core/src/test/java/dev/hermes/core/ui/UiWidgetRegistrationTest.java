@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.hermes.api.ui.UiDocument;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.HermesEngineImpl;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,8 @@ final class UiWidgetRegistrationTest {
         UiLayoutResult layout =
                 new UiLayoutEngine().layout(doc.root(), 100, 50, 1f);
         UiWidgetRegistryImpl widgets = (UiWidgetRegistryImpl) ui.widgets();
-        UiTreeRenderer renderer = new UiTreeRenderer(new UiFontRegistry(), new UiTextureCache(), widgets);
+        UiTreeRenderer renderer =
+                new UiTreeRenderer(new UiFontRegistry(), ResourceManagerImpl.createDefault(), widgets);
         assertEquals(List.of("badge:b1"), renderer.debugOps(doc.root(), layout));
     }
 }

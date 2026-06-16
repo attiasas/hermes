@@ -34,6 +34,8 @@ public final class HermesDoctor {
         results.addAll(checkPlatforms(gameProject));
         results.add(
                 HermesDoctorSupport.checkHtmlCustomShaders(gameProject.getRootProject().getRootDir().toPath()));
+        results.add(
+                HermesDoctorSupport.checkResourceBundles(gameProject.getRootProject().getRootDir().toPath()));
         results.add(checkWritableDirs(gameProject));
         printAndThrow(results);
     }

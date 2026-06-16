@@ -7,15 +7,25 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.FootstepEmitter;
 import dev.hermes.api.ecs.SoundEmitter;
 import dev.hermes.api.ecs.Transform;
+import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.EntityTypeRegistryImpl;
 import dev.hermes.core.ecs.WorldManagerImpl;
+import dev.hermes.core.resource.ResourceManagerImpl;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 final class FootstepSystemTest {
+
+    private static final String CLIP = "sfx/test.wav";
+
+    @BeforeAll
+    static void initGdx() {
+        TestGdx.initClasspathFiles();
+    }
 
     private WorldManagerImpl manager;
     private RecordingSoundBackend backend;
@@ -29,9 +39,9 @@ final class FootstepSystemTest {
         manager = new WorldManagerImpl(new EntityTypeRegistryImpl(), components);
         backend = new RecordingSoundBackend();
         AudioServiceImpl audio =
-                new AudioServiceImpl(backend, new AudioMixerImpl(), new SoundCache(backend));
+                new AudioServiceImpl(backend, new AudioMixerImpl(), ResourceManagerImpl.createDefault(backend));
         audio.loadProfileFromJson(
-                "{\"version\":1,\"clips\":{\"footstep\":\"sfx/footstep.wav\"}}");
+                "{\"version\":1,\"clips\":{\"footstep\":\"" + CLIP + "\"}}");
         emitterSystem = new SoundEmitterSystem(audio);
         footstepSystem = new FootstepSystem(audio);
     }
@@ -40,12 +50,12 @@ final class FootstepSystemTest {
     void soundEmitterSpawnPlaysOnce() {
         Entity entity = manager.entities().create("bell");
         SoundEmitter emitter = new SoundEmitter();
-        emitter.setClip("sfx/spawn.wav");
+        emitter.setClip(CLIP);
         emitter.setPlayOn(SoundEmitter.PlayOn.SPAWN);
         manager.entities().addComponent(entity.id(), emitter);
 
         emitterSystem.update(manager, 0.016f);
-        assertEquals("sfx/spawn.wav", backend.lastPath);
+        assertEquals(CLIP, backend.lastPath);
 
         backend.lastPath = null;
         emitterSystem.update(manager, 0.016f);
@@ -56,7 +66,7 @@ final class FootstepSystemTest {
     void soundEmitterIntervalPlaysRepeatedly() {
         Entity entity = manager.entities().create("tick");
         SoundEmitter emitter = new SoundEmitter();
-        emitter.setClip("sfx/tick.wav");
+        emitter.setClip(CLIP);
         emitter.setPlayOn(SoundEmitter.PlayOn.INTERVAL);
         emitter.setIntervalSeconds(0.5f);
         manager.entities().addComponent(entity.id(), emitter);
@@ -65,7 +75,7 @@ final class FootstepSystemTest {
         assertNull(backend.lastPath);
 
         emitterSystem.update(manager, 0.25f);
-        assertEquals("sfx/tick.wav", backend.lastPath);
+        assertEquals(CLIP, backend.lastPath);
     }
 
     @Test
@@ -85,6 +95,6 @@ final class FootstepSystemTest {
         Transform transform = manager.entities().getComponent(entity.id(), Transform.class);
         transform.setX(2f);
         footstepSystem.update(manager, 0.5f);
-        assertEquals("sfx/footstep.wav", backend.lastPath);
+        assertEquals(CLIP, backend.lastPath);
     }
 }

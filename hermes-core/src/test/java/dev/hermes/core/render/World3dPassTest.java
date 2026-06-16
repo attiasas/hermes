@@ -1,12 +1,16 @@
 package dev.hermes.core.render;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.g3d.Model;
 import dev.hermes.api.Entity;
+import dev.hermes.api.resource.ResourceKind;
+import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
@@ -14,6 +18,8 @@ import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.SceneParseException;
 import dev.hermes.core.ecs.EntityStoreImpl;
 import dev.hermes.core.render.pass.World3dPass;
+import dev.hermes.core.resource.ResourceAccess;
+import dev.hermes.core.resource.ResourceManagerImpl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -25,13 +31,16 @@ final class World3dPassTest {
 
     private EntityStoreImpl world;
     private ComponentRegistryImpl registry;
+    private ResourceManagerImpl resources;
 
     @BeforeEach
     void setUp() {
         TestGdx.initClasspathFiles();
+        TestGdx.initHeadlessGl();
         world = new EntityStoreImpl();
         registry = new ComponentRegistryImpl();
         BuiltinComponents.register(registry);
+        resources = ResourceManagerImpl.createDefault();
     }
 
     @Test
@@ -67,5 +76,14 @@ final class World3dPassTest {
                         () -> SceneLoader.loadFromString("scenes/bad.json", json, world, registry));
 
         assertTrue(error.getMessage().contains("Mesh requires a Material"));
+    }
+
+    @Test
+    void loadSync_resolvesModelThroughResourceAccess() {
+        ResourceRef ref = ResourceRef.of("models/cube.obj");
+        resources.loadSync(ref, ResourceKind.MODEL);
+        assertTrue(resources.isLoaded(ref, ResourceKind.MODEL));
+        Model model = ResourceAccess.model(resources, ref);
+        assertNotNull(model);
     }
 }

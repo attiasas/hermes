@@ -9,10 +9,13 @@ import dev.hermes.api.audio.PlayOptions;
 import dev.hermes.api.audio.SoundHandle;
 import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.scene.SceneAudioConfig;
-
 import dev.hermes.api.log.Logger;
 import dev.hermes.api.log.Logs;
+import dev.hermes.api.resource.ResourceKind;
+import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.resource.ResourceManagerImpl;
+import dev.hermes.core.resource.ResourcePlatform;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -30,33 +33,34 @@ public final class AudioServiceImpl implements AudioService {
     private static final int DEFAULT_MAX_INSTANCES_PER_CLIP = 8;
 
     private final SoundBackend backend;
-    private final SoundCache soundCache;
+    private final ResourceManagerImpl resources;
     private final BgmControllerImpl bgmController;
     private AudioMixer mixer;
     private AudioProfile profile;
     private boolean missingProfileLogged;
+    private boolean htmlSoundSkipLogged;
     private final Map<String, SceneAudioConfig> sceneConfigs = new HashMap<>();
     private String bgmOwnerSceneId;
     private final Map<String, Deque<GdxSoundHandle>> activeByPath = new HashMap<>();
     private final Deque<GdxSoundHandle> allSfx = new ArrayDeque<>();
     private boolean instanceCapWarned;
 
-    public AudioServiceImpl(SoundBackend backend, AudioMixer mixer, SoundCache soundCache) {
-        this(backend, new NoopMusicBackend(), mixer, soundCache);
+    public AudioServiceImpl(SoundBackend backend, AudioMixer mixer, ResourceManagerImpl resources) {
+        this(backend, new NoopMusicBackend(), mixer, resources);
     }
 
     AudioServiceImpl(
-            SoundBackend backend, MusicBackend musicBackend, AudioMixer mixer, SoundCache soundCache) {
+            SoundBackend backend, MusicBackend musicBackend, AudioMixer mixer, ResourceManagerImpl resources) {
         this.backend = backend;
         this.mixer = mixer;
-        this.soundCache = soundCache;
+        this.resources = resources;
         this.bgmController = new BgmControllerImpl(musicBackend, mixer);
     }
 
-    public static AudioServiceImpl createDefault(AudioMixerImpl mixer) {
-        GdxSoundBackend backend = new GdxSoundBackend();
+    public static AudioServiceImpl createDefault(
+            AudioMixerImpl mixer, ResourceManagerImpl resources, SoundBackend soundBackend) {
         GdxMusicBackend musicBackend = new GdxMusicBackend();
-        return new AudioServiceImpl(backend, musicBackend, mixer, new SoundCache(backend));
+        return new AudioServiceImpl(soundBackend, musicBackend, mixer, resources);
     }
 
     public void setMixer(AudioMixer mixer) {
@@ -64,7 +68,6 @@ public final class AudioServiceImpl implements AudioService {
     }
 
     public void dispose() {
-        soundCache.dispose();
         bgmController.dispose();
     }
 
@@ -75,7 +78,7 @@ public final class AudioServiceImpl implements AudioService {
 
     @Override
     public SoundHandle play(String clipPath, PlayOptions options) {
-        soundCache.soundForPath(clipPath);
+        ensureSoundLoaded(clipPath);
         float gain = mixer.effectiveGain(options.bus()) * options.volume();
         long id = backend.play(clipPath, gain, options.pitch(), options.pan(), options.loop());
         if (options.worldX().isPresent()) {
@@ -225,6 +228,20 @@ public final class AudioServiceImpl implements AudioService {
     void loadProfileFromJson(String json) {
         profile = AudioProfileLoader.parse(json);
         applyProfileBusVolumes();
+    }
+
+    private void ensureSoundLoaded(String clipPath) {
+        if (clipPath == null || clipPath.isBlank()) {
+            return;
+        }
+        if (ResourcePlatform.isHtmlPlatform()) {
+            if (!htmlSoundSkipLogged) {
+                log.debug("Skipping sound resource load on HTML platform");
+                htmlSoundSkipLogged = true;
+            }
+            return;
+        }
+        resources.loadSync(ResourceRef.of(clipPath), ResourceKind.SOUND);
     }
 
     private void trackInstance(String clipPath, GdxSoundHandle handle) {

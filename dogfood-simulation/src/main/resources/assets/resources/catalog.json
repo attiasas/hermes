@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "entries": {
+    "@logo": { "path": "hermes-logo.png", "kind": "texture" },
+    "@cube": { "path": "models/cube.obj", "kind": "model" },
+    "@footstep": { "path": "sfx/footstep.wav", "kind": "sound" },
+    "@fire-loop": { "path": "sfx/fire_loop.wav", "kind": "sound" },
+    "@ui-click": { "path": "sfx/ui_click.wav", "kind": "sound" },
+    "@main-menu-music": { "path": "music/main-menu.wav", "kind": "sound" }
+  }
+}

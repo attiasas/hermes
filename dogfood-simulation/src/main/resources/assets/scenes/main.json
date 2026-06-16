@@ -1,4 +1,8 @@
 {
+  "preload": {
+    "bundles": ["game"],
+    "async": true
+  },
   "inputContext": "gameplay",
   "ui": "ui/hud.json",
   "entities": [

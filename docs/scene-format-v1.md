@@ -44,6 +44,7 @@ load time with `SceneParseException`.
 | `renderPipeline`        | No       | Optional render pipeline asset path (e.g. `"render/ui-overlay.json"`). Overrides the project default from `hermes.json` for this scene only. Resolution order: scene JSON → `SceneDefinition.renderPipeline()` → project default. |
 | `lighting`              | No       | Scene-wide lighting defaults (version 1). See [World lighting](world-lighting.md) and [Lighting block](#lighting-block) below. |
 | `audio`                 | No       | Scene background music and fade settings. See [Audio block](#audio-block) and [audio.md](audio.md). |
+| `preload`               | No       | Resource bundles and paths to load before this scene enters. See [Preload block](#preload-block) and [resource-management.md](resource-management.md). |
 
 ## Built-in component types
 
@@ -333,6 +334,48 @@ float array, alpha ignored).
 
 Point and spot lights require matching `maxPoint` / `maxSpot` budgets on the render pipeline `world3d` pass — see
 [render-pipeline.md](render-pipeline.md).
+
+## Preload block
+
+Optional top-level `"preload"` object declares resource bundles (and optional individual paths) to load before this scene
+enters the stack. Full guide: [resource-management.md](resource-management.md).
+
+When `"async": true` and `"bundles"` is non-empty, `SceneStack` loads bundles asynchronously, shows the loading overlay,
+then parses entities. With `"async": false`, the scene enters immediately and assets load on first use unless you preload
+from Java.
+
+```json
+{
+  "preload": {
+    "async": true,
+    "showLoadingScreen": true,
+    "bundles": ["main-menu", "shared-ui"],
+    "paths": [
+      { "ref": "textures/background.png", "kind": "texture" }
+    ]
+  },
+  "entities": []
+}
+```
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `async` | `false` | When `true` and `bundles` is non-empty, defer scene enter until bundles finish loading |
+| `showLoadingScreen` | `true` | Show loading overlay during async preload |
+| `bundles` | `[]` | Bundle ids → `resources/bundles/{id}.json` |
+| `paths` | `[]` | Extra `{ "ref", "kind" }` entries (parsed and validated; use bundles for v1 scene transitions) |
+
+| `paths[].kind` | Maps to |
+|----------------|---------|
+| `texture` | 2D texture |
+| `model` | Wavefront OBJ |
+| `sound` | Sound clip (skipped on HTML v1) |
+| `font` | Bitmap font |
+| `json` | Raw JSON |
+| `binary` | Opaque bytes |
+
+Scene-level `"async"` overrides profile `defaultAsync` for that transition only. Works with `SceneChangeRequest.goTo`
+and `push` — see [scene-management.md](scene-management.md).
 
 ## Audio block
 

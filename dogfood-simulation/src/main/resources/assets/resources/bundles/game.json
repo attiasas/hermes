@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "id": "game",
+  "resources": [
+    { "ref": "@cube", "kind": "model" },
+    { "ref": "@logo", "kind": "texture" },
+    { "ref": "@footstep", "kind": "sound" },
+    { "ref": "@fire-loop", "kind": "sound" }
+  ]
+}

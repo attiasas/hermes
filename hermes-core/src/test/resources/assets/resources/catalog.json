@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "entries": {
+    "@logo": { "path": "textures/hermes-logo.png", "kind": "texture" },
+    "@player-model": { "path": "models/hero.obj", "kind": "model" },
+    "@click": { "path": "sfx/ui/click.wav", "kind": "sound" }
+  }
+}

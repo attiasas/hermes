@@ -10,7 +10,7 @@
       {
         "type": "image",
         "id": "logo",
-        "texture": "hermes-logo.png",
+        "texture": "@logo",
         "layout": { "anchor": "topCenter", "offsetY": -48, "width": 200, "height": 200 }
       },
       {

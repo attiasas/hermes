@@ -3,6 +3,7 @@ package dev.hermes.api.ecs;
 import dev.hermes.api.audio.AudioService;
 import dev.hermes.api.config.RuntimeConfigService;
 import dev.hermes.api.input.InputService;
+import dev.hermes.api.resource.ResourceService;
 import dev.hermes.api.scene.SceneManager;
 import dev.hermes.api.ui.UiService;
 import dev.hermes.api.viewport.ViewportService;
@@ -31,4 +32,6 @@ public interface HermesEngine {
     UiService ui();
 
     AudioService audio();
+
+    ResourceService resources();
 }

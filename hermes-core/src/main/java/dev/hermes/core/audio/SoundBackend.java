@@ -1,7 +1,7 @@
 package dev.hermes.core.audio;
 
 /** libGDX-free sound playback surface for production and test backends. */
-interface SoundBackend {
+public interface SoundBackend {
 
     Object loadSound(String path);
 
