@@ -8,6 +8,9 @@ import dev.hermes.api.Entity;
 import java.util.List;
 import java.util.Optional;
 import dev.hermes.core.world.spatial.BruteForceSpatialIndex;
+import dev.hermes.core.world.tilemap.TileMapAsset;
+
+import java.util.Optional;
 
 public class WorldSpaceImpl implements WorldSpace {
 
@@ -15,6 +18,7 @@ public class WorldSpaceImpl implements WorldSpace {
     private WorldBounds bounds;
     private SpatialIndex spatial;
     private Optional<String> tilemapPath = Optional.empty();
+    private Optional<TileMapAsset> tileMapAsset = Optional.empty();
 
     public WorldSpaceImpl() {
         this(WorldKind.OPEN, WorldBounds.unbounded(), new BruteForceSpatialIndex());
@@ -27,10 +31,19 @@ public class WorldSpaceImpl implements WorldSpace {
     }
 
     public void configure(WorldBlock block, SpatialIndex spatialIndex) {
+        configure(block, spatialIndex, Optional.empty());
+    }
+
+    public void configure(WorldBlock block, SpatialIndex spatialIndex, Optional<TileMapAsset> tileMap) {
         this.kind = block.kind();
         this.bounds = block.bounds();
         this.spatial = spatialIndex;
         this.tilemapPath = block.tilemapPath();
+        this.tileMapAsset = tileMap == null ? Optional.empty() : tileMap;
+    }
+
+    public Optional<TileMapAsset> tileMapAsset() {
+        return tileMapAsset;
     }
 
     public Optional<String> tilemapPath() {
