@@ -7,10 +7,18 @@
     "version": 1,
     "projection": "perspective",
     "x": 0,
-    "y": 0,
+    "y": 2,
     "z": 5,
     "fieldOfView": 60,
-    "fitMode": "stretch"
+    "fitMode": "stretch",
+    "lookAt": { "x": 0, "y": 0, "z": 0 },
+    "controls": {
+      "mode": "orbit",
+      "rotateButton": "LEFT",
+      "translateButton": "RIGHT",
+      "forwardButton": "MIDDLE",
+      "scrollZoom": true
+    }
   },
   "inputContext": "gameplay",
   "ui": "ui/hud.json",

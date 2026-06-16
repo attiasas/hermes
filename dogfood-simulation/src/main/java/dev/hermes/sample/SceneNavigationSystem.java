@@ -11,6 +11,8 @@ import dev.hermes.api.scene.SceneManager;
  */
 public final class SceneNavigationSystem implements System {
 
+    private static final boolean AUTO_PAUSE_DEMO = false;
+
     private final SceneManager scenes;
     private final float intervalSeconds;
     private float elapsed;
@@ -23,6 +25,9 @@ public final class SceneNavigationSystem implements System {
 
     @Override
     public void update(WorldManager manager, float deltaSeconds) {
+        if (!AUTO_PAUSE_DEMO) {
+            return;
+        }
         EntityStore entities = manager.entities();
         if (scenes.active() != null && !"game".equals(scenes.active().id())) {
             return;
