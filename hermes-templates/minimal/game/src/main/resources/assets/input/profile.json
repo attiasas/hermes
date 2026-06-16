@@ -3,23 +3,11 @@
   "context": "gameplay",
   "actions": {
     "select": { "type": "button" },
-    "pause": { "type": "button" },
-    "camera_forward": { "type": "button" },
-    "camera_backward": { "type": "button" },
-    "camera_left": { "type": "button" },
-    "camera_right": { "type": "button" },
-    "camera_up": { "type": "button" },
-    "camera_down": { "type": "button" }
+    "pause": { "type": "button" }
   },
   "bindings": [
     { "action": "select", "source": "pointer", "button": "LEFT", "when": "justPressed" },
-    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" },
-    { "action": "camera_forward", "source": "keyboard", "key": "W", "when": "pressed" },
-    { "action": "camera_backward", "source": "keyboard", "key": "S", "when": "pressed" },
-    { "action": "camera_left", "source": "keyboard", "key": "A", "when": "pressed" },
-    { "action": "camera_right", "source": "keyboard", "key": "D", "when": "pressed" },
-    { "action": "camera_up", "source": "keyboard", "key": "Q", "when": "pressed" },
-    { "action": "camera_down", "source": "keyboard", "key": "E", "when": "pressed" }
+    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" }
   ],
   "gamepad": { "deadzone": 0.15 }
 }

@@ -13,7 +13,6 @@
     "fitMode": "stretch",
     "lookAt": { "x": 0, "y": 0, "z": 0 },
     "controls": {
-      "mode": "orbit",
       "rotateButton": "LEFT",
       "translateButton": "RIGHT",
       "forwardButton": "MIDDLE",
