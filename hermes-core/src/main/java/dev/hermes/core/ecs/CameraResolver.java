@@ -53,7 +53,8 @@ public final class CameraResolver {
             return resolveRenderTargetCamera(entities, passTargetId, surfaceWidth, surfaceHeight)
                     .orElseGet(() -> defaultCamera(surfaceWidth, surfaceHeight));
         }
-        return resolveLegacyEntityMain(entities, surfaceWidth, surfaceHeight);
+        ActiveCamera legacy = resolveLegacyEntityMain(entities, surfaceWidth, surfaceHeight);
+        return legacy != null ? legacy : defaultCamera(surfaceWidth, surfaceHeight);
     }
 
     public static ActiveCamera resolve(EntityStore entities, float windowWidth, float windowHeight) {
@@ -139,6 +140,10 @@ public final class CameraResolver {
         if (view != null) {
             return fromView(view);
         }
+        ActiveCamera legacy = resolveLegacyEntityMain(manager.entities(), surfaceWidth, surfaceHeight);
+        if (legacy != null) {
+            return legacy;
+        }
         return defaultCamera(surfaceWidth, surfaceHeight);
     }
 
@@ -167,6 +172,9 @@ public final class CameraResolver {
 
     private static ActiveCamera resolveLegacyEntityMain(
             EntityStore entities, float surfaceWidth, float surfaceHeight) {
+        if (entities == null) {
+            return null;
+        }
         Entity fallback = null;
         Camera fallbackCamera = null;
         for (Entity entity : entities.entitiesWith(Camera.class)) {
@@ -182,7 +190,7 @@ public final class CameraResolver {
             break;
         }
         if (fallback == null || fallbackCamera == null) {
-            return defaultCamera(surfaceWidth, surfaceHeight);
+            return null;
         }
         Transform transform = entities.getComponent(fallback.id(), Transform.class);
         float viewportWidth =
