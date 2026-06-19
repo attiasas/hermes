@@ -15,6 +15,7 @@ public final class InputKey {
     public static final int W = 51;
     public static final int SPACE = 62;
     public static final int ENTER = 66;
+    public static final int E = 33;
     public static final int Q = 45;
     public static final int F1 = 131;
     public static final int ESCAPE = 111;
@@ -33,6 +34,7 @@ public final class InputKey {
         register("W", W);
         register("SPACE", SPACE);
         register("ENTER", ENTER);
+        register("E", E);
         register("Q", Q);
         register("F1", F1);
         register("ESCAPE", ESCAPE);

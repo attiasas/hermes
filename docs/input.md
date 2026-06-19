@@ -55,7 +55,7 @@ Pointer hardware reports **SCREEN** coordinates (window bottom-left). Picking an
 | System | When it runs | Behavior |
 |--------|----------------|----------|
 | `SelectionSystem` | `actions.justPressed("select")` | Picks at pointer; sets `Selected` on hit, clears selection on miss. |
-| `CameraSceneControlSystem` | Active camera is **perspective** | Empty left-drag orbits camera around `lookAt` (or origin). |
+| `CameraControlSystem` | Perspective scene camera with controls enabled | Left-drag orbit, right-drag pan, middle dolly, scroll zoom around scene `lookAt` (or origin). |
 | `EntityDragSystem` | Active camera is **orthographic** | Left-drag moves the entity with `Selected`. |
 
 Stock scenes in [dogfood-simulation](../dogfood-simulation/) and [hermes-templates](../hermes-templates/) ship
@@ -79,16 +79,39 @@ Stock scenes in [dogfood-simulation](../dogfood-simulation/) and [hermes-templat
 
 `SelectionSystem` handles the rest. Optional `Selected` marker is added at runtime (not required in JSON).
 
-### 3D orbit camera on empty drag
+### 3D camera controls (orbit / pan / zoom)
 
-Use a **perspective** active camera (dogfood `main.json`, `minimal` / `multi-scene` templates). Drag on empty space
-starts an orbit; clicking a `Selectable` entity selects it instead. Set `Camera.lookAt` for a stable orbit target:
+Perspective scenes enable built-in controls automatically (`CameraControlSystem`). Default bindings match libGDX
+[CameraInputController](https://github.com/libgdx/libgdx/blob/master/gdx/src/com/badlogic/gdx/graphics/g3d/utils/CameraInputController.java):
+
+| Pointer | Action |
+|---------|--------|
+| Left drag | Orbit around target |
+| Right drag | Pan |
+| Middle drag | Dolly along view |
+| Scroll | Zoom |
+| WASD | Translate camera (view angle unchanged) |
+| Q / E | Move look-at target down / up |
+| Arrow keys | Move look-at target on world XZ plane |
+
+Orbit target is the scene `lookAt` point (or world origin when unset). Entity selection (`Selected`) does not affect the camera.
+
+Scene JSON:
 
 ```json
-"Camera": {
+"camera": {
+  "version": 1,
   "projection": "perspective",
-  "active": true,
-  "lookAt": { "x": 0, "y": 0, "z": 0 }
+  "x": 0,
+  "y": 2,
+  "z": 5,
+  "lookAt": { "x": 0, "y": 0, "z": 0 },
+  "controls": {
+    "rotateButton": "LEFT",
+    "translateButton": "RIGHT",
+    "forwardButton": "MIDDLE",
+    "scrollZoom": true
+  }
 }
 ```
 

@@ -11,6 +11,6 @@
       "radius": 1.5
     },
     "BounceMarker": { "amplitude": 0.2, "speed": 3 },
-    "Selectable": { "radius": 1.2, "layer": "WORLD" }
+    "Selectable": { "radius": 2.0, "layer": "WORLD" }
   }
 }

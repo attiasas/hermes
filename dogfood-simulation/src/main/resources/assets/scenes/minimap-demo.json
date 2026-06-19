@@ -1,0 +1,40 @@
+{
+  "world": {
+    "version": 1,
+    "kind": "open",
+    "dimensions": { "width": 800, "height": 600 },
+    "spatial": { "strategy": "uniformGrid", "cellSize": 64 }
+  },
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 0,
+    "z": 5,
+    "fieldOfView": 60,
+    "fitMode": "stretch"
+  },
+  "renderPipeline": "render/minimap-pipeline.json",
+  "entities": [
+    {
+      "id": "minimap-cam",
+      "components": {
+        "Transform": { "x": 400, "y": 300, "z": 20 },
+        "Camera": {
+          "projection": "orthographic",
+          "zoom": 0.05,
+          "renderTarget": "minimap",
+          "viewportWidth": 256,
+          "viewportHeight": 256
+        }
+      }
+    },
+    {
+      "type": "spin-cube",
+      "id": "cube",
+      "components": {
+        "Transform": { "x": 0, "y": 0, "z": 0 }
+      }
+    }
+  ]
+}

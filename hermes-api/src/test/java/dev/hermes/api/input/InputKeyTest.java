@@ -14,6 +14,7 @@ class InputKeyTest {
         assertEquals(InputKey.SPACE, InputKey.byName("space"));
         assertEquals(InputKey.ENTER, InputKey.byName("enter"));
         assertEquals(InputKey.Q, InputKey.byName("q"));
+        assertEquals(InputKey.E, InputKey.byName("e"));
     }
 
     @Test

@@ -16,6 +16,7 @@ final class InputKeyLibGdxParityTest {
         assertEquals(Keys.UP, InputKey.UP);
         assertEquals(Keys.ENTER, InputKey.ENTER);
         assertEquals(Keys.Q, InputKey.Q);
+        assertEquals(Keys.E, InputKey.E);
     }
 
     @Test
@@ -24,5 +25,6 @@ final class InputKeyLibGdxParityTest {
         assertEquals(Keys.SPACE, InputKey.byName("space"));
         assertEquals(Keys.ENTER, InputKey.byName("ENTER"));
         assertEquals(Keys.Q, InputKey.byName("Q"));
+        assertEquals(Keys.E, InputKey.byName("E"));
     }
 }

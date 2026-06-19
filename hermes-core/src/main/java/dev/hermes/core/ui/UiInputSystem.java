@@ -92,7 +92,7 @@ public final class UiInputSystem implements System {
         }
     }
 
-    static UiNode hitTest(UiLayoutResult layout, UiNode node, float surfaceX, float surfaceY) {
+    public static UiNode hitTest(UiLayoutResult layout, UiNode node, float surfaceX, float surfaceY) {
         List<UiNode> children = node.children();
         for (int i = children.size() - 1; i >= 0; i--) {
             UiNode hit = hitTest(layout, children.get(i), surfaceX, surfaceY);

@@ -19,6 +19,7 @@ import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Selectable;
 import dev.hermes.api.ecs.Selected;
 import dev.hermes.api.ecs.Sprite;
+import dev.hermes.api.ecs.TileMap;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
@@ -30,7 +31,7 @@ import dev.hermes.core.audio.AudioActionSystem;
 import dev.hermes.core.audio.AudioServiceImpl;
 import dev.hermes.core.audio.FootstepSystem;
 import dev.hermes.core.audio.SoundEmitterSystem;
-import dev.hermes.core.input.CameraSceneControlSystem;
+import dev.hermes.core.input.CameraControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
 import dev.hermes.core.lighting.BuiltinLightingSystem;
@@ -45,6 +46,7 @@ public final class BuiltinComponents {
 
     static final String TRANSFORM = "Transform";
     static final String SPRITE = "Sprite";
+    static final String TILE_MAP = "TileMap";
     static final String CAMERA = "Camera";
     static final String MESH = "Mesh";
     static final String MATERIAL = "Material";
@@ -89,12 +91,20 @@ public final class BuiltinComponents {
                     return sprite;
                 });
         registry.register(
+                TILE_MAP,
+                TileMap.class,
+                (data, ctx) -> {
+                    TileMap tileMap = new TileMap();
+                    tileMap.setMap(resolveResourcePath(data.getString("map", ""), ctx));
+                    tileMap.setLayer(data.getString("layer", "ground"));
+                    return tileMap;
+                });
+        registry.register(
                 CAMERA,
                 Camera.class,
                 (data, ctx) -> {
                     Camera camera = new Camera();
                     camera.setProjection(parseProjection(data.getString("projection", "orthographic")));
-                    camera.setActive(data.getBoolean("active", true));
                     camera.setZoom(data.getFloat("zoom", 1f));
                     camera.setFieldOfView(data.getFloat("fieldOfView", 67f));
                     camera.setNear(data.getFloat("near", 0.1f));
@@ -280,8 +290,13 @@ public final class BuiltinComponents {
             engine.addSystem(new AudioActionSystem(engine.input().actions(), audio), SystemScope.GLOBAL);
         }
         engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
+        engine.addSystem(new SpatialIndexSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
-        engine.addSystem(new CameraSceneControlSystem(engine.input()), SystemScope.GLOBAL);
+        if (engine instanceof HermesEngineImpl) {
+            engine.addSystem(new CameraControlSystem((HermesEngineImpl) engine), SystemScope.GLOBAL);
+        } else {
+            engine.addSystem(new CameraControlSystem(engine.input()), SystemScope.GLOBAL);
+        }
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
         if (engine instanceof HermesEngineImpl) {
             HermesEngineImpl impl = (HermesEngineImpl) engine;

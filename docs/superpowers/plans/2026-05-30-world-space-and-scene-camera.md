@@ -8,7 +8,19 @@
 
 **Architecture:** Extend `WorldManager` with `space()` (`WorldSpace`) and `camera()` (`SceneCameraController`). Scene JSON gains `"world"` and `"camera"` blocks (version 1). A `SpatialIndex` SPI backs `queryNear` / `queryAabb`; default is brute-force, optional uniform grid and tilemap-backed indexes. Main camera resolves: bound entity → scene config → engine default. Entity `Camera` components are **auxiliary only** (minimap, security cam, picture-in-picture) unless promoted to main via controller. libGDX-free types in `hermes-api`; indexing and tile loading in `hermes-core`.
 
-**Tech Stack:** Java 11, libGDX 1.14.0 (core only for tile batching / existing render), JUnit 5, Gradle `:hermes-core:test`, `:dogfood-simulation:compileJava`, existing ECS (`WorldManager`, `EntityStore`, `EntityFactory`), `ViewportService`, `CameraResolver`, `WorldPicker`.
+**Tech Stack:** Java 11, libGDX 1.14.0 (core only for tile batching / existing render), JUnit 5, Gradle `:hermes-core:test`, `:dogfood-simulation:compileJava`, existing ECS (`WorldManager`, `EntityStore`, `EntityFactory`), `ResourceService` / `ResourceKind` ([central resource plan](2026-06-08-central-resource-management.md) — **landed** v1), `ViewportService`, `CameraResolver`, `WorldPicker`.
+
+**Plan status:** **Partially landed** (Tasks 1–2) — `WorldManager.space()` / `camera()`, libGDX-free world types (`WorldBounds`, `WorldKind`, `WorldSpace`, `SpatialIndex`, `SceneCameraConfig`, `SceneCameraController`, `MainCameraBinding`), `BruteForceSpatialIndex`, and `SpatialPresence` are in the repo (`dc7691a`, `7e49270`). Scene JSON `"world"` / `"camera"` blocks, `CameraResolver` refactor, `SpatialIndexSystem`, grid/tilemap strategies, scene migrations, and author docs are **not started**. `Camera.active` and `main-camera` entities remain everywhere. `SceneCameraControllerImpl` and `ActiveCameraView` are stubs; `SceneCameraConfig` lacks scene pose fields (`x`/`y`/`z`) and still carries spurious `active`/`renderTarget` copied from entity `Camera`.
+
+| Task | Status | Notes |
+|------|--------|-------|
+| 1 — World/camera API | **Landed** | Stubs remain in controller + `ActiveCameraView` |
+| 2 — BruteForce + SpatialPresence | **Landed** | No JSON deserializer; `queryNear` ignores `SpatialPresence` expansion |
+| 3 — Parse `"world"` | Not started | |
+| 4 — Parse `"camera"` | Not started | |
+| 5 — CameraResolver refactor | Not started | `Camera.active` still in API + scenes |
+| 6 — SpatialIndexSystem | Not started | Manual `spatial().rebuild()` only |
+| 7–12 | Not started | Grid, tilemap, picker, migration, SPI |
 
 ---
 
@@ -16,25 +28,29 @@
 
 | Area | Today | After this plan |
 |------|-------|-----------------|
-| Scene root | `WorldManager.entities()` only | Adds `space()` + `camera()` |
-| World bounds | Implicit / unbounded | Explicit `WorldBounds` from scene `"world"` block |
-| Spatial queries | Full scan (`WorldPicker`, systems loop all entities) | `WorldSpace.queryNear` / `queryAabb` via `SpatialIndex` |
-| Main camera | First entity with `Camera.active == true` | Scene `"camera"` block; optional bind to entity |
+| Scene root | `WorldManager.entities()` + stub `space()` / `camera()` | JSON-backed `space()` + `camera()` services |
+| World bounds | Always `WorldBounds.unbounded()` | Explicit `WorldBounds` from scene `"world"` block |
+| Spatial queries | `BruteForceSpatialIndex` + manual `rebuild()`; `WorldPicker` full scan | `SpatialIndexSystem` auto-rebuild; picker uses `queryNear` |
+| Main camera | First entity with `Camera.active == true` (`CameraResolver`) | Scene `"camera"` block; optional bind to entity |
 | Auxiliary cameras | Same as main (`active` flag) | Entity `Camera` + `renderTarget` (minimap FBO) |
-| Tile worlds | None | `"world".kind: "tilemap"` + Hermes map asset |
-| Scene JSON | `entities`, `lighting`, `audio`, `ui`, … | Adds `"world"`, `"camera"` |
-| Templates | Camera as entity (`main-camera`) | Camera in scene block; entity cameras only when needed |
+| Tile worlds | `WorldKind.TILEMAP` enum only | `"world".kind: "tilemap"` + `.hmap.json` via `ResourceKind.TILEMAP` |
+| Scene JSON | `entities`, `lighting`, `audio`, `ui`, `preload`, … — no `world`/`camera` | Adds `"world"`, `"camera"` |
+| Templates / dogfood | `main-camera` entity in every scene | Camera in scene block; entity cameras only when needed |
+| Author docs | `scene-format-v1.md` has no world/camera sections | `docs/world-space.md` + scene-format cross-links |
 
 Relevant existing types to reuse:
 
-- `WorldManager` / `WorldManagerImpl` — per-scene root ([entity-types plan](2026-05-21-entity-types-and-world-manager.md) — **landed**)
-- `Camera` / `CameraResolver` / `ActiveCamera` / `SceneCamera` — refactor resolver, keep libGDX binding
+- `WorldManager` / `WorldManagerImpl` — per-scene root with `space()` + `camera()` wired ([entity-types plan](2026-05-21-entity-types-and-world-manager.md) — **landed**)
+- `WorldSpaceImpl` / `BruteForceSpatialIndex` / `SpatialBoundsHelper` — landed v1 spatial path; extend, do not rewrite
+- `SpatialPresence` — landed component type; add `BuiltinComponents` deserializer in Task 2 follow-up or Task 11
+- `Camera` / `CameraResolver` / `ActiveCamera` / `SceneCamera` — **still entity-active**; refactor in Task 5
 - `Transform` — entity pose; spatial index tracks entities with `Transform`
-- `Selectable.radius` — default pick/query radius when no `SpatialPresence`
-- `SceneDocument` / `SceneParser` — pattern for new top-level blocks (same as `lighting`, `audio`)
+- `Selectable.radius` — default pick/query radius when no `SpatialPresence` (not wired into `queryNear` yet)
+- `SceneDocument` / `SceneParser` — pattern for new top-level blocks (same as `lighting`, `audio`, `preload`)
 - `SceneLightingState` on reserved entity — **do not** duplicate; world/camera live on `WorldManager` services
-- `ViewportService` / `RenderSurfaceDesc` — unchanged contract; resolver input changes
-- `WorldPicker` — switch to `WorldSpace.queryNear` when index present
+- `ViewportService` / `RenderSurfaceDesc` — unchanged contract; resolver input changes in Task 5
+- `WorldPicker` — still linear `entitiesWith(Selectable)` scan; switch in Task 10
+- `ResourceService` / `ResourceLoaderRegistry` — tilemap loader registers `ResourceKind.TILEMAP` in Task 8
 - `ComponentRegistration` SPI — pattern for `SpatialIndexRegistration`
 
 ---
@@ -73,20 +89,28 @@ Relevant existing types to reuse:
 
 | Plan | Status | How this plan uses it |
 |------|--------|------------------------|
+| [Central resource management](2026-06-08-central-resource-management.md) | **Landed** (v1) | Tilemap assets load via `ResourceKind.TILEMAP` + `ResourceLoaderRegistration` (Task 8); no private tile caches |
 | [Entity types](2026-05-21-entity-types-and-world-manager.md) | Landed | `WorldManager` extension surface; templates unchanged except camera entity removal |
-| [World lighting](2026-05-26-world-lighting.md) | Landed | Light culling still uses active main camera position from new resolver |
-| [Unified input](2026-05-21-unified-input-system.md) | Landed | `CameraSceneControlSystem` orbits **main** camera (scene or bound entity) |
-| [Physics & collisions](2026-05-30-physics-and-collisions.md) | Not landed | Independent services on `WorldManager`; share world units; spatial index ≠ physics broadphase |
-| [Animations & drawables](2026-05-30-animations-and-drawables.md) | Not landed | Animated entities update `Transform` → spatial index refresh |
-| [Debug mode](2026-05-30-debug-mode.md) | Not landed | v2: overlay rows `world.bounds`, `spatial.cellCount`, `camera.mainBinding` |
-| [Save/load](2026-05-22-save-load-sessions.md) | Not landed | v2: persist `camera.mainBinding` + optional world seed |
+| [World lighting](2026-05-26-world-lighting.md) | **Landed** | Light culling uses active camera position; switch to new resolver in Task 5 |
+| [Unified input](2026-05-21-unified-input-system.md) | Landed | `CameraSceneControlSystem` orbits **main** camera (scene or bound entity) after Task 5 |
+| [Unified runtime config](2026-05-24-unified-runtime-config-service.md) | Landed | Boot profiles unchanged |
 | [Custom UI](2026-05-29-custom-ui-service.md) | Landed | `"match": "designViewport"` reads scene UI `designAspect` when present |
+| [Audio](2026-05-22-audio-system.md) | **Landed** | `AudioListenerUpdater` follows `CameraResolver` today; migrate to `resolveForManager` in Task 5 |
+| [Animations & drawables](2026-05-30-animations-and-drawables.md) | Not started | Animated entities update `Transform` → `SpatialIndexSystem` must run after animation tracks |
+| [Physics & collisions](2026-05-30-physics-and-collisions.md) | Not started | Independent `WorldManager.physics()` service; share world units; spatial index ≠ physics broadphase |
+| [Debug mode](2026-05-30-debug-mode.md) | Not started | v2: overlay rows `world.bounds`, `spatial.cellCount`, `camera.mainBinding` |
+| [Save/load](2026-05-22-save-load-sessions.md) | Not started | v2: persist `camera.mainBinding` + optional world seed |
+| [Dogfood sample games](2026-06-08-dogfood-sample-games.md) | Not started | Pac-Man maze v1 = char grid; can adopt tilemap after Task 8–9 |
+| [Localization](2026-05-30-localization-i18n.md) | Not started | Independent |
+
+**Prerequisites:** [Entity types](2026-05-21-entity-types-and-world-manager.md) + [central resource management](2026-06-08-central-resource-management.md) v1 — both **landed**. Tasks 1–2 **landed**.
 
 **Recommended order:**
 
-1. Execute **this plan** (world + camera foundation).
-2. **Physics plan** — uses same world units; optional future hook: populate spatial index from static colliders.
-3. **Animations plan** — no conflict; ensure `SpatialIndexSystem` runs after animation tracks update transforms.
+1. **Resume this plan** at Task 3 (scene `"world"` JSON) — Tasks 1–2 done.
+2. Complete Tasks 3–6 (JSON blocks + resolver + `SpatialIndexSystem`) before grid/tilemap or migrations.
+3. **Physics plan** — can proceed in parallel after Task 3 bounds exist; optional future hook: populate spatial index from static colliders.
+4. **Animations plan** — no conflict once `SpatialIndexSystem` exists; register it after animation transform writes.
 
 ---
 
@@ -442,7 +466,7 @@ public interface WorldSpace {
   WorldKind kind();
   WorldBounds bounds();
   SpatialIndex spatial();
-  Optional<TileMapSpec> tileMap();
+  // Task 8: Optional<TileMapSpec> tileMap();
 
   /** Entities within radius of (x,y) in world units. */
   List<Entity> queryNear(float x, float y, float radius);
@@ -454,6 +478,8 @@ public interface WorldSpace {
   List<Entity> queryAabb(float minX, float minY, float maxX, float maxY);
 }
 ```
+
+**Landed:** All methods above except `tileMap()`. `WorldSpaceImpl` is constructed with fixed `kind`/`bounds`/`spatial` — Task 3 must apply scene JSON by replacing or reconfiguring the impl on load.
 
 ### SceneCameraController
 
@@ -469,7 +495,7 @@ public interface SceneCameraController {
 }
 ```
 
-`ActiveCameraView` is libGDX-free (same fields as today’s `ActiveCamera` but public in api package).
+`ActiveCameraView` is libGDX-free (same fields as today's `ActiveCamera` but public in api package). **Today:** empty stub class — populate in Task 5 alongside `CameraResolver.resolveForManager`.
 
 ### SpatialPresence component
 
@@ -540,39 +566,39 @@ manager.camera().bindMain("drone-cam");
 
 ## File structure
 
-| File | Responsibility |
-|------|----------------|
-| `hermes-api/.../world/WorldSpace.java` | Query API |
-| `hermes-api/.../world/WorldBounds.java` | min/max + unbounded flags |
-| `hermes-api/.../world/WorldKind.java` | OPEN, TILEMAP |
-| `hermes-api/.../world/SpatialIndex.java` | Strategy interface |
-| `hermes-api/.../world/SpatialQueryResult.java` | Entity + distance sq |
-| `hermes-api/.../world/SceneCameraController.java` | Main camera control |
-| `hermes-api/.../world/SceneCameraConfig.java` | libGDX-free main config |
-| `hermes-api/.../world/MainCameraBinding.java` | SCENE, ENTITY enum |
-| `hermes-api/.../world/ActiveCameraView.java` | Public resolved view |
-| `hermes-api/.../world/TileMapSpec.java` | Read-only map metadata |
-| `hermes-api/.../ecs/SpatialPresence.java` | Query bounds component |
-| `hermes-api/.../ecs/TileMap.java` | Tile draw reference |
-| `hermes-api/.../world/SpatialIndexRegistration.java` | SPI |
-| `hermes-core/.../world/WorldSpaceImpl.java` | Holds bounds + index |
-| `hermes-core/.../world/WorldBlockParser.java` | Parse `"world"` JSON |
-| `hermes-core/.../world/SceneCameraBlockParser.java` | Parse `"camera"` JSON |
-| `hermes-core/.../world/SceneCameraControllerImpl.java` | Binding state |
-| `hermes-core/.../world/WorldBoundsResolver.java` | match designViewport etc. |
-| `hermes-core/.../world/spatial/BruteForceSpatialIndex.java` | Default |
-| `hermes-core/.../world/spatial/UniformGridSpatialIndex.java` | Grid |
-| `hermes-core/.../world/spatial/TileMapSpatialIndex.java` | Cell = tile |
-| `hermes-core/.../world/tilemap/HermesTileMapLoader.java` | Load `.hmap.json` |
-| `hermes-core/.../world/tilemap/TileMapRenderSystem.java` | Draw tiles in sprites pass |
-| `hermes-core/.../ecs/SpatialIndexSystem.java` | Maintain index |
-| `hermes-core/.../ecs/CameraResolver.java` | Refactor to use controller |
-| `hermes-core/.../ecs/BuiltinComponents.java` | Remove `active`; add deserializers |
-| `hermes-core/.../ecs/WorldManagerImpl.java` | Wire services |
-| `hermes-core/.../ecs/SceneDocument.java` | Parse world + camera |
-| `hermes-core/.../input/WorldPicker.java` | Use spatial queries |
-| `docs/world-space.md` | Author guide |
-| `docs/scene-format-v1.md` | world + camera sections |
+| File | Status | Responsibility |
+|------|--------|----------------|
+| `hermes-api/.../world/WorldSpace.java` | Landed | Query API |
+| `hermes-api/.../world/WorldBounds.java` | Landed | min/max + unbounded flags |
+| `hermes-api/.../world/WorldKind.java` | Landed | OPEN, TILEMAP |
+| `hermes-api/.../world/SpatialIndex.java` | Landed | Strategy interface |
+| `hermes-api/.../world/SceneCameraController.java` | Landed | Main camera control API |
+| `hermes-api/.../world/SceneCameraConfig.java` | Landed (incomplete) | libGDX-free main config — add x/y/z; remove `active`/`renderTarget` |
+| `hermes-api/.../world/MainCameraBinding.java` | Landed | SCENE, ENTITY enum |
+| `hermes-api/.../world/ActiveCameraView.java` | Stub | Public resolved view — empty class; fill in Task 5 |
+| `hermes-api/.../world/TileMapSpec.java` | Not started | Read-only map metadata |
+| `hermes-api/.../ecs/SpatialPresence.java` | Landed | Query bounds component |
+| `hermes-api/.../ecs/TileMap.java` | Not started | Tile draw reference |
+| `hermes-api/.../world/SpatialIndexRegistration.java` | Not started | SPI |
+| `hermes-core/.../world/WorldSpaceImpl.java` | Landed | Holds bounds + index; immutable after construct |
+| `hermes-core/.../world/WorldBlockParser.java` | Not started | Parse `"world"` JSON |
+| `hermes-core/.../world/SceneCameraBlockParser.java` | Not started | Parse `"camera"` JSON |
+| `hermes-core/.../world/SceneCameraControllerImpl.java` | Stub | Binding state — TODO methods |
+| `hermes-core/.../world/WorldBoundsResolver.java` | Not started | match designViewport etc. |
+| `hermes-core/.../world/spatial/BruteForceSpatialIndex.java` | Landed | Default strategy |
+| `hermes-core/.../world/spatial/SpatialBoundsHelper.java` | Landed | AABB + radius helpers; `effectiveRadius` unused in `queryNear` yet |
+| `hermes-core/.../world/spatial/UniformGridSpatialIndex.java` | Not started | Grid |
+| `hermes-core/.../world/spatial/TileMapSpatialIndex.java` | Not started | Cell = tile |
+| `hermes-core/.../world/tilemap/HermesTileMapLoader.java` | Not started | Load `.hmap.json` via `ResourceService` |
+| `hermes-core/.../world/tilemap/TileMapRenderSystem.java` | Not started | Draw tiles in sprites pass |
+| `hermes-core/.../ecs/SpatialIndexSystem.java` | Not started | Maintain index |
+| `hermes-core/.../ecs/CameraResolver.java` | Unchanged | Refactor to use controller (Task 5) |
+| `hermes-core/.../ecs/BuiltinComponents.java` | Unchanged | Still deserializes `Camera.active`; add `SpatialPresence` |
+| `hermes-core/.../ecs/WorldManagerImpl.java` | Landed | Wire services |
+| `hermes-core/.../ecs/SceneDocument.java` | Unchanged | Parse world + camera (Task 3–4) |
+| `hermes-core/.../input/WorldPicker.java` | Unchanged | Use spatial queries (Task 10) |
+| `docs/world-space.md` | Not started | Author guide |
+| `docs/scene-format-v1.md` | Unchanged | world + camera sections (Task 11) |
 
 ---
 
@@ -580,18 +606,20 @@ manager.camera().bindMain("drone-cam");
 
 ### Task 1: libGDX-free world and camera API types
 
-**Files:**
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/WorldBounds.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/WorldKind.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/WorldSpace.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/SpatialIndex.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/SceneCameraConfig.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/MainCameraBinding.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/SceneCameraController.java`
-- Create: `hermes-api/src/main/java/dev/hermes/api/world/ActiveCameraView.java`
-- Modify: `hermes-api/src/main/java/dev/hermes/api/ecs/WorldManager.java`
+**Status: Landed** (`dc7691a`). Remaining gaps: `ActiveCameraView` is an empty class; `SceneCameraControllerImpl` returns defaults / null; `SceneCameraConfig` needs scene pose fields and should drop `active`/`renderTarget` (scene cameras do not use pass targets).
 
-- [ ] **Step 1: Write failing test**
+**Files:**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/WorldBounds.java` — **done**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/WorldKind.java` — **done**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/WorldSpace.java` — **done**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/SpatialIndex.java` — **done**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/SceneCameraConfig.java` — **done** (incomplete fields)
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/MainCameraBinding.java` — **done**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/SceneCameraController.java` — **done**
+- Create: `hermes-api/src/main/java/dev/hermes/api/world/ActiveCameraView.java` — **stub**
+- Modify: `hermes-api/src/main/java/dev/hermes/api/ecs/WorldManager.java` — **done**
+
+- [x] **Step 1: Write failing test**
 
 Create `hermes-core/src/test/java/dev/hermes/core/world/WorldApiSurfaceTest.java`:
 
@@ -606,12 +634,12 @@ void worldManagerExposesSpaceAndCamera() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew :hermes-core:test --tests dev.hermes.core.world.WorldApiSurfaceTest -q`
 Expected: FAIL — `space()` / `camera()` not defined
 
-- [ ] **Step 3: Implement API types and stub impl**
+- [x] **Step 3: Implement API types and stub impl**
 
 `WorldBounds.java`:
 
@@ -640,12 +668,12 @@ private final SceneCameraControllerImpl camera = new SceneCameraControllerImpl()
 @Override public SceneCameraController camera() { return camera; }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `./gradlew :hermes-core:test --tests dev.hermes.core.world.WorldApiSurfaceTest -q`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add hermes-api/src/main/java/dev/hermes/api/world/ hermes-api/src/main/java/dev/hermes/api/ecs/WorldManager.java hermes-core/src/main/java/dev/hermes/core/ecs/WorldManagerImpl.java hermes-core/src/main/java/dev/hermes/core/world/ hermes-core/src/test/java/dev/hermes/core/world/WorldApiSurfaceTest.java
@@ -656,14 +684,16 @@ git commit -m "feat: add WorldSpace and SceneCameraController API on WorldManage
 
 ### Task 2: BruteForceSpatialIndex and SpatialPresence
 
-**Files:**
-- Create: `hermes-api/src/main/java/dev/hermes/api/ecs/SpatialPresence.java`
-- Create: `hermes-core/src/main/java/dev/hermes/core/world/spatial/BruteForceSpatialIndex.java`
-- Create: `hermes-core/src/main/java/dev/hermes/core/world/spatial/SpatialBoundsHelper.java`
-- Modify: `hermes-core/src/main/java/dev/hermes/core/world/WorldSpaceImpl.java`
-- Test: `hermes-core/src/test/java/dev/hermes/core/world/BruteForceSpatialIndexTest.java`
+**Status: Landed** (`7e49270`). Remaining gaps before Task 6: `queryNear` uses transform point only (does not expand by `SpatialPresence` / `Selectable` via `SpatialBoundsHelper.effectiveRadius`); `SpatialPresence` has no `BuiltinComponents` JSON deserializer; callers must invoke `spatial().rebuild(entities)` manually (see `entitiesAddedAfterRebuildAreNotVisibleUntilRebuild` test).
 
-- [ ] **Step 1: Write failing test**
+**Files:**
+- Create: `hermes-api/src/main/java/dev/hermes/api/ecs/SpatialPresence.java` — **done**
+- Create: `hermes-core/src/main/java/dev/hermes/core/world/spatial/BruteForceSpatialIndex.java` — **done**
+- Create: `hermes-core/src/main/java/dev/hermes/core/world/spatial/SpatialBoundsHelper.java` — **done**
+- Modify: `hermes-core/src/main/java/dev/hermes/core/world/WorldSpaceImpl.java` — **done**
+- Test: `hermes-core/src/test/java/dev/hermes/core/world/BruteForceSpatialIndexTest.java` — **done** (15 cases)
+
+- [x] **Step 1: Write failing test**
 
 ```java
 @Test
@@ -681,12 +711,12 @@ void queryNearReturnsEntitiesWithinRadius() {
 }
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `./gradlew :hermes-core:test --tests dev.hermes.core.world.BruteForceSpatialIndexTest -q`
 Expected: FAIL — `rebuild` / `queryNear` missing
 
-- [ ] **Step 3: Implement BruteForceSpatialIndex**
+- [x] **Step 3: Implement BruteForceSpatialIndex**
 
 ```java
 public final class BruteForceSpatialIndex implements SpatialIndex {
@@ -705,13 +735,15 @@ public final class BruteForceSpatialIndex implements SpatialIndex {
 }
 ```
 
-Wire `WorldSpaceImpl.queryNear` to delegate to `spatial().queryNear(entities, …)` (hold `EntityStore` ref from rebuild).
+**Implementation note:** Landed code stores `EntityStore` on `rebuild()` and `queryNear`/`queryAabb` use the cached index without taking `EntityStore` per call. `queryNear` currently uses point distance only — wire `effectiveRadius` when polishing before Task 10.
 
-- [ ] **Step 4: Run test to verify it passes**
+Wire `WorldSpaceImpl.queryNear` to delegate to `spatial().queryNear(…)` (index holds entity ref from last rebuild).
+
+- [x] **Step 4: Run test to verify it passes**
 
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat: add BruteForceSpatialIndex and SpatialPresence"
@@ -940,7 +972,8 @@ git commit -m "feat: uniform grid spatial index strategy"
 
 **Files:**
 - Create: `hermes-api/src/main/java/dev/hermes/api/ecs/TileMap.java`
-- Create: `hermes-core/src/main/java/dev/hermes/core/world/tilemap/HermesTileMapLoader.java`
+- Create: `hermes-api/src/main/java/dev/hermes/api/resource/ResourceKind.java` entry `TILEMAP` (or extend existing enum)
+- Create: `hermes-core/src/main/java/dev/hermes/core/world/tilemap/HermesTileMapLoader.java` — register on `ResourceLoaderRegistry`
 - Create: `hermes-core/src/main/java/dev/hermes/core/world/tilemap/TileMapAsset.java`
 - Create: `hermes-core/src/main/java/dev/hermes/core/world/spatial/TileMapSpatialIndex.java`
 - Modify: `hermes-core/src/main/java/dev/hermes/core/world/WorldSpaceImpl.java`
@@ -1038,6 +1071,8 @@ git commit -m "perf: WorldPicker uses WorldSpace spatial queries"
 
 - [ ] **Step 1: Update dogfood main.json**
 
+`dogfood-simulation/src/main/resources/assets/scenes/main.json` still has a `main-camera` entity today — migrate to:
+
 ```json
 {
   "camera": {
@@ -1107,34 +1142,37 @@ git commit -m "feat: spatial index SPI and minimap demo scene"
 
 ### Spec coverage
 
-| Requirement | Task |
-|-------------|------|
-| World dimensions (same/bigger/smaller than app) | Task 3 — explicit + match modes |
-| Search strategies for near entities | Tasks 2, 6, 7, 8, 10 |
-| Open space world | Task 3 — kind open default |
-| Tile map world | Tasks 8, 9 |
-| Scene main camera not entity | Tasks 4, 5 |
-| Entity cameras + main switch | Tasks 4, 5 — bindMain / follow |
-| Minimap / renderTarget preserved | Task 5 resolver FBO branch; Task 12 demo |
-| Config-first + Java tiers | Design goals + Task 11 docs |
-| Fit future plans | Relationship section; SpatialPresence separate from physics |
-| No backward compat | Pre-release policy; delete Camera.active |
+| Requirement | Task | Status |
+|-------------|------|--------|
+| World/camera API on `WorldManager` | Task 1 | Landed |
+| Brute-force spatial queries | Task 2 | Landed |
+| World dimensions (same/bigger/smaller than app) | Task 3 | Not started |
+| Search strategies for near entities | Tasks 2, 6, 7, 8, 10 | Partial (brute force only) |
+| Open space world | Task 3 — kind open default | Default in code; not JSON-driven |
+| Tile map world | Tasks 8, 9 | Not started |
+| Scene main camera not entity | Tasks 4, 5 | Not started |
+| Entity cameras + main switch | Tasks 4, 5 — bindMain / follow | Not started |
+| Minimap / renderTarget preserved | Task 5 resolver FBO branch; Task 12 demo | Not started |
+| Config-first + Java tiers | Design goals + Task 11 docs | Not started |
+| Fit future plans | Relationship section; SpatialPresence separate from physics | Updated |
+| No backward compat | Pre-release policy; delete Camera.active | Policy stands; not executed |
 
 ### Placeholder scan
 
-No TBD steps; each task includes test code and commands.
+Tasks 1–2 landed with documented gaps (stubs, `effectiveRadius`, deserializers). Tasks 3–12 retain concrete test code and commands. No TBD steps.
 
 ### Type consistency
 
-- `WorldManager.space()` / `camera()` used consistently
-- `CameraResolver.resolveForManager(WorldManager, …)` replaces entity-only resolve
-- `SceneCameraConfig` fields align with removed entity Camera properties (minus `active`, `renderTarget`)
+- `WorldManager.space()` / `camera()` used consistently — **landed**
+- `CameraResolver.resolveForManager(WorldManager, …)` replaces entity-only resolve — **planned Task 5**; today still `resolveForPass(EntityStore, …)`
+- `SceneCameraConfig` fields should align with scene `"camera"` JSON (pose + projection); remove `active`/`renderTarget` when completing Task 4–5
+- `SpatialIndex.rebuild(EntityStore)` + query without per-call store — **landed** (differs from early sketch in Task 2 step 3)
 
 ---
 
 ## Execution handoff
 
-Plan complete and saved to `docs/superpowers/plans/2026-05-30-world-space-and-scene-camera.md`. Two execution options:
+Plan updated to reflect **partial landing** (Tasks 1–2). **Resume at Task 3.** Two execution options:
 
 **1. Subagent-Driven (recommended)** — dispatch a fresh subagent per task, review between tasks, fast iteration
 

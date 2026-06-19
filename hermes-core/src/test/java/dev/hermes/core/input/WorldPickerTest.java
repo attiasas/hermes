@@ -22,6 +22,7 @@ import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
 import dev.hermes.core.ecs.SceneLoader;
 import dev.hermes.core.ecs.EntityStoreImpl;
+import dev.hermes.core.ecs.WorldManagerImpl;
 import dev.hermes.core.viewport.ViewportServiceImpl;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
@@ -191,6 +192,21 @@ final class WorldPickerTest {
         assertTrue(hit.isPresent());
         assertEquals(near.id(), hit.get().entity);
         assertEquals("near", hit.get().entityName);
+    }
+
+    @Test
+    void perspectivePick_hitsSelectableWithSceneCamera() {
+        ComponentRegistryImpl registry = new ComponentRegistryImpl();
+        BuiltinComponents.register(registry);
+        WorldManagerImpl manager = new WorldManagerImpl();
+        SceneLoader.load("scenes/perspective-pick-test.json", manager, registry);
+
+        float screenX = viewport.windowWidth() * 0.5f;
+        float screenY = viewport.windowHeight() * 0.5f;
+
+        Optional<PickHit> hit = picker.pick(manager.entities(), screenX, screenY, PickLayer.WORLD);
+        assertTrue(hit.isPresent());
+        assertEquals("cube", hit.get().entityName);
     }
 
     @Test

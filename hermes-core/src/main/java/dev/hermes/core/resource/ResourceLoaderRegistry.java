@@ -7,6 +7,7 @@ import dev.hermes.core.audio.SoundBackend;
 import dev.hermes.core.resource.loaders.ModelResourceLoader;
 import dev.hermes.core.resource.loaders.SoundResourceLoader;
 import dev.hermes.core.resource.loaders.TextureResourceLoader;
+import dev.hermes.core.world.tilemap.HermesTileMapLoader;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -51,6 +52,7 @@ public final class ResourceLoaderRegistry implements dev.hermes.api.resource.Res
         registry.register(ResourceKind.TEXTURE, new TextureResourceLoader());
         registry.register(ResourceKind.MODEL, new ModelResourceLoader());
         registry.register(ResourceKind.SOUND, new SoundResourceLoader(soundBackend));
+        registry.register(ResourceKind.TILEMAP, new HermesTileMapLoader());
         return registry;
     }
 }

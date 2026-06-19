@@ -6,5 +6,6 @@ public enum ResourceKind {
     SOUND,
     FONT,
     JSON,
-    BINARY
+    BINARY,
+    TILEMAP
 }

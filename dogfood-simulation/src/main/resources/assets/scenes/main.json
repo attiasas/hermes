@@ -3,21 +3,25 @@
     "bundles": ["game"],
     "async": true
   },
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 2,
+    "z": 5,
+    "fieldOfView": 60,
+    "fitMode": "stretch",
+    "lookAt": { "x": 0, "y": 0, "z": 0 },
+    "controls": {
+      "rotateButton": "LEFT",
+      "translateButton": "RIGHT",
+      "forwardButton": "MIDDLE",
+      "scrollZoom": true
+    }
+  },
   "inputContext": "gameplay",
   "ui": "ui/hud.json",
   "entities": [
-    {
-      "id": "main-camera",
-      "components": {
-        "Transform": { "x": 0, "y": 0, "z": 5 },
-        "Camera": {
-          "projection": "perspective",
-          "active": true,
-          "fieldOfView": 60,
-          "fitMode": "stretch"
-        }
-      }
-    },
     {
       "type": "spin-cube",
       "id": "cube",

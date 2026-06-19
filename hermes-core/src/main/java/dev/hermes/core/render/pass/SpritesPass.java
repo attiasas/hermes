@@ -20,6 +20,7 @@ import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ShaderRegistry;
 import dev.hermes.core.resource.ResourceAccess;
 import dev.hermes.core.resource.ResourceManagerImpl;
+import dev.hermes.core.world.tilemap.TileMapRenderSystem;
 import dev.hermes.core.viewport.BoundCamera;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public final class SpritesPass {
     private final SpriteBatch batch;
     private final ShaderRegistry shaderRegistry;
     private final ResourceManagerImpl resources;
+    private final TileMapRenderSystem tileMaps;
     private final Vector3 projected = new Vector3();
 
     public SpritesPass(SpriteBatch batch, ResourceManagerImpl resources) {
@@ -46,6 +48,7 @@ public final class SpritesPass {
         this.batch = batch;
         this.shaderRegistry = shaderRegistry;
         this.resources = Objects.requireNonNull(resources, "resources");
+        this.tileMaps = new TileMapRenderSystem(resources);
     }
 
     public void resize(int width, int height) {
@@ -62,6 +65,7 @@ public final class SpritesPass {
 
         batch.setProjectionMatrix(bound.combined());
         batch.begin();
+        tileMaps.render(entities, layers, bound, batch);
         for (Entity entity : drawables) {
             drawSprite(entities, entity, active, bound);
         }

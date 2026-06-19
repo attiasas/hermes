@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.controllers.Controller;
 import com.badlogic.gdx.controllers.Controllers;
 import com.badlogic.gdx.utils.Array;
+import dev.hermes.api.input.InputButton;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -20,6 +21,8 @@ final class GdxInputReaders {
     private final Set<Integer> previousKeyboardPressed = new HashSet<>();
     private final Set<Integer> previousPointerPressed = new HashSet<>();
     private final Set<Integer> previousGamepadPressed = new HashSet<>();
+
+    private final ScrollWheelCapture scrollWheel = ScrollWheelCapture.shared();
 
     GdxInputReaders(InputProfile profile) {
         Set<Integer> keys = new LinkedHashSet<>();
@@ -50,6 +53,9 @@ final class GdxInputReaders {
                     break;
             }
         }
+        buttons.add(InputButton.LEFT);
+        buttons.add(InputButton.RIGHT);
+        buttons.add(InputButton.MIDDLE);
         keyboardKeys = keys.stream().mapToInt(Integer::intValue).toArray();
         pointerButtons = buttons.stream().mapToInt(Integer::intValue).toArray();
         gamepadButtons = padButtons.stream().mapToInt(Integer::intValue).toArray();
@@ -58,10 +64,12 @@ final class GdxInputReaders {
     }
 
     InputFrame poll() {
+        scrollWheel.installIfNeeded();
         InputFrame.Builder builder = InputFrame.builder();
         pollKeyboard(builder);
         pollPointer(builder);
         pollGamepad(builder);
+        builder.scroll(scrollWheel.takeScrollX(), scrollWheel.takeScrollY());
         return builder.build();
     }
 

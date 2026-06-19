@@ -14,7 +14,6 @@ public final class Camera implements Component {
     }
 
     private Projection projection = Projection.ORTHOGRAPHIC;
-    private boolean active = true;
     private float zoom = 1f;
     private float fieldOfView = 67f;
     private float near = 0.1f;
@@ -37,14 +36,6 @@ public final class Camera implements Component {
 
     public void setProjection(Projection projection) {
         this.projection = projection == null ? Projection.ORTHOGRAPHIC : projection;
-    }
-
-    public boolean active() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
     }
 
     public float zoom() {

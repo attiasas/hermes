@@ -75,7 +75,7 @@ Relevant existing types to reuse:
 | [Unified input](2026-05-21-unified-input-system.md) | Landed | `locale.next`, `locale.set:es` actions for no-code language toggle |
 | [Audio system](2026-05-22-audio-system.md) | Not landed | v2: subtitle tracks reference same text keys |
 | [Debug mode](2026-05-30-debug-mode.md) | Not landed | v2: overlay `locale.active`, `locale.missingKeys` |
-| [World space & camera](2026-05-30-world-space-and-scene-camera.md) | Not landed | No conflict |
+| [World space & camera](2026-05-30-world-space-and-scene-camera.md) | Partially landed (Tasks 1–2) | No conflict |
 | [Animations & drawables](2026-05-30-animations-and-drawables.md) | Not landed | No conflict |
 
 **Recommended order:**

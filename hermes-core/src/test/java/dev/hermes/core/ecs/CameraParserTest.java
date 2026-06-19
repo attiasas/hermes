@@ -27,7 +27,7 @@ final class CameraParserTest {
                         + "      \"id\": \"cam\",\n"
                         + "      \"components\": {\n"
                         + "        \"Transform\": { \"x\": 10, \"y\": 20, \"z\": 0 },\n"
-                        + "        \"Camera\": { \"projection\": \"orthographic\", \"zoom\": 2, \"active\": true }\n"
+                        + "        \"Camera\": { \"projection\": \"orthographic\", \"zoom\": 2 }\n"
                         + "      }\n"
                         + "    }\n"
                         + "  ]\n"
@@ -39,7 +39,6 @@ final class CameraParserTest {
         Camera camera = world.getComponent(world.findByName("cam").id(), Camera.class);
         assertEquals(Camera.Projection.ORTHOGRAPHIC, camera.projection());
         assertEquals(2f, camera.zoom());
-        assertTrue(camera.active());
     }
 
     @Test
@@ -77,8 +76,7 @@ final class CameraParserTest {
                         + "          \"projection\": \"perspective\",\n"
                         + "          \"fieldOfView\": 90,\n"
                         + "          \"near\": 1,\n"
-                        + "          \"far\": 500,\n"
-                        + "          \"active\": false\n"
+                        + "          \"far\": 500\n"
                         + "        }\n"
                         + "      }\n"
                         + "    }\n"
@@ -93,7 +91,6 @@ final class CameraParserTest {
         assertEquals(90f, camera.fieldOfView());
         assertEquals(1f, camera.near());
         assertEquals(500f, camera.far());
-        assertFalse(camera.active());
     }
 
     @Test

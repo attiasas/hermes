@@ -1,20 +1,13 @@
 {
+  "camera": {
+    "version": 1,
+    "projection": "orthographic",
+    "x": 320,
+    "y": 240,
+    "z": 0,
+    "fitMode": "stretch"
+  },
   "entities": [
-    {
-      "id": "cam",
-      "components": {
-        "Transform": {
-          "x": 320,
-          "y": 240,
-          "z": 0
-        },
-        "Camera": {
-          "projection": "orthographic",
-          "active": true,
-          "fitMode": "stretch"
-        }
-      }
-    },
     {
       "id": "logo",
       "components": {

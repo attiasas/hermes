@@ -22,9 +22,11 @@ import dev.hermes.core.viewport.ViewportServiceImpl;
 import dev.hermes.api.ui.UiService;
 import dev.hermes.api.ui.UiWidgetRegistration;
 import dev.hermes.api.resource.ResourceLoaderRegistration;
+import dev.hermes.api.world.SpatialIndexRegistration;
 import dev.hermes.api.resource.ResourceService;
 import dev.hermes.api.viewport.ViewportService;
 import dev.hermes.core.resource.ResourceManagerImpl;
+import dev.hermes.core.world.SpatialIndexRegistrations;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -84,6 +86,10 @@ public final class HermesEngineImpl implements HermesEngine {
         for (ResourceLoaderRegistration registration : ServiceLoader.load(ResourceLoaderRegistration.class)) {
             log.debug("Loading resource loader registration: " + registration.getClass().getName());
             registration.register(resources.loaderRegistry());
+        }
+        for (SpatialIndexRegistration registration : ServiceLoader.load(SpatialIndexRegistration.class)) {
+            log.debug("Loading spatial index registration: " + registration.getClass().getName());
+            registration.register(SpatialIndexRegistrations.registry());
         }
     }
 

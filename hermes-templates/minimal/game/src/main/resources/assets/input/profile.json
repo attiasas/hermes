@@ -3,11 +3,31 @@
   "context": "gameplay",
   "actions": {
     "select": { "type": "button" },
-    "pause": { "type": "button" }
+    "pause": { "type": "button" },
+    "camera_move_forward": { "type": "button" },
+    "camera_move_backward": { "type": "button" },
+    "camera_move_left": { "type": "button" },
+    "camera_move_right": { "type": "button" },
+    "camera_look_at_up": { "type": "button" },
+    "camera_look_at_down": { "type": "button" },
+    "camera_look_at_left": { "type": "button" },
+    "camera_look_at_right": { "type": "button" },
+    "camera_look_at_forward": { "type": "button" },
+    "camera_look_at_backward": { "type": "button" }
   },
   "bindings": [
     { "action": "select", "source": "pointer", "button": "LEFT", "when": "justPressed" },
-    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" }
+    { "action": "pause", "source": "keyboard", "key": "ESCAPE", "when": "justPressed" },
+    { "action": "camera_move_forward", "source": "keyboard", "key": "W", "when": "pressed" },
+    { "action": "camera_move_backward", "source": "keyboard", "key": "S", "when": "pressed" },
+    { "action": "camera_move_left", "source": "keyboard", "key": "A", "when": "pressed" },
+    { "action": "camera_move_right", "source": "keyboard", "key": "D", "when": "pressed" },
+    { "action": "camera_look_at_up", "source": "keyboard", "key": "Q", "when": "pressed" },
+    { "action": "camera_look_at_down", "source": "keyboard", "key": "E", "when": "pressed" },
+    { "action": "camera_look_at_forward", "source": "keyboard", "key": "UP", "when": "pressed" },
+    { "action": "camera_look_at_backward", "source": "keyboard", "key": "DOWN", "when": "pressed" },
+    { "action": "camera_look_at_left", "source": "keyboard", "key": "LEFT", "when": "pressed" },
+    { "action": "camera_look_at_right", "source": "keyboard", "key": "RIGHT", "when": "pressed" }
   ],
   "gamepad": { "deadzone": 0.15 }
 }
