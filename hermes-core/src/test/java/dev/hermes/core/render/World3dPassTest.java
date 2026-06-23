@@ -9,6 +9,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g3d.Model;
 import dev.hermes.api.Entity;
+import dev.hermes.api.ecs.DrawablePart;
+import dev.hermes.api.ecs.Drawables;
+import dev.hermes.api.ecs.Material;
+import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.TestGdx;
@@ -55,6 +59,23 @@ final class World3dPassTest {
         List<Entity> drawables = World3dPass.collectDrawables(world);
         assertEquals(1, drawables.size());
         assertEquals("cube", drawables.get(0).name());
+    }
+
+    @Test
+    void collectDrawables_multiPartEntity_returnsOneDrawable() {
+        Entity entity = world.create("multi");
+        world.addComponent(entity.id(), new Transform());
+        world.addComponent(entity.id(), new Material());
+        world.addComponent(
+                entity.id(),
+                new Drawables(
+                        List.of(
+                                DrawablePart.mesh("body", "models/cube.obj"),
+                                DrawablePart.mesh("hat", "models/cube.obj"))));
+
+        List<Entity> drawables = World3dPass.collectDrawables(world);
+        assertEquals(1, drawables.size());
+        assertEquals("multi", drawables.get(0).name());
     }
 
     @Test

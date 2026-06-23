@@ -13,8 +13,8 @@
         "Transform": {
           "z": 0
         },
-        "Mesh": {
-          "model": "models/cube.obj"
+        "Drawables": {
+          "mesh": "models/cube.obj"
         },
         "Material": {
           "shader": "default/unlit"

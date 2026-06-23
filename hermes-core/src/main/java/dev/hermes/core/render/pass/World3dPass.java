@@ -6,8 +6,6 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.Renderable;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
-import com.badlogic.gdx.math.Matrix4;
-import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FlushablePool;
 import dev.hermes.api.Entity;
@@ -16,6 +14,8 @@ import dev.hermes.api.ecs.DrawableKind;
 import dev.hermes.api.ecs.DrawablePart;
 import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Material;
+import dev.hermes.api.ecs.MaterialUniform;
+import dev.hermes.api.ecs.PartMaterial;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
@@ -23,6 +23,7 @@ import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.lighting.LightingRuntime;
 import dev.hermes.core.render.ShaderCompileException;
+import dev.hermes.core.render.TransformComposer;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
 import dev.hermes.core.render.resource.ShaderRegistry;
 import dev.hermes.core.resource.ResourceAccess;
@@ -45,7 +46,6 @@ public final class World3dPass {
     private final ResourceManagerImpl resources;
     private final ShaderRegistry shaderRegistry;
     private final ModelBatch modelBatch;
-    private final Matrix4 instanceTransform = new Matrix4();
     private final Map<String, Shader> g3dShaderCache = new HashMap<>();
     private final RenderablePool renderablePool = new RenderablePool();
     private final Array<Renderable> renderableScratch = new Array<>(1);
@@ -84,33 +84,66 @@ public final class World3dPass {
     private void drawMesh(EntityStore entities, Entity entity, Environment environment) {
         Transform transform = entities.getComponent(entity.id(), Transform.class);
         Drawables drawables = entities.getComponent(entity.id(), Drawables.class);
-        Material material = entities.getComponent(entity.id(), Material.class);
-        DrawablePart meshPart = firstMeshPart(drawables);
-        if (transform == null || meshPart == null || material == null) {
-            return;
-        }
-        String modelPath = meshPart.model();
-        if (modelPath == null || modelPath.isBlank()) {
+        Material entityMaterial = entities.getComponent(entity.id(), Material.class);
+        if (transform == null || drawables == null || entityMaterial == null) {
             return;
         }
 
-        String shaderId = material.shader();
-        if (shaderRegistry != null && !shaderRegistry.isRegistered(shaderId)) {
-            throw new ShaderCompileException("shader not registered: " + shaderId);
+        for (DrawablePart part : drawables.parts()) {
+            if (!shouldDrawMeshPart(part)) {
+                continue;
+            }
+            Material material = resolveMaterial(entityMaterial, part);
+            String modelPath = resolveModelPath(part);
+
+            String shaderId = material.shader();
+            if (shaderRegistry != null && !shaderRegistry.isRegistered(shaderId)) {
+                throw new ShaderCompileException("shader not registered: " + shaderId);
+            }
+
+            ResourceRef ref = ResourceRef.of(modelPath);
+            resources.loadSync(ref, ResourceKind.MODEL);
+            ModelInstance instance = new ModelInstance(ResourceAccess.model(resources, ref));
+            TransformComposer.composeInto(instance.transform, transform, part.local());
+
+            Shader g3dShader = resolveG3dShader(shaderId, instance, environment);
+            if (g3dShader != null) {
+                applyMaterialUniforms(g3dShader, material);
+                modelBatch.render(instance, environment, g3dShader);
+            } else {
+                modelBatch.render(instance, environment);
+            }
         }
+    }
 
-        ResourceRef ref = ResourceRef.of(modelPath);
-        resources.loadSync(ref, ResourceKind.MODEL);
-        ModelInstance instance = new ModelInstance(ResourceAccess.model(resources, ref));
-        applyTransform(instance.transform, transform);
+    static boolean shouldDrawMeshPart(DrawablePart part) {
+        if (!part.local().visible() || part.kind() != DrawableKind.MESH) {
+            return false;
+        }
+        String modelPath = resolveModelPath(part);
+        return modelPath != null && !modelPath.isBlank();
+    }
 
-        Shader g3dShader = resolveG3dShader(shaderId, instance, environment);
-        if (g3dShader != null) {
-            applyMaterialUniforms(g3dShader, material);
-            modelBatch.render(instance, environment, g3dShader);
+    private static Material resolveMaterial(Material entityMaterial, DrawablePart part) {
+        PartMaterial override = part.partMaterial();
+        if (override == null) {
+            return entityMaterial;
+        }
+        Material resolved = new Material();
+        String shader = override.shader();
+        resolved.setShader(shader != null && !shader.isBlank() ? shader : entityMaterial.shader());
+        if (override.uniforms().isEmpty()) {
+            resolved.setUniforms(entityMaterial.uniforms());
         } else {
-            modelBatch.render(instance, environment);
+            Map<String, MaterialUniform> merged = new HashMap<>(entityMaterial.uniforms());
+            merged.putAll(override.uniforms());
+            resolved.setUniforms(merged);
         }
+        return resolved;
+    }
+
+    private static String resolveModelPath(DrawablePart part) {
+        return part.model();
     }
 
     private Shader resolveG3dShader(String shaderId, ModelInstance instance, Environment environment) {
@@ -140,21 +173,6 @@ public final class World3dPass {
         }
     }
 
-    private static void applyTransform(Matrix4 matrix, Transform transform) {
-        matrix.idt();
-        matrix.translate(transform.x(), transform.y(), transform.z());
-        if (transform.rotationX() != 0f) {
-            matrix.rotate(Vector3.X, transform.rotationX());
-        }
-        if (transform.rotationY() != 0f) {
-            matrix.rotate(Vector3.Y, transform.rotationY());
-        }
-        if (transform.rotationZ() != 0f) {
-            matrix.rotate(Vector3.Z, transform.rotationZ());
-        }
-        matrix.scale(transform.scaleX(), transform.scaleY(), transform.scaleZ());
-    }
-
     /**
      * Returns mesh entities that have transform and material (excludes camera entities).
      */
@@ -177,7 +195,7 @@ public final class World3dPass {
                 continue;
             }
             Drawables drawables = entities.getComponent(entity.id(), Drawables.class);
-            if (firstMeshPart(drawables) == null) {
+            if (!hasAnyMeshPart(drawables)) {
                 continue;
             }
             RenderLayer renderLayer = entities.getComponent(entity.id(), RenderLayer.class);
@@ -191,16 +209,16 @@ public final class World3dPass {
         return result;
     }
 
-    private static DrawablePart firstMeshPart(Drawables drawables) {
+    private static boolean hasAnyMeshPart(Drawables drawables) {
         if (drawables == null) {
-            return null;
+            return false;
         }
         for (DrawablePart part : drawables.parts()) {
-            if (part.kind() == DrawableKind.MESH) {
-                return part;
+            if (shouldDrawMeshPart(part)) {
+                return true;
             }
         }
-        return null;
+        return false;
     }
 
     public void dispose() {
