@@ -10,9 +10,13 @@ import dev.hermes.core.resource.DecodedPayload;
 import dev.hermes.core.resource.ResourceLoader;
 import dev.hermes.core.resource.ResourcePlatform;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Locale;
+import java.util.UUID;
 
 /** Loads split glTF (and desktop GLB) assets through gdx-gltf. */
 public final class GltfModelResourceLoader implements ResourceLoader {
@@ -53,9 +57,10 @@ public final class GltfModelResourceLoader implements ResourceLoader {
         }
         String ext = extension(path);
         try {
+            FileHandle loadable = materializeForSeparatedLoading(file, path, ext);
             Object loader = createLoader(ext);
             Method load = loader.getClass().getMethod("load", FileHandle.class);
-            Object loaded = load.invoke(loader, file);
+            Object loaded = load.invoke(loader, loadable);
             return extractModel(loaded);
         } catch (ResourceLoadException e) {
             throw e;
@@ -68,6 +73,47 @@ public final class GltfModelResourceLoader implements ResourceLoader {
     public void dispose(Object resource) {
         if (resource instanceof Model) {
             ((Model) resource).dispose();
+        }
+    }
+
+    private static FileHandle materializeForSeparatedLoading(FileHandle file, String path, String ext) {
+        File backing = file.file();
+        if (backing != null) {
+            return file;
+        }
+        if (!"gltf".equals(ext)) {
+            return file;
+        }
+        if (ResourcePlatform.isHtmlPlatform()) {
+            return file;
+        }
+        try {
+            File tempDir =
+                    new File(
+                            System.getProperty("java.io.tmpdir"),
+                            "hermes-gltf-" + UUID.randomUUID());
+            if (!tempDir.mkdirs() && !tempDir.isDirectory()) {
+                throw new ResourceLoadException("Unable to create temp glTF directory: " + tempDir);
+            }
+            String fileName = fileNameFromPath(path);
+            File gltfFile = new File(tempDir, fileName);
+            writeBytes(gltfFile, readAllBytes(file));
+
+            int slash = path.lastIndexOf('/');
+            String directory = slash >= 0 ? path.substring(0, slash + 1) : "";
+            String binPath = directory + stripExtension(fileName) + ".bin";
+            FileHandle binSource = HermesAssetPaths.internal(binPath);
+            if (!binSource.exists()) {
+                binSource = Gdx.files.internal(binPath);
+            }
+            if (binSource.exists()) {
+                writeBytes(new File(tempDir, fileNameFromPath(binPath)), readAllBytes(binSource));
+            }
+            return new FileHandle(gltfFile);
+        } catch (ResourceLoadException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResourceLoadException("Failed to materialize classpath glTF: " + path, e);
         }
     }
 
@@ -162,6 +208,32 @@ public final class GltfModelResourceLoader implements ResourceLoader {
             return (Object[]) value;
         }
         return null;
+    }
+
+    private static void writeBytes(File target, byte[] bytes) {
+        try (FileOutputStream out = new FileOutputStream(target)) {
+            out.write(bytes);
+        } catch (Exception e) {
+            throw new ResourceLoadException("Failed to write glTF temp file: " + target, e);
+        }
+    }
+
+    private static byte[] readAllBytes(FileHandle file) {
+        try (InputStream in = file.read()) {
+            return in.readAllBytes();
+        } catch (Exception e) {
+            throw new ResourceLoadException("Failed to read glTF asset bytes", e);
+        }
+    }
+
+    private static String fileNameFromPath(String path) {
+        int slash = path.lastIndexOf('/');
+        return slash >= 0 ? path.substring(slash + 1) : path;
+    }
+
+    private static String stripExtension(String name) {
+        int idx = name.lastIndexOf('.');
+        return idx < 0 ? name : name.substring(0, idx);
     }
 
     private static String extension(String path) {

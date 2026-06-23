@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-    implementation "com.github.mgsx-dev.gdx-gltf:gdx-gltf:2.1.2"
+    implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.2.1"
 }
