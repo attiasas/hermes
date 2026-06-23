@@ -6,13 +6,16 @@ import com.badlogic.gdx.graphics.g3d.loader.ObjLoader;
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceLoadException;
 import dev.hermes.core.HermesAssetPaths;
+import dev.hermes.core.render.resource.PrimitiveModelDocument;
+import dev.hermes.core.render.resource.PrimitiveModelGenerator;
 import dev.hermes.core.resource.DecodedPayload;
 import dev.hermes.core.resource.ResourceLoader;
 
-/** Loads Wavefront OBJ models via {@link ObjLoader}. */
+/** Loads Wavefront OBJ models or procedural primitives from generator JSON / synthetic paths. */
 public final class ModelResourceLoader implements ResourceLoader {
 
     private final ObjLoader objLoader = new ObjLoader();
+    private final PrimitiveModelGenerator primitiveGenerator = new PrimitiveModelGenerator();
 
     @Override
     public ResourceKind kind() {
@@ -21,6 +24,9 @@ public final class ModelResourceLoader implements ResourceLoader {
 
     @Override
     public DecodedPayload decode(String path) {
+        if (PrimitiveModelDocument.isSyntheticPath(path)) {
+            return DecodedPayload.fromSourcePath(path);
+        }
         FileHandle file = HermesAssetPaths.internal(path);
         if (!file.exists()) {
             throw new ResourceLoadException("Model asset not found: " + path);
@@ -34,7 +40,14 @@ public final class ModelResourceLoader implements ResourceLoader {
         if (path == null || path.isBlank()) {
             throw new ResourceLoadException("Model decode produced no source path");
         }
-        return objLoader.loadModel(HermesAssetPaths.internal(path));
+        if (PrimitiveModelDocument.isSyntheticPath(path)) {
+            return primitiveGenerator.generate(PrimitiveModelDocument.parseSyntheticPath(path));
+        }
+        FileHandle file = HermesAssetPaths.internal(path);
+        if (path.endsWith(".json")) {
+            return primitiveGenerator.generate(PrimitiveModelDocument.parseJson(file.readString("UTF-8")));
+        }
+        return objLoader.loadModel(file);
     }
 
     @Override

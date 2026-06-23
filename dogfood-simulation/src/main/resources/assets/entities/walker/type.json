@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "components": {
+    "Drawables": {
+      "parts": [
+        {
+          "id": "body",
+          "kind": "sprite",
+          "texture": "hermes-logo.png",
+          "sheet": { "columns": 4, "rows": 1, "frameWidth": 64, "frameHeight": 256 }
+        }
+      ]
+    },
+    "Material": { "shader": "default/unlit" },
+    "AnimationController": {
+      "clips": {
+        "walk": "animations/hero-walk.json"
+      },
+      "default": "walk"
+    }
+  }
+}

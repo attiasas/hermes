@@ -58,7 +58,7 @@ final class EntityFactory {
         String drawableType = null;
         for (JsonValue entry : merged) {
             String typeName = entry.name;
-            if (BuiltinComponents.SPRITE.equals(typeName) || BuiltinComponents.MESH.equals(typeName)) {
+            if (BuiltinComponents.DRAWABLES.equals(typeName)) {
                 hasDrawable = true;
                 drawableType = typeName;
             }

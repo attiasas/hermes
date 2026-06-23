@@ -9,6 +9,10 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g3d.Model;
 import dev.hermes.api.Entity;
+import dev.hermes.api.ecs.DrawablePart;
+import dev.hermes.api.ecs.Drawables;
+import dev.hermes.api.ecs.Material;
+import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.TestGdx;
@@ -58,6 +62,23 @@ final class World3dPassTest {
     }
 
     @Test
+    void collectDrawables_multiPartEntity_returnsOneDrawable() {
+        Entity entity = world.create("multi");
+        world.addComponent(entity.id(), new Transform());
+        world.addComponent(entity.id(), new Material());
+        world.addComponent(
+                entity.id(),
+                new Drawables(
+                        List.of(
+                                DrawablePart.mesh("body", "models/cube.obj"),
+                                DrawablePart.mesh("hat", "models/cube.obj"))));
+
+        List<Entity> drawables = World3dPass.collectDrawables(world);
+        assertEquals(1, drawables.size());
+        assertEquals("multi", drawables.get(0).name());
+    }
+
+    @Test
     void meshWithoutMaterial_failsSceneLoad() {
         String json =
                 "{\n"
@@ -65,7 +86,7 @@ final class World3dPassTest {
                         + "    \"id\": \"bad\",\n"
                         + "    \"components\": {\n"
                         + "      \"Transform\": {},\n"
-                        + "      \"Mesh\": { \"model\": \"models/cube.obj\" }\n"
+                        + "      \"Drawables\": { \"mesh\": \"models/cube.obj\" }\n"
                         + "    }\n"
                         + "  }]\n"
                         + "}\n";
@@ -75,7 +96,7 @@ final class World3dPassTest {
                         SceneParseException.class,
                         () -> SceneLoader.loadFromString("scenes/bad.json", json, world, registry));
 
-        assertTrue(error.getMessage().contains("Mesh requires a Material"));
+        assertTrue(error.getMessage().contains("Drawables requires a Material"));
     }
 
     @Test

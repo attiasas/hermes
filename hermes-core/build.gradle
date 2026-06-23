@@ -7,6 +7,7 @@ dependencies {
     api project(':hermes-api')
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
     implementation "com.badlogicgames.gdx-controllers:gdx-controllers-core:$gdxControllersVersion"
+    implementation "com.github.mgsx-dev.gdx-gltf:gltf:2.2.1"
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'

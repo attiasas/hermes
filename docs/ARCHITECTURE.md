@@ -15,7 +15,7 @@ dogfood-simulation ──api──► hermes-api ◄── hermes-core (+ libGDX
 
 | Module                 | Role                                                                                                                                                                                               |
 |------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `hermes-api`           | Public types: `HermesApplication`, ECS (`WorldManager`, `EntityStore`, `Component`, `System`), entity types (`EntityTypeRegistry`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, `UiService`, scene-facing components (`Transform`, `Sprite`, `Camera`, `Selectable`, `UiAttach`). No libGDX. |
+| `hermes-api`           | Public types: `HermesApplication`, ECS (`WorldManager`, `EntityStore`, `Component`, `System`), entity types (`EntityTypeRegistry`), scene stack (`SceneManager`, `SceneChangeRequest`), `InputService`, `ViewportService`, `UiService`, `AnimationService`, scene-facing components (`Transform`, `Drawables`, `AnimationController`, `Camera`, `Selectable`, `UiAttach`). No libGDX. |
 | `hermes-core`          | Engine implementation: `SceneManagerImpl`, scene load, ECS runtime, rendering. Depends on `hermes-api` and libGDX (not exposed to game compile classpath).                                         |
 | `hermes-launcher-*`    | Platform entrypoints (LWJGL3, TeaVM, Android). Depend on `hermes-core`. Included by the settings plugin when enabled.                                                                              |
 | `dogfood-simulation`   | Engine monorepo dogfood game. `api` → `hermes-api`, `runtimeOnly` → `hermes-core`.                                                                    |
@@ -224,8 +224,28 @@ and [coordinate-spaces.md](coordinate-spaces.md).
 | Bindings | `setBinding` / `UiBindingProvider` for dynamic HUD (tier 2) |
 | SPI | `UiWidgetRegistration` for custom widget types (tier 4) |
 
-`RenderLayer` and `PickLayer` are **WORLD** only; menus and HUDs are not `Sprite` + `PickLayer.UI`. Author tiers and
+`RenderLayer` and `PickLayer` are **WORLD** only; menus and HUDs are not drawable entities with screen pick layers. Author tiers and
 breaking changes from the legacy sprite UI path: [ui-format-v1.md](ui-format-v1.md).
+
+## Drawables and animation
+
+Visual entities use **`Drawables`** (multi-part mesh/sprite parts) instead of single `Mesh` / `Sprite` components. Each part has an optional **`local`** offset from the entity root `Transform`; the render passes compose `root × local` at draw time.
+
+| Piece | Role |
+|-------|------|
+| `Drawables` / `DrawablePart` | Static or rigged (`rig: gltf`) visual parts |
+| `AnimationController` | Logical clip map + runtime playback state |
+| `AnimationSystem` | ACTIVE_SCENE; delegates to `AnimationBackendRegistry` |
+| `HermesTrackBackend` | Evaluates Hermes JSON keyframe clips (`ResourceKind.ANIMATION_CLIP`) |
+| `GltfAnimationBackend` | Skeletal glTF clip playback on rigged parts |
+| `AnimationService` | `engine.animation()` — `play`, `stop`, `setSpeed`, query state |
+| `AnimationRegistration` SPI | Register custom backends and `AnimationTrackResolver` hooks |
+
+**Animation sources (v1):** Hermes hand-authored JSON (`assets/animations/*.json`) for 2D/props/uniforms, and named glTF clips from DCC exports for skinned 3D. One active clip per entity; switch from JSON (`AnimationController.default`) or Java (`AnimationService.play`).
+
+**HTML parity:** Hermes clips run on TeaVM unchanged. glTF assets for web must use **split `.gltf` + `.bin` + PNG** — not embedded `.glb`. See [animations.md](animations.md) and [resource-management.md](resource-management.md#html--teavm).
+
+Author tiers (shorthand drawable → multi-part → clips → Java → SPI): [animations.md](animations.md).
 
 ## Related docs
 
@@ -233,6 +253,7 @@ breaking changes from the legacy sprite UI path: [ui-format-v1.md](ui-format-v1.
 - [Input system](input.md)
 - [Coordinate spaces & viewport service](coordinate-spaces.md)
 - [Render pipeline](render-pipeline.md)
+- [Animations](animations.md)
 - [Scene format v1](scene-format-v1.md)
 - [UI format v1](ui-format-v1.md)
 - [Entity types](entity-types.md)

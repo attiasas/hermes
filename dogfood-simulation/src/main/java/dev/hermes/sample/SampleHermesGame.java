@@ -48,6 +48,7 @@ public final class SampleHermesGame implements HermesApplication {
         engine.scenes().registry().register("game", "scenes/main.json");
         engine.scenes().registry().register("pause", "scenes/pause.json");
         engine.scenes().registry().register("advanced-render", "demos/advanced-render.json");
+        engine.scenes().registry().register("animation-starter", "scenes/animation-starter.json");
         engine.addSystem(new BounceMarkerSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new MenuNavigationSystem(engine.scenes(), engine.input()));
         engine.addSystem(new DogfoodUiBindingsSystem(engine));

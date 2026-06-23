@@ -34,15 +34,29 @@ assets/
   "version": 1,
   "components": {
     "Transform": { "x": 0, "y": 0, "z": 0 },
-    "Mesh": { "model": "models/cube.obj", "texture": "hermes-logo.png" },
-    "Material": { "shader": "default/unlit" },
+    "Drawables": {
+      "parts": [
+        { "id": "cube", "kind": "mesh", "model": "@cube" },
+        {
+          "id": "logo",
+          "kind": "sprite",
+          "texture": "@logo",
+          "local": { "y": 1.4, "scaleX": 0.25, "scaleY": 0.25 }
+        }
+      ]
+    },
+    "Material": { "shader": "default/lit" },
+    "AnimationController": {
+      "clips": { "pulse": "animations/logo-pulse.json" },
+      "default": "pulse"
+    },
     "SpinMarker": {
       "speed": 1.2,
       "centerX": { "$ref": "Transform.x" },
       "centerY": { "$ref": "Transform.y" },
       "radius": 1.5
     },
-    "Selectable": { "radius": 1.2, "layer": "WORLD" }
+    "Selectable": { "radius": 2.0, "layer": "WORLD" }
   }
 }
 ```
@@ -52,7 +66,52 @@ assets/
 | `version` | Yes | Must be `1`. |
 | `components` | No | Default component map (same shape as scene `entities[].components`). |
 
-Every entity with `Sprite` or `Mesh` **must** also have `Material` after merge (same rule as [scene-format-v1.md](scene-format-v1.md)).
+Every entity with `Drawables` **must** also have `Material` after merge (same rule as [scene-format-v1.md](scene-format-v1.md)).
+
+### glTF character template
+
+Skeletal 3D characters use a rigged mesh part and glTF clip names:
+
+```json
+{
+  "version": 1,
+  "components": {
+    "Drawables": {
+      "parts": [
+        {
+          "id": "body",
+          "kind": "mesh",
+          "model": "models/hero.gltf",
+          "rig": "gltf"
+        }
+      ]
+    },
+    "Material": { "shader": "default/lit" },
+    "AnimationController": {
+      "rigPart": "body",
+      "clips": {
+        "idle": { "type": "gltf", "clip": "Idle" },
+        "walk": { "type": "gltf", "clip": "Walk" }
+      },
+      "default": "idle"
+    }
+  }
+}
+```
+
+Scene instance:
+
+```json
+{
+  "type": "gltf-character",
+  "id": "hero",
+  "components": {
+    "Transform": { "x": 0, "y": 0, "z": 0 }
+  }
+}
+```
+
+Export split `.gltf` + `.bin` + PNG for HTML targets. Full animation guide: [animations.md](animations.md).
 
 ## Scene entities: `type`, `kind`, and merge
 
@@ -175,10 +234,11 @@ Render and input take **`EntityStore`**: `RenderGraph.render(entities)`, `InputS
 
 | Tier | What you write | Example |
 |------|----------------|---------|
-| **1 — Templates** | `type.json` + scene `"type"` + small overrides | Spinning cube from `entities/spin-cube/type.json` |
+| **1 — Templates** | `type.json` + scene `"type"` + small overrides | Spinning cube from `entities/spin-cube/type.json` (Drawables + Hermes pulse) |
 | **2 — Runtime spawn** | Same templates; `entities.spawn(kind)` | Spawn enemies from a wave system |
-| **3 — Custom components** | Register deserializer + optional `ComponentContext` | `PulseMarker` with JSON fields |
-| **4 — Systems** | `System.update(WorldManager, float)` querying `manager.entities()` | Movement, AI, cross-entity rules |
+| **3 — Animation clips** | `AnimationController` + Hermes JSON or glTF clips in template | Walk cycles, logo pulse — no Java ([animations.md](animations.md)) |
+| **4 — Java control** | `engine.animation().play(...)` or custom components | Clip switching, `PulseMarker`-style markers |
+| **5 — Systems / SPI** | `System.update(WorldManager, float)` or `AnimationRegistration` | Movement, AI, custom animation backends |
 
 Start at tier 1. Add Java only when config cannot express the behavior.
 
@@ -212,6 +272,7 @@ A post-load hook will ensure reserved entities exist when those features land. D
 
 ## Related docs
 
+- [Animations](animations.md) — Hermes clips, glTF, drawables, HTML parity
 - [Scene format v1](scene-format-v1.md) — scene JSON schema
 - [Scene management](scene-management.md) — stack, `SystemScope`, lifecycle
 - [Architecture](ARCHITECTURE.md) — ECS module layout

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Shader and uniform bindings for drawable entities ({@link Sprite}, {@link Mesh}).
+ * Shader and uniform bindings for drawable entities ({@link Drawables}).
  */
 public final class Material implements Component {
 

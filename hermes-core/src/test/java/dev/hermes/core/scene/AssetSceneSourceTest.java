@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.ComponentRegistry;
 import dev.hermes.api.ecs.EntityStore;
-import dev.hermes.api.ecs.Sprite;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.WorldManager;
 import dev.hermes.api.scene.SceneLoadContext;
@@ -44,7 +44,7 @@ final class AssetSceneSourceTest {
         assertNotNull(logo);
         assertEquals(140f, entities.getComponent(logo.id(), Transform.class).x());
         assertEquals(210f, entities.getComponent(logo.id(), Transform.class).y());
-        assertEquals("hermes-logo.png", entities.getComponent(logo.id(), Sprite.class).texture());
+        assertEquals("hermes-logo.png", entities.getComponent(logo.id(), Drawables.class).parts().get(0).texture());
     }
 
     private static SceneLoadContext sceneLoadContext(WorldManager manager, ComponentRegistry registry) {

@@ -65,7 +65,7 @@ class NewCommandTest {
                         target.resolve("game/src/main/resources/assets/scenes/main.json"),
                         StandardCharsets.UTF_8);
         assertTrue(scene.contains("\"projection\": \"orthographic\""));
-        assertTrue(scene.contains("\"Sprite\""));
+        assertTrue(scene.contains("\"Drawables\""));
     }
 
     @Test

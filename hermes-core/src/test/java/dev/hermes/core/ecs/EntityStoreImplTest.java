@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.EntityKind;
-import dev.hermes.api.ecs.Sprite;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Transform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,13 +27,13 @@ final class EntityStoreImplTest {
     void createAndAddComponents() {
         Entity entity = world.create("player");
         world.addComponent(entity.id(), new Transform(10f, 20f));
-        world.addComponent(entity.id(), new Sprite("logo.png"));
+        world.addComponent(entity.id(), Drawables.singleSprite("logo.png"));
 
         assertEquals(1, world.entityCount());
         assertEquals("player", entity.name());
         assertNotNull(world.findByName("player"));
         assertEquals(10f, world.getComponent(entity.id(), Transform.class).x());
-        assertEquals("logo.png", world.getComponent(entity.id(), Sprite.class).texture());
+        assertEquals("logo.png", world.getComponent(entity.id(), Drawables.class).parts().get(0).texture());
         assertTrue(world.hasComponent(entity.id(), Transform.class));
     }
 
@@ -61,10 +61,10 @@ final class EntityStoreImplTest {
     void entitiesWithFiltersByComponentType() {
         Entity a = world.create("a");
         Entity b = world.create("b");
-        world.addComponent(a.id(), new Sprite("a.png"));
+        world.addComponent(a.id(), Drawables.singleSprite("a.png"));
         world.addComponent(b.id(), new Transform());
 
-        assertEquals(1, world.entitiesWith(Sprite.class).size());
+        assertEquals(1, world.entitiesWith(Drawables.class).size());
         assertEquals(1, world.entitiesWith(Transform.class).size());
     }
 
@@ -73,7 +73,7 @@ final class EntityStoreImplTest {
         Entity a = world.create("a", EntityKind.of("character"));
         world.addComponent(a.id(), new Transform());
         Entity b = world.create("b");
-        world.addComponent(b.id(), new Sprite("x.png"));
+        world.addComponent(b.id(), Drawables.singleSprite("x.png"));
 
         world.clear();
 

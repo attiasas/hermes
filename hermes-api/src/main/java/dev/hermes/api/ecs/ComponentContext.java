@@ -9,6 +9,29 @@ import dev.hermes.api.resource.ResourceService;
  */
 public interface ComponentContext {
 
+    ComponentContext EMPTY =
+            new ComponentContext() {
+                @Override
+                public EntityId entityId() {
+                    return new EntityId(0);
+                }
+
+                @Override
+                public EntityKind kind() {
+                    return EntityKind.UNSET;
+                }
+
+                @Override
+                public String entityName() {
+                    return "";
+                }
+
+                @Override
+                public <T extends Component> T sibling(Class<T> type) {
+                    return null;
+                }
+            };
+
     EntityId entityId();
 
     EntityKind kind();

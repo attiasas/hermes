@@ -6,8 +6,6 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import dev.hermes.api.EntityId;
 import dev.hermes.api.ecs.EntityKind;
-import dev.hermes.api.ecs.Material;
-import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.Transform;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

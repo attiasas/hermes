@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "duration": 0.8,
+  "loop": true,
+  "tracks": [
+    {
+      "target": "parts.body.frame",
+      "interpolation": "step",
+      "keyframes": [
+        { "t": 0.0, "v": 0 },
+        { "t": 0.2, "v": 1 },
+        { "t": 0.4, "v": 2 },
+        { "t": 0.6, "v": 3 }
+      ]
+    }
+  ]
+}

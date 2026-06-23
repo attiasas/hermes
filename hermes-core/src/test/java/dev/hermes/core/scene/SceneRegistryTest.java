@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
-import dev.hermes.api.ecs.Sprite;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.scene.SceneChangeRequest;
 import dev.hermes.api.scene.SceneDefinition;
@@ -43,7 +43,7 @@ final class SceneRegistryTest {
         assertEquals(210f, engine.scenes().activeManager().entities().getComponent(logo.id(), Transform.class).y());
         assertEquals(
                 "hermes-logo.png",
-                engine.scenes().activeManager().entities().getComponent(logo.id(), Sprite.class).texture());
+                engine.scenes().activeManager().entities().getComponent(logo.id(), Drawables.class).parts().get(0).texture());
     }
 
     @Test

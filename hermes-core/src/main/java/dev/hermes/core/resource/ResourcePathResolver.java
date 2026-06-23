@@ -36,8 +36,18 @@ public final class ResourcePathResolver {
     }
 
     private static Resolved resolvePath(String path, ResourceKind kind) {
-        if (!HermesAssetPaths.internal(path).exists()) {
-            throw new ResourceLoadException("Resource file not found: " + path);
+        if (path.startsWith("primitive:")) {
+            return new Resolved(path, kind);
+        }
+        String assetPath = path;
+        if (kind == ResourceKind.SPRITE_SHEET) {
+            int hash = path.indexOf('#');
+            if (hash > 0) {
+                assetPath = path.substring(0, hash);
+            }
+        }
+        if (!HermesAssetPaths.internal(assetPath).exists()) {
+            throw new ResourceLoadException("Resource file not found: " + assetPath);
         }
         return new Resolved(path, kind);
     }

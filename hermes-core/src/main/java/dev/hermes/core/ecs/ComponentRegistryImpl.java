@@ -44,6 +44,10 @@ public final class ComponentRegistryImpl implements ComponentRegistry {
         return registrations.containsKey(typeName);
     }
 
+    Component deserialize(String typeName, ComponentData data, ComponentContext context) {
+        return deserialize("", "", typeName, data, context);
+    }
+
     Component deserialize(
             String scenePath, String entityName, String typeName, ComponentData data, ComponentContext context) {
         Registration registration = registrations.get(typeName);

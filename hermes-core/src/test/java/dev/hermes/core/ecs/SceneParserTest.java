@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.hermes.api.Entity;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.EntityKind;
-import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 
 import java.util.Optional;
@@ -36,7 +36,7 @@ final class SceneParserTest {
                         + "      \"id\": \"logo\",\n"
                         + "      \"components\": {\n"
                         + "        \"Transform\": { \"x\": 140, \"y\": 210 },\n"
-                        + "        \"Sprite\": { \"texture\": \"hermes-logo.png\" },\n"
+                        + "        \"Drawables\": { \"sprite\": \"hermes-logo.png\" },\n"
                         + "        \"Material\": { \"shader\": \"default/unlit\" }\n"
                         + "      }\n"
                         + "    }\n"
@@ -50,7 +50,7 @@ final class SceneParserTest {
         assertNotNull(logo);
         assertEquals(140f, world.getComponent(logo.id(), Transform.class).x());
         assertEquals(210f, world.getComponent(logo.id(), Transform.class).y());
-        assertEquals("hermes-logo.png", world.getComponent(logo.id(), Sprite.class).texture());
+        assertEquals("hermes-logo.png", world.getComponent(logo.id(), Drawables.class).parts().get(0).texture());
     }
 
     @Test
@@ -119,7 +119,7 @@ final class SceneParserTest {
                         + "    {\n"
                         + "      \"id\": \"logo\",\n"
                         + "      \"components\": {\n"
-                        + "        \"Sprite\": { \"texture\": \"logo.png\" },\n"
+                        + "        \"Drawables\": { \"sprite\": \"logo.png\" },\n"
                         + "        \"Material\": { \"shader\": \"default/unlit\" }\n"
                         + "      }\n"
                         + "    }\n"

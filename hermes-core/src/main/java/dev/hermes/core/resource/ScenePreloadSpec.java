@@ -95,6 +95,10 @@ public final class ScenePreloadSpec {
                 return ResourceKind.TEXTURE;
             case "model":
                 return ResourceKind.MODEL;
+            case "gltf_model":
+            case "gltf-model":
+            case "gltfmodel":
+                return ResourceKind.GLTF_MODEL;
             case "sound":
                 return ResourceKind.SOUND;
             case "font":
@@ -103,6 +107,10 @@ public final class ScenePreloadSpec {
                 return ResourceKind.JSON;
             case "binary":
                 return ResourceKind.BINARY;
+            case "animation_clip":
+            case "animation-clip":
+            case "animationclip":
+                return ResourceKind.ANIMATION_CLIP;
             default:
                 throw new SceneParseException(context + ": unknown kind '" + kindName + "'");
         }

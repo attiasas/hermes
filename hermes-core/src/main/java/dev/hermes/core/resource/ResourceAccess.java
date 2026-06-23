@@ -2,6 +2,7 @@ package dev.hermes.core.resource;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Model;
+import dev.hermes.api.animation.AnimationClip;
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceLoadException;
 import dev.hermes.api.resource.ResourceRef;
@@ -21,8 +22,20 @@ public final class ResourceAccess {
         return require(mgr, ref, ResourceKind.MODEL, Model.class);
     }
 
+    public static Model gltfModel(ResourceManagerImpl mgr, ResourceRef ref) {
+        return require(mgr, ref, ResourceKind.GLTF_MODEL, Model.class);
+    }
+
+    public static TextureRegion[] spriteSheetFrames(ResourceManagerImpl mgr, ResourceRef ref) {
+        return require(mgr, ref, ResourceKind.SPRITE_SHEET, TextureRegion[].class);
+    }
+
     public static TileMapAsset tileMap(ResourceManagerImpl mgr, ResourceRef ref) {
         return require(mgr, ref, ResourceKind.TILEMAP, TileMapAsset.class);
+    }
+
+    public static AnimationClip animationClip(ResourceManagerImpl mgr, ResourceRef ref) {
+        return require(mgr, ref, ResourceKind.ANIMATION_CLIP, AnimationClip.class);
     }
 
     private static <T> T require(

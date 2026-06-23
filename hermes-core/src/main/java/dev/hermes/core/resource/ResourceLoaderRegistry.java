@@ -4,8 +4,11 @@ import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceLoadException;
 import dev.hermes.core.audio.AudioBackends;
 import dev.hermes.core.audio.SoundBackend;
+import dev.hermes.core.resource.loaders.AnimationClipResourceLoader;
+import dev.hermes.core.resource.loaders.GltfModelResourceLoader;
 import dev.hermes.core.resource.loaders.ModelResourceLoader;
 import dev.hermes.core.resource.loaders.SoundResourceLoader;
+import dev.hermes.core.resource.loaders.SpriteSheetResourceLoader;
 import dev.hermes.core.resource.loaders.TextureResourceLoader;
 import dev.hermes.core.world.tilemap.HermesTileMapLoader;
 
@@ -50,7 +53,10 @@ public final class ResourceLoaderRegistry implements dev.hermes.api.resource.Res
         Objects.requireNonNull(soundBackend, "soundBackend");
         ResourceLoaderRegistry registry = new ResourceLoaderRegistry();
         registry.register(ResourceKind.TEXTURE, new TextureResourceLoader());
+        registry.register(ResourceKind.SPRITE_SHEET, new SpriteSheetResourceLoader());
         registry.register(ResourceKind.MODEL, new ModelResourceLoader());
+        registry.register(ResourceKind.GLTF_MODEL, new GltfModelResourceLoader());
+        registry.register(ResourceKind.ANIMATION_CLIP, new AnimationClipResourceLoader());
         registry.register(ResourceKind.SOUND, new SoundResourceLoader(soundBackend));
         registry.register(ResourceKind.TILEMAP, new HermesTileMapLoader());
         return registry;
