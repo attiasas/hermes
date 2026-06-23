@@ -39,6 +39,7 @@ import dev.hermes.core.input.CameraControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
 import dev.hermes.core.lighting.BuiltinLightingSystem;
+import dev.hermes.core.render.resource.PrimitiveModelDocument;
 import dev.hermes.core.ui.UiAttachSystem;
 import dev.hermes.core.ui.UiInputSystem;
 import dev.hermes.core.ui.UiServiceImpl;
@@ -347,17 +348,17 @@ public final class BuiltinComponents {
                 kind == DrawableKind.SPRITE
                         ? DrawablePart.sprite(id, "")
                         : DrawablePart.mesh(id, "");
-        if (entry.has("model")) {
-            part.setModel(resolveResourcePath(entry.getString("model", ""), ctx));
-        }
         if (entry.has("texture")) {
             part.setTexture(resolveResourcePath(entry.getString("texture", ""), ctx));
         }
         if (entry.has("primitive")) {
-            part.setPrimitive(entry.getString("primitive", ""));
-        }
-        if (entry.has("size")) {
-            part.setSize(toFloatArray(entry.get("size")));
+            String primitive = entry.getString("primitive", "");
+            float[] size = entry.has("size") ? toFloatArray(entry.get("size")) : null;
+            part.setPrimitive(primitive);
+            part.setSize(size);
+            part.setModel(PrimitiveModelDocument.syntheticPath(primitive, size));
+        } else if (entry.has("model")) {
+            part.setModel(resolveResourcePath(entry.getString("model", ""), ctx));
         }
         if (entry.has("local")) {
             applyLocalTransform(entry.get("local"), part.local());

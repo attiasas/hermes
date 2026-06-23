@@ -36,6 +36,9 @@ public final class ResourcePathResolver {
     }
 
     private static Resolved resolvePath(String path, ResourceKind kind) {
+        if (path.startsWith("primitive:")) {
+            return new Resolved(path, kind);
+        }
         String assetPath = path;
         if (kind == ResourceKind.SPRITE_SHEET) {
             int hash = path.indexOf('#');
