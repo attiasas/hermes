@@ -21,6 +21,10 @@ public final class ResourceAccess {
         return require(mgr, ref, ResourceKind.MODEL, Model.class);
     }
 
+    public static TextureRegion[] spriteSheetFrames(ResourceManagerImpl mgr, ResourceRef ref) {
+        return require(mgr, ref, ResourceKind.SPRITE_SHEET, TextureRegion[].class);
+    }
+
     public static TileMapAsset tileMap(ResourceManagerImpl mgr, ResourceRef ref) {
         return require(mgr, ref, ResourceKind.TILEMAP, TileMapAsset.class);
     }

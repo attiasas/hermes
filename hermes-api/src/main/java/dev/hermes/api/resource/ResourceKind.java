@@ -7,5 +7,6 @@ public enum ResourceKind {
     FONT,
     JSON,
     BINARY,
-    TILEMAP
+    TILEMAP,
+    SPRITE_SHEET
 }
