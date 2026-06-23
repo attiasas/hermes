@@ -2,6 +2,7 @@ package dev.hermes.core.animation;
 
 import dev.hermes.api.Component;
 import dev.hermes.api.EntityId;
+import dev.hermes.api.animation.AnimationTrackResolver;
 import dev.hermes.api.ecs.DrawablePart;
 import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.EntityStore;
@@ -11,6 +12,7 @@ import dev.hermes.api.ecs.MaterialUniform;
 import dev.hermes.api.ecs.Transform;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -20,12 +22,29 @@ public final class AnimationTargetApplier {
     private static final String TRANSFORM_PREFIX = "Transform.";
     private static final String PARTS_PREFIX = "parts.";
     private static final String MATERIAL_PREFIX = "Material.uniforms.";
+    private final List<AnimationTrackResolver> resolvers;
+
+    public AnimationTargetApplier() {
+        this(List.of());
+    }
+
+    public AnimationTargetApplier(List<AnimationTrackResolver> resolvers) {
+        this.resolvers = Objects.requireNonNull(resolvers, "resolvers");
+    }
 
     public void apply(EntityStore store, EntityId entityId, String target, AnimationTrackEvaluator.Value value) {
         Objects.requireNonNull(store, "store");
         Objects.requireNonNull(entityId, "entityId");
         Objects.requireNonNull(target, "target");
         Objects.requireNonNull(value, "value");
+
+        float scalarValue = value.hasScalar() ? value.scalar() : Float.NaN;
+        float[] valueArray = requireArray(value);
+        for (AnimationTrackResolver resolver : resolvers) {
+            if (resolver != null && resolver.apply(target, scalarValue, valueArray, entityId, store)) {
+                return;
+            }
+        }
 
         if (target.startsWith(TRANSFORM_PREFIX)) {
             applyTransformTarget(store, entityId, target.substring(TRANSFORM_PREFIX.length()), value);
