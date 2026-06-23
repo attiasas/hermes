@@ -7,8 +7,8 @@ Scene files describe entities and their components. They live under the game mod
 Hermes is **pre-release**; the scene format stays **v1** until 1.0. JSON rules may change — update this doc in the same
 PR when they do.
 
-Every entity with a `Sprite` or `Mesh` component **must** also include a `Material` component. Scenes without it fail at
-load time with `SceneParseException`.
+Every entity with a `Drawables` component **must** also include a `Material` component (entity-level or per-part
+override). Scenes without it fail at load time with `SceneParseException`.
 
 ## Top-level shape
 
@@ -21,7 +21,7 @@ load time with `SceneParseException`.
       "id": "logo",
       "components": {
         "Transform": { "x": 140, "y": 210 },
-        "Sprite": { "texture": "hermes-logo.png" },
+        "Drawables": { "sprite": "hermes-logo.png" },
         "Material": { "shader": "default/unlit" }
       }
     }
@@ -53,8 +53,8 @@ load time with `SceneParseException`.
 | Type          | Properties                                      | Description                                                                                                                       |
 |---------------|-------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | `Transform`   | See below                                       | Position, rotation (degrees), and scale. All fields optional.                                                                     |
-| `Sprite`      | `texture` (string)                              | 2D texture path relative to the assets root. **Requires `Material` on the same entity.**                                          |
-| `Mesh`        | `model` (string), `texture` (optional string)   | 3D model path (e.g. Wavefront `.obj`) under the assets root; optional albedo texture. **Requires `Material` on the same entity.** |
+| `Drawables`   | See below                                       | Multi-part mesh/sprite visuals. Shorthand `{ "sprite": "…" }` or `{ "mesh": "…" }`, or `parts[]`. **Requires `Material`.**       |
+| `AnimationController` | See below                               | Logical clip map (Hermes JSON paths or glTF clip names), playback defaults. Optional.                                               |
 | `Material`    | `shader` (string), `uniforms` (optional object) | Shader id and optional uniform map (float arrays). Default shader: `default/unlit`. Use `default/lit` for lit 3D meshes.          |
 | `RenderLayer` | `layer` (string)                                | `"WORLD"` (default). Screen-space UI uses the scene `"ui"` field (widget trees), not `RenderLayer`.                              |
 | `Selectable`  | See below                                       | Marks entity as screen-pickable; pair with `Transform`. Used by built-in selection and drag systems.                              |
@@ -77,24 +77,51 @@ load time with `SceneParseException`.
 | `rotationX`, `rotationY`, `rotationZ` | `0`     | Euler rotation in degrees. `rotationZ` is used for 2D sprite drawing.             |
 | `scaleX`, `scaleY`, `scaleZ`          | `1`     | Scale per axis. `scaleX` / `scaleY` affect sprite size; all axes apply to meshes. |
 
-Sprites and meshes are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity)
+Drawable parts are drawn in **world space**. The active `Camera` entity (with a `Transform` on the same entity)
 defines view projection. Without a camera entity, the engine uses a default orthographic view centered on the viewport.
 See [coordinate-spaces.md](coordinate-spaces.md) for SCREEN / SURFACE / WORLD rules and `engine.viewport()`.
 
-### Sprite + Material
+Full animation guide (Hermes clips, glTF, HTML rules, tiers): [animations.md](animations.md).
+
+### Drawables properties
+
+**Tier 0 — shorthand** (one part, `id: "default"`):
+
+| Property | Description |
+|----------|-------------|
+| `sprite` | 2D texture path (mutually exclusive with `mesh` / `parts`) |
+| `mesh` | 3D model path (OBJ, glTF, or procedural generator JSON) |
+| `texture` | Optional albedo on shorthand mesh |
+
+**Tier 1 — multi-part** — use `parts` array instead of shorthand:
+
+| `parts[]` field | Applies to | Description |
+|-----------------|------------|-------------|
+| `id` | all | Part name; used in animation tracks (`parts.<id>.*`) |
+| `kind` | all | `"mesh"` or `"sprite"` |
+| `model` | mesh | Model path under assets root |
+| `texture` | sprite / mesh | Texture path |
+| `primitive` | mesh | Inline procedural: `"box"`, `"plane"`, `"sphere"` |
+| `size` | mesh + `primitive` | Generator dimensions (float array) |
+| `local` | all | Part offset from entity root (same fields as `Transform` + `visible`, `spriteFrame`) |
+| `sheet` | sprite | `{ "columns", "rows", "frameWidth", "frameHeight" }` for sprite sheets |
+| `material` | all | Optional per-part `{ "shader", "uniforms" }` override |
+| `rig` | mesh | `"gltf"` for skinned glTF parts |
+
+### Drawables + Material (2D)
 
 ```json
 {
   "id": "logo",
   "components": {
     "Transform": { "x": 320, "y": 240 },
-    "Sprite": { "texture": "hermes-logo.png" },
+    "Drawables": { "sprite": "hermes-logo.png" },
     "Material": { "shader": "default/unlit" }
   }
 }
 ```
 
-### Mesh + Material (3D)
+### Drawables + Material (3D)
 
 Place models under `assets/models/` (e.g. `models/cube.obj`). Templates ship a minimal unit cube for experimentation.
 
@@ -103,17 +130,60 @@ Place models under `assets/models/` (e.g. `models/cube.obj`). Templates ship a m
   "id": "cube",
   "components": {
     "Transform": { "z": 0 },
-    "Mesh": { "model": "models/cube.obj" },
+    "Drawables": { "mesh": "models/cube.obj" },
     "Material": { "shader": "default/lit" }
   }
 }
 ```
 
-Optional texture on the mesh:
+Optional texture on shorthand mesh:
 
 ```json
-"Mesh": { "model": "models/cube.obj", "texture": "brick.png" }
+"Drawables": { "mesh": "models/cube.obj", "texture": "brick.png" }
 ```
+
+Multi-part example:
+
+```json
+"Drawables": {
+  "parts": [
+    { "id": "cube", "kind": "mesh", "model": "models/cube.obj" },
+    { "id": "logo", "kind": "sprite", "texture": "hermes-logo.png", "local": { "y": 1.4, "scaleX": 0.25, "scaleY": 0.25 } }
+  ]
+}
+```
+
+### AnimationController properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `clips` | required | Map: logical name → Hermes JSON path string **or** clip object |
+| `rigPart` | — | Part id with `"rig": "gltf"`; required when any clip has `"type": "gltf"` |
+| `default` | first clip key | Clip played on spawn when `autoPlay` is true |
+| `speed` | `1.0` | Global playback speed multiplier |
+| `autoPlay` | `true` | Start `default` clip at entity creation |
+
+Clip object (when not a plain string path):
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `type` | `hermes` (string paths) or `gltf` | v1: `hermes` \| `gltf` only |
+| `path` | — | Hermes clip JSON path |
+| `clip` | — | glTF animation name |
+| `loop` | `true` | Per-clip loop override |
+| `speed` | controller `speed` | Per-clip speed multiplier |
+
+```json
+"AnimationController": {
+  "clips": {
+    "pulse": "animations/logo-pulse.json",
+    "walk": { "type": "gltf", "clip": "Walk" }
+  },
+  "default": "pulse"
+}
+```
+
+Java playback: `engine.animation().play(entityId, "pulse")`. See [animations.md](animations.md).
 
 Use a perspective camera for 3D scenes:
 
@@ -147,7 +217,7 @@ Example with tint:
 
 | Property | Default   | Description                                                             |
 |----------|-----------|-------------------------------------------------------------------------|
-| `layer`  | `"WORLD"` | World-space draw order for sprites and meshes.                            |
+| `layer`  | `"WORLD"` | World-space draw order for drawable parts.                            |
 
 ### Selectable properties
 
@@ -230,7 +300,7 @@ Pair dynamic values with `engine.ui().setBinding(...)` (tier 2). Do not use `Ren
 ### Camera properties
 
 **Required:** a `Transform` on the same entity (camera position and rotation). Camera entities are never drawn, even if
-they also have a `Sprite` or `Mesh`.
+they also have `Drawables`.
 
 | Property                          | Default          | Description                                                                                                       |
 |-----------------------------------|------------------|-------------------------------------------------------------------------------------------------------------------|
@@ -293,7 +363,7 @@ For moving or flickering lights, use light **entities** with `Transform` (see be
 
 ### Light components
 
-Light entities do not require `Mesh` or `Sprite` — they are invisible unless you add debug geometry later.
+Light entities do not require `Drawables` — they are invisible unless you add debug geometry later.
 
 Shared optional fields on all light components: `enabled` (default `true`), `intensity` (default `1`), `color` (RGBA
 float array, alpha ignored).
@@ -370,7 +440,8 @@ from Java.
 | `paths[].kind` | Maps to |
 |----------------|---------|
 | `texture` | 2D texture |
-| `model` | Wavefront OBJ |
+| `model` | Wavefront OBJ or glTF |
+| `animation_clip` | Hermes keyframe clip JSON |
 | `sound` | Sound clip (skipped on HTML v1) |
 | `font` | Bitmap font |
 | `json` | Raw JSON |
