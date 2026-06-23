@@ -103,6 +103,10 @@ public final class ScenePreloadSpec {
                 return ResourceKind.JSON;
             case "binary":
                 return ResourceKind.BINARY;
+            case "animation_clip":
+            case "animation-clip":
+            case "animationclip":
+                return ResourceKind.ANIMATION_CLIP;
             default:
                 throw new SceneParseException(context + ": unknown kind '" + kindName + "'");
         }

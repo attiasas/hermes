@@ -90,6 +90,10 @@ public final class ResourceBundleLoader {
                 return ResourceKind.JSON;
             case "binary":
                 return ResourceKind.BINARY;
+            case "animation_clip":
+            case "animation-clip":
+            case "animationclip":
+                return ResourceKind.ANIMATION_CLIP;
             default:
                 throw new ResourceLoadException(context + ": unknown kind '" + kindName + "'");
         }

@@ -79,6 +79,10 @@ public final class ResourceCatalogLoader {
                 return ResourceKind.JSON;
             case "binary":
                 return ResourceKind.BINARY;
+            case "animation_clip":
+            case "animation-clip":
+            case "animationclip":
+                return ResourceKind.ANIMATION_CLIP;
             default:
                 throw new ResourceLoadException(
                         "catalog entry '" + alias + "': unknown kind '" + kindName + "'");

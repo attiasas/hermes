@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "duration": 0.8,
+  "loop": true,
+  "tracks": [
+    {
+      "target": "Transform.scaleX",
+      "interpolation": "linear",
+      "keyframes": [
+        {"t": 0, "v": 1},
+        {"t": 0.5, "v": 1.15}
+      ]
+    },
+    {
+      "target": "parts.body.frame",
+      "interpolation": "step",
+      "keyframes": [
+        {"t": 0, "v": 0},
+        {"t": 0.2, "v": 1}
+      ]
+    },
+    {
+      "target": "Material.uniforms.tint",
+      "interpolation": "linear",
+      "keyframes": [
+        {"t": 0, "v": [1.0, 0.75, 0.25, 1.0]}
+      ]
+    }
+  ]
+}
