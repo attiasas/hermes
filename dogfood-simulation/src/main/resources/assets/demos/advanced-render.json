@@ -21,8 +21,8 @@
           "scaleY": 1,
           "scaleZ": 1
         },
-        "Mesh": {
-          "model": "models/plane.obj"
+        "Drawables": {
+          "mesh": "models/plane.obj"
         },
         "Material": {
           "shader": "water",
@@ -42,8 +42,8 @@
           "y": 0.6,
           "z": 0
         },
-        "Mesh": {
-          "model": "models/cube.obj"
+        "Drawables": {
+          "mesh": "models/cube.obj"
         },
         "Material": {
           "shader": "default/unlit"

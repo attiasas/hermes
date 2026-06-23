@@ -2,7 +2,7 @@
   "version": 1,
   "components": {
     "Transform": { "z": 0 },
-    "Mesh": { "model": "models/cube.obj" },
+    "Drawables": { "mesh": "models/cube.obj" },
     "Material": { "shader": "default/lit" },
     "PulseMarker": { "amplitude": 0.15, "speed": 2.5 },
     "Selectable": { "radius": 1.2, "layer": "WORLD" }

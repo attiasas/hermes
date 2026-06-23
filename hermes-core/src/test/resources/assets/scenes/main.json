@@ -7,8 +7,8 @@
           "x": 140,
           "y": 210
         },
-        "Sprite": {
-          "texture": "hermes-logo.png"
+        "Drawables": {
+          "sprite": "hermes-logo.png"
         },
         "Material": {
           "shader": "default/unlit"

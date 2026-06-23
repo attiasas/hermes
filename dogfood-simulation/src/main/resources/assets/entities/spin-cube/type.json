@@ -2,7 +2,7 @@
   "version": 1,
   "components": {
     "Transform": { "x": 0, "y": 0, "z": 0 },
-    "Mesh": { "model": "@cube", "texture": "@logo" },
+    "Drawables": { "mesh": "@cube", "sprite": "@logo" },
     "Material": { "shader": "default/lit" },
     "SpinMarker": {
       "speed": 1.2,

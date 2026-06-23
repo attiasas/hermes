@@ -22,8 +22,8 @@
           "scaleX": 0.35,
           "scaleY": 0.35
         },
-        "Sprite": {
-          "texture": "hermes-logo.png"
+        "Drawables": {
+          "sprite": "hermes-logo.png"
         },
         "Material": {
           "shader": "default/unlit"
@@ -48,8 +48,8 @@
           "scaleX": 0.35,
           "scaleY": 0.35
         },
-        "Sprite": {
-          "texture": "hermes-logo.png"
+        "Drawables": {
+          "sprite": "hermes-logo.png"
         },
         "Material": {
           "shader": "default/unlit"
