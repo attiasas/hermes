@@ -65,7 +65,7 @@ final class World3dPassTest {
                         + "    \"id\": \"bad\",\n"
                         + "    \"components\": {\n"
                         + "      \"Transform\": {},\n"
-                        + "      \"Mesh\": { \"model\": \"models/cube.obj\" }\n"
+                        + "      \"Drawables\": { \"mesh\": \"models/cube.obj\" }\n"
                         + "    }\n"
                         + "  }]\n"
                         + "}\n";
@@ -75,7 +75,7 @@ final class World3dPassTest {
                         SceneParseException.class,
                         () -> SceneLoader.loadFromString("scenes/bad.json", json, world, registry));
 
-        assertTrue(error.getMessage().contains("Mesh requires a Material"));
+        assertTrue(error.getMessage().contains("Drawables requires a Material"));
     }
 
     @Test

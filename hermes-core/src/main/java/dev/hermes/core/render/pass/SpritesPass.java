@@ -6,9 +6,11 @@ import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Vector3;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.DrawableKind;
+import dev.hermes.api.ecs.DrawablePart;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.RenderLayer;
-import dev.hermes.api.ecs.Sprite;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.resource.ResourceKind;
@@ -74,11 +76,12 @@ public final class SpritesPass {
 
     private void drawSprite(EntityStore entities, Entity entity, ActiveCamera active, BoundCamera bound) {
         Transform transform = entities.getComponent(entity.id(), Transform.class);
-        Sprite sprite = entities.getComponent(entity.id(), Sprite.class);
-        if (transform == null || sprite == null) {
+        Drawables drawables = entities.getComponent(entity.id(), Drawables.class);
+        DrawablePart spritePart = firstSpritePart(drawables);
+        if (transform == null || spritePart == null) {
             return;
         }
-        String texturePath = sprite.texture();
+        String texturePath = spritePart.texture();
         if (texturePath == null || texturePath.isBlank()) {
             return;
         }
@@ -143,11 +146,15 @@ public final class SpritesPass {
         Set<RenderLayer.Layer> allowed =
                 layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.WORLD) : layers;
         List<Entity> result = new ArrayList<>();
-        for (Entity entity : entities.entitiesWith(Sprite.class)) {
+        for (Entity entity : entities.entitiesWith(Drawables.class)) {
             if (entities.hasComponent(entity.id(), Camera.class)) {
                 continue;
             }
             if (!entities.hasComponent(entity.id(), Transform.class)) {
+                continue;
+            }
+            Drawables drawables = entities.getComponent(entity.id(), Drawables.class);
+            if (firstSpritePart(drawables) == null) {
                 continue;
             }
             RenderLayer renderLayer = entities.getComponent(entity.id(), RenderLayer.class);
@@ -159,6 +166,18 @@ public final class SpritesPass {
             result.add(entity);
         }
         return result;
+    }
+
+    private static DrawablePart firstSpritePart(Drawables drawables) {
+        if (drawables == null) {
+            return null;
+        }
+        for (DrawablePart part : drawables.parts()) {
+            if (part.kind() == DrawableKind.SPRITE) {
+                return part;
+            }
+        }
+        return null;
     }
 
     public void dispose() {

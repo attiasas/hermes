@@ -12,8 +12,10 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FlushablePool;
 import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
+import dev.hermes.api.ecs.DrawableKind;
+import dev.hermes.api.ecs.DrawablePart;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Material;
-import dev.hermes.api.ecs.Mesh;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.EntityStore;
@@ -81,12 +83,13 @@ public final class World3dPass {
 
     private void drawMesh(EntityStore entities, Entity entity, Environment environment) {
         Transform transform = entities.getComponent(entity.id(), Transform.class);
-        Mesh mesh = entities.getComponent(entity.id(), Mesh.class);
+        Drawables drawables = entities.getComponent(entity.id(), Drawables.class);
         Material material = entities.getComponent(entity.id(), Material.class);
-        if (transform == null || mesh == null || material == null) {
+        DrawablePart meshPart = firstMeshPart(drawables);
+        if (transform == null || meshPart == null || material == null) {
             return;
         }
-        String modelPath = mesh.model();
+        String modelPath = meshPart.model();
         if (modelPath == null || modelPath.isBlank()) {
             return;
         }
@@ -163,7 +166,7 @@ public final class World3dPass {
         Set<RenderLayer.Layer> allowed =
                 layers == null || layers.isEmpty() ? EnumSet.of(RenderLayer.Layer.WORLD) : layers;
         List<Entity> result = new ArrayList<>();
-        for (Entity entity : entities.entitiesWith(Mesh.class)) {
+        for (Entity entity : entities.entitiesWith(Drawables.class)) {
             if (entities.hasComponent(entity.id(), Camera.class)) {
                 continue;
             }
@@ -171,6 +174,10 @@ public final class World3dPass {
                 continue;
             }
             if (!entities.hasComponent(entity.id(), Material.class)) {
+                continue;
+            }
+            Drawables drawables = entities.getComponent(entity.id(), Drawables.class);
+            if (firstMeshPart(drawables) == null) {
                 continue;
             }
             RenderLayer renderLayer = entities.getComponent(entity.id(), RenderLayer.class);
@@ -182,6 +189,18 @@ public final class World3dPass {
             result.add(entity);
         }
         return result;
+    }
+
+    private static DrawablePart firstMeshPart(Drawables drawables) {
+        if (drawables == null) {
+            return null;
+        }
+        for (DrawablePart part : drawables.parts()) {
+            if (part.kind() == DrawableKind.MESH) {
+                return part;
+            }
+        }
+        return null;
     }
 
     public void dispose() {

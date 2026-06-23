@@ -1,5 +1,6 @@
 package dev.hermes.core.ecs;
 
+import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.utils.JsonValue;
 import dev.hermes.api.ecs.ComponentData;
 
@@ -13,6 +14,14 @@ final class JsonComponentData implements ComponentData {
 
     JsonComponentData(JsonValue object) {
         this.object = object == null ? new JsonValue(JsonValue.ValueType.object) : object;
+    }
+
+    static JsonComponentData parse(String json) {
+        return new JsonComponentData(new JsonReader().parse(json));
+    }
+
+    JsonValue value() {
+        return object;
     }
 
     @Override

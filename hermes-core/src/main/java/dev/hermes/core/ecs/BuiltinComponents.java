@@ -14,12 +14,16 @@ import dev.hermes.api.ecs.SoundEmitter;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.MaterialUniform;
-import dev.hermes.api.ecs.Mesh;
+import dev.hermes.api.ecs.DrawableKind;
+import dev.hermes.api.ecs.DrawablePart;
+import dev.hermes.api.ecs.DrawableRig;
+import dev.hermes.api.ecs.Drawables;
+import dev.hermes.api.ecs.LocalTransform;
+import dev.hermes.api.ecs.PartMaterial;
 import dev.hermes.api.ecs.RenderLayer;
 import dev.hermes.api.ecs.Selectable;
 import dev.hermes.api.ecs.Selected;
-import dev.hermes.api.ecs.Sprite;
-import dev.hermes.api.ecs.TileMap;
+import dev.hermes.api.ecs.SpriteSheet;
 import dev.hermes.api.ecs.Transform;
 import dev.hermes.api.ecs.UiAttach;
 import dev.hermes.api.input.PickLayer;
@@ -39,16 +43,20 @@ import dev.hermes.core.ui.UiAttachSystem;
 import dev.hermes.core.ui.UiInputSystem;
 import dev.hermes.core.ui.UiServiceImpl;
 
+import dev.hermes.api.ecs.TileMap;
+import com.badlogic.gdx.utils.JsonValue;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class BuiltinComponents {
 
     static final String TRANSFORM = "Transform";
-    static final String SPRITE = "Sprite";
+    static final String DRAWABLES = "Drawables";
     static final String TILE_MAP = "TileMap";
     static final String CAMERA = "Camera";
-    static final String MESH = "Mesh";
     static final String MATERIAL = "Material";
     static final String RENDER_LAYER = "RenderLayer";
     static final String SELECTABLE = "Selectable";
@@ -83,12 +91,29 @@ public final class BuiltinComponents {
                     return transform;
                 });
         registry.register(
-                SPRITE,
-                Sprite.class,
+                DRAWABLES,
+                Drawables.class,
                 (data, ctx) -> {
-                    Sprite sprite = new Sprite();
-                    sprite.setTexture(resolveResourcePath(data.getString("texture", ""), ctx));
-                    return sprite;
+                    if (!(data instanceof JsonComponentData)) {
+                        return new Drawables(List.of());
+                    }
+                    JsonComponentData json = (JsonComponentData) data;
+                    JsonValue root = json.value();
+                    if (root.has("parts")) {
+                        return new Drawables(parseDrawableParts(root.get("parts"), ctx));
+                    }
+                    if (root.has("sprite")) {
+                        String texture = resolveResourcePath(root.getString("sprite", ""), ctx);
+                        return Drawables.singleSprite(texture);
+                    }
+                    if (root.has("mesh")) {
+                        DrawablePart part = DrawablePart.mesh("default", resolveResourcePath(root.getString("mesh", ""), ctx));
+                        if (root.has("texture")) {
+                            part.setTexture(resolveResourcePath(root.getString("texture", ""), ctx));
+                        }
+                        return new Drawables(List.of(part));
+                    }
+                    return new Drawables(List.of());
                 });
         registry.register(
                 TILE_MAP,
@@ -126,17 +151,6 @@ public final class BuiltinComponents {
                         }
                     }
                     return camera;
-                });
-        registry.register(
-                MESH,
-                Mesh.class,
-                (data, ctx) -> {
-                    Mesh mesh = new Mesh();
-                    mesh.setModel(resolveResourcePath(data.getString("model", ""), ctx));
-                    if (data.has("texture")) {
-                        mesh.setTexture(resolveResourcePath(data.getString("texture", ""), ctx));
-                    }
-                    return mesh;
                 });
         registry.register(
                 MATERIAL,
@@ -313,6 +327,150 @@ public final class BuiltinComponents {
     @FunctionalInterface
     private interface DirectionSetter {
         void setDirection(float x, float y, float z);
+    }
+
+    private static List<DrawablePart> parseDrawableParts(JsonValue partsArray, ComponentContext ctx) {
+        List<DrawablePart> parts = new ArrayList<>();
+        if (partsArray == null || !partsArray.isArray()) {
+            return parts;
+        }
+        for (JsonValue entry : partsArray) {
+            parts.add(parseDrawablePart(entry, ctx));
+        }
+        return parts;
+    }
+
+    private static DrawablePart parseDrawablePart(JsonValue entry, ComponentContext ctx) {
+        String id = entry.getString("id", "default");
+        DrawableKind kind = parseDrawableKind(entry);
+        DrawablePart part =
+                kind == DrawableKind.SPRITE
+                        ? DrawablePart.sprite(id, "")
+                        : DrawablePart.mesh(id, "");
+        if (entry.has("model")) {
+            part.setModel(resolveResourcePath(entry.getString("model", ""), ctx));
+        }
+        if (entry.has("texture")) {
+            part.setTexture(resolveResourcePath(entry.getString("texture", ""), ctx));
+        }
+        if (entry.has("primitive")) {
+            part.setPrimitive(entry.getString("primitive", ""));
+        }
+        if (entry.has("size")) {
+            part.setSize(toFloatArray(entry.get("size")));
+        }
+        if (entry.has("local")) {
+            applyLocalTransform(entry.get("local"), part.local());
+        }
+        if (entry.has("sheet")) {
+            part.setSheet(parseSpriteSheet(entry.get("sheet")));
+        }
+        if (entry.has("material")) {
+            part.setPartMaterial(parsePartMaterial(entry.get("material")));
+        }
+        if (entry.has("rig")) {
+            part.setRig(parseDrawableRig(entry.getString("rig", "")));
+        }
+        return part;
+    }
+
+    private static DrawableKind parseDrawableKind(JsonValue entry) {
+        if (entry.has("kind")) {
+            String kind = entry.getString("kind", "").trim().toLowerCase();
+            if ("sprite".equals(kind)) {
+                return DrawableKind.SPRITE;
+            }
+            if ("mesh".equals(kind)) {
+                return DrawableKind.MESH;
+            }
+            throw new IllegalArgumentException("unknown Drawables part kind: " + entry.getString("kind", ""));
+        }
+        if (entry.has("model") || entry.has("primitive")) {
+            return DrawableKind.MESH;
+        }
+        if (entry.has("texture")) {
+            return DrawableKind.SPRITE;
+        }
+        return DrawableKind.MESH;
+    }
+
+    private static void applyLocalTransform(JsonValue local, LocalTransform transform) {
+        if (local == null || !local.isObject()) {
+            return;
+        }
+        transform.setX(local.getFloat("x", 0f));
+        transform.setY(local.getFloat("y", 0f));
+        transform.setZ(local.getFloat("z", 0f));
+        transform.setRotationX(local.getFloat("rotationX", 0f));
+        transform.setRotationY(local.getFloat("rotationY", 0f));
+        transform.setRotationZ(local.getFloat("rotationZ", 0f));
+        transform.setScaleX(local.getFloat("scaleX", 1f));
+        transform.setScaleY(local.getFloat("scaleY", 1f));
+        transform.setScaleZ(local.getFloat("scaleZ", 1f));
+        if (local.has("visible")) {
+            transform.setVisible(local.getBoolean("visible", true));
+        }
+        if (local.has("spriteFrame")) {
+            transform.setSpriteFrame(local.getInt("spriteFrame", 0));
+        }
+    }
+
+    private static SpriteSheet parseSpriteSheet(JsonValue sheet) {
+        SpriteSheet result = new SpriteSheet();
+        if (sheet == null || !sheet.isObject()) {
+            return result;
+        }
+        result.setColumns(sheet.getInt("columns", 1));
+        result.setRows(sheet.getInt("rows", 1));
+        result.setFrameWidth(sheet.getInt("frameWidth", 1));
+        result.setFrameHeight(sheet.getInt("frameHeight", 1));
+        return result;
+    }
+
+    private static PartMaterial parsePartMaterial(JsonValue material) {
+        PartMaterial result = new PartMaterial();
+        if (material == null || !material.isObject()) {
+            return result;
+        }
+        if (material.has("shader")) {
+            result.setShader(material.getString("shader", ""));
+        }
+        if (material.has("uniforms") && material.get("uniforms").isObject()) {
+            Map<String, MaterialUniform> uniforms = new HashMap<>();
+            for (JsonValue entry : material.get("uniforms")) {
+                uniforms.put(entry.name, new MaterialUniform(toFloatArray(entry)));
+            }
+            result.setUniforms(uniforms);
+        }
+        return result;
+    }
+
+    private static DrawableRig parseDrawableRig(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase();
+        if ("gltf".equals(normalized)) {
+            return DrawableRig.GLTF;
+        }
+        throw new IllegalArgumentException("unknown Drawables part rig: " + value);
+    }
+
+    private static float[] toFloatArray(JsonValue value) {
+        if (value == null || value.isNull()) {
+            return new float[0];
+        }
+        if (value.isArray()) {
+            float[] arr = new float[value.size];
+            for (int i = 0; i < value.size; i++) {
+                arr[i] = value.getFloat(i);
+            }
+            return arr;
+        }
+        if (value.isNumber()) {
+            return new float[]{value.asFloat()};
+        }
+        return new float[0];
     }
 
     private static String resolveResourcePath(String value, ComponentContext ctx) {

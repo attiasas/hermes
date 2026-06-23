@@ -3,11 +3,10 @@ package dev.hermes.core.ecs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.badlogic.gdx.utils.JsonReader;
-import com.badlogic.gdx.utils.JsonValue;
 import dev.hermes.api.EntityId;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.EntityKind;
 import dev.hermes.api.ecs.Material;
-import dev.hermes.api.ecs.Mesh;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,9 +24,9 @@ final class MeshMaterialParserTest {
 
     @Test
     void meshDeserializesModelAndTexture() {
-        Mesh mesh = deserializeMesh("{\"model\":\"models/cube.obj\",\"texture\":\"tex.png\"}");
-        assertEquals("models/cube.obj", mesh.model());
-        assertEquals("tex.png", mesh.texture());
+        Drawables drawables = deserializeDrawables("{\"mesh\":\"models/cube.obj\",\"texture\":\"tex.png\"}");
+        assertEquals("models/cube.obj", drawables.parts().get(0).model());
+        assertEquals("tex.png", drawables.parts().get(0).texture());
     }
 
     @Test
@@ -38,12 +37,12 @@ final class MeshMaterialParserTest {
         assertEquals(1f, m.uniform("u_tint").getAsFloatArray()[0], 0.001f);
     }
 
-    private Mesh deserializeMesh(String json) {
-        return (Mesh)
+    private Drawables deserializeDrawables(String json) {
+        return (Drawables)
                 registry.deserialize(
                         "test.json",
                         "entity",
-                        BuiltinComponents.MESH,
+                        BuiltinComponents.DRAWABLES,
                         new JsonComponentData(new JsonReader().parse(json)),
                         emptyContext());
     }

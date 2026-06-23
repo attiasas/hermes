@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
-import dev.hermes.api.ecs.Mesh;
+import dev.hermes.api.ecs.Drawables;
 import dev.hermes.core.TestGdx;
 import dev.hermes.core.ecs.BuiltinComponents;
 import dev.hermes.core.ecs.ComponentRegistryImpl;
@@ -44,8 +44,8 @@ final class ConfigOnlyRenderSceneTest {
 
         var cube = world.findByName("cube");
         assertNotNull(cube);
-        Mesh mesh = world.getComponent(cube.id(), Mesh.class);
-        assertNotNull(mesh);
-        assertEquals("models/cube.obj", mesh.model());
+        Drawables drawables = world.getComponent(cube.id(), Drawables.class);
+        assertNotNull(drawables);
+        assertEquals("models/cube.obj", drawables.parts().get(0).model());
     }
 }

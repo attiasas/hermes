@@ -5,7 +5,7 @@ import dev.hermes.api.Component;
 import java.util.List;
 
 /**
- * Multi-part drawable component replacing single {@link Mesh} / {@link Sprite} entities.
+ * Multi-part drawable component for mesh and sprite parts on an entity.
  */
 public final class Drawables implements Component {
 
