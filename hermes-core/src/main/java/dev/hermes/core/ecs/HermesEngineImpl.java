@@ -25,6 +25,8 @@ import dev.hermes.api.resource.ResourceLoaderRegistration;
 import dev.hermes.api.world.SpatialIndexRegistration;
 import dev.hermes.api.resource.ResourceService;
 import dev.hermes.api.viewport.ViewportService;
+import dev.hermes.core.animation.AnimationBackendRegistry;
+import dev.hermes.core.animation.HermesTrackBackend;
 import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.world.SpatialIndexRegistrations;
 
@@ -47,6 +49,7 @@ public final class HermesEngineImpl implements HermesEngine {
     private final InputServiceImpl input;
     private final SoundBackend soundBackend = AudioBackends.gdx();
     private final ResourceManagerImpl resources = ResourceManagerImpl.createDefault(soundBackend);
+    private final AnimationBackendRegistry animationBackends = new AnimationBackendRegistry();
     private final UiServiceImpl ui;
     private final AudioMixerImpl internalMixer = new AudioMixerImpl();
     private final AudioServiceImpl audio;
@@ -59,6 +62,7 @@ public final class HermesEngineImpl implements HermesEngine {
         this.input = new InputServiceImpl(this);
         this.ui = new UiServiceImpl(resources);
         this.audio = AudioServiceImpl.createDefault(internalMixer, resources, soundBackend);
+        animationBackends.register(new HermesTrackBackend());
         BuiltinComponents.register(registry);
         BuiltinComponents.registerSystems(this);
         loadServiceRegistrations();
@@ -160,6 +164,10 @@ public final class HermesEngineImpl implements HermesEngine {
 
     ComponentRegistryImpl registryImpl() {
         return registry;
+    }
+
+    AnimationBackendRegistry animationBackends() {
+        return animationBackends;
     }
 
     public static final class SystemEntry {
