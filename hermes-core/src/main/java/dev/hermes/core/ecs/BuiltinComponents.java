@@ -2,6 +2,8 @@ package dev.hermes.core.ecs;
 
 import dev.hermes.api.ecs.AmbientLight;
 import dev.hermes.api.ecs.AmbientSource;
+import dev.hermes.api.animation.AnimationClipRef;
+import dev.hermes.api.animation.AnimationClipType;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.ComponentData;
 import dev.hermes.api.ecs.ComponentRegistry;
@@ -18,6 +20,7 @@ import dev.hermes.api.ecs.DrawableKind;
 import dev.hermes.api.ecs.DrawablePart;
 import dev.hermes.api.ecs.DrawableRig;
 import dev.hermes.api.ecs.Drawables;
+import dev.hermes.api.ecs.AnimationController;
 import dev.hermes.api.ecs.LocalTransform;
 import dev.hermes.api.ecs.PartMaterial;
 import dev.hermes.api.ecs.RenderLayer;
@@ -48,6 +51,7 @@ import dev.hermes.api.ecs.TileMap;
 import com.badlogic.gdx.utils.JsonValue;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,6 +60,7 @@ public final class BuiltinComponents {
 
     static final String TRANSFORM = "Transform";
     static final String DRAWABLES = "Drawables";
+    static final String ANIMATION_CONTROLLER = "AnimationController";
     static final String TILE_MAP = "TileMap";
     static final String CAMERA = "Camera";
     static final String MATERIAL = "Material";
@@ -116,6 +121,10 @@ public final class BuiltinComponents {
                     }
                     return new Drawables(List.of());
                 });
+        registry.register(
+                ANIMATION_CONTROLLER,
+                AnimationController.class,
+                (data, ctx) -> parseAnimationController(data, ctx));
         registry.register(
                 TILE_MAP,
                 TileMap.class,
@@ -339,6 +348,94 @@ public final class BuiltinComponents {
             parts.add(parseDrawablePart(entry, ctx));
         }
         return parts;
+    }
+
+    private static AnimationController parseAnimationController(ComponentData data, ComponentContext ctx) {
+        if (!(data instanceof JsonComponentData)) {
+            throw new IllegalArgumentException("AnimationController requires object JSON data");
+        }
+        JsonValue root = ((JsonComponentData) data).value();
+        JsonValue clipsNode = root.get("clips");
+        if (clipsNode == null || !clipsNode.isObject()) {
+            throw new IllegalArgumentException("AnimationController.clips is required");
+        }
+        Map<String, AnimationClipRef> clips = new LinkedHashMap<>();
+        boolean hasGltfClip = false;
+        for (JsonValue entry : clipsNode) {
+            AnimationClipRef clipRef = parseAnimationClipRef(entry, ctx);
+            clips.put(entry.name, clipRef);
+            if (clipRef.type() == AnimationClipType.GLTF) {
+                hasGltfClip = true;
+            }
+        }
+        if (clips.isEmpty()) {
+            throw new IllegalArgumentException("AnimationController.clips must not be empty");
+        }
+        AnimationController controller = new AnimationController();
+        controller.setClips(clips);
+        String rigPart = root.getString("rigPart", "").trim();
+        if (hasGltfClip && rigPart.isBlank()) {
+            throw new IllegalArgumentException(
+                    "AnimationController.rigPart is required when clips include type 'gltf'");
+        }
+        controller.setRigPart(rigPart);
+        String defaultClip = root.getString("default", "");
+        if (defaultClip == null || defaultClip.isBlank()) {
+            defaultClip = clips.keySet().iterator().next();
+        }
+        if (!clips.containsKey(defaultClip)) {
+            throw new IllegalArgumentException(
+                    "AnimationController.default must reference a clip in AnimationController.clips");
+        }
+        controller.setDefaultClip(defaultClip);
+        controller.setSpeed(root.getFloat("speed", 1f));
+        controller.setAutoPlay(root.getBoolean("autoPlay", true));
+        if (controller.autoPlay()) {
+            controller.setCurrentClip(controller.defaultClip());
+            controller.setActiveRef(clips.get(controller.defaultClip()));
+            controller.setPlaying(true);
+            controller.setFinished(false);
+            controller.setTimeSeconds(0f);
+        }
+        return controller;
+    }
+
+    private static AnimationClipRef parseAnimationClipRef(JsonValue entry, ComponentContext ctx) {
+        if (entry == null || entry.isNull()) {
+            throw new IllegalArgumentException("AnimationController clip entry must be string or object");
+        }
+        if (entry.isString()) {
+            String path = resolveResourcePath(entry.asString(), ctx);
+            return AnimationClipRef.hermes(path);
+        }
+        if (!entry.isObject()) {
+            throw new IllegalArgumentException("AnimationController clip entry must be string or object");
+        }
+        String typeValue = entry.getString("type", "").trim();
+        AnimationClipType type = parseAnimationClipType(typeValue, entry);
+        boolean loop = entry.getBoolean("loop", true);
+        float speed = entry.getFloat("speed", 1f);
+        if (type == AnimationClipType.HERMES) {
+            String pathValue = entry.getString("path", entry.getString("clip", ""));
+            String resolved = resolveResourcePath(pathValue, ctx);
+            return AnimationClipRef.hermes(resolved).withLoop(loop).withSpeed(speed);
+        }
+        String clipName = entry.getString("clip", entry.getString("path", ""));
+        return AnimationClipRef.gltf(clipName).withLoop(loop).withSpeed(speed);
+    }
+
+    private static AnimationClipType parseAnimationClipType(String rawType, JsonValue entry) {
+        if (rawType == null || rawType.isBlank()) {
+            return entry.has("path") ? AnimationClipType.HERMES : AnimationClipType.GLTF;
+        }
+        String normalized = rawType.trim().toLowerCase();
+        if ("hermes".equals(normalized)) {
+            return AnimationClipType.HERMES;
+        }
+        if ("gltf".equals(normalized)) {
+            return AnimationClipType.GLTF;
+        }
+        throw new IllegalArgumentException("unknown AnimationController clip type: " + rawType);
     }
 
     private static DrawablePart parseDrawablePart(JsonValue entry, ComponentContext ctx) {
