@@ -11,6 +11,7 @@ public final class DrawablePart {
     private String texture;
     private String primitive;
     private float[] size;
+    private DrawableRig rig;
     private final LocalTransform local = new LocalTransform();
     private SpriteSheet sheet;
     private PartMaterial partMaterial;
@@ -65,11 +66,19 @@ public final class DrawablePart {
     }
 
     public float[] size() {
-        return size;
+        return size == null ? null : size.clone();
     }
 
     public void setSize(float[] size) {
-        this.size = size;
+        this.size = size == null ? null : size.clone();
+    }
+
+    public DrawableRig rig() {
+        return rig;
+    }
+
+    public void setRig(DrawableRig rig) {
+        this.rig = rig;
     }
 
     public LocalTransform local() {
