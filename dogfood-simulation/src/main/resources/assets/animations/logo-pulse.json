@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "duration": 1.2,
+  "loop": true,
+  "tracks": [
+    {
+      "target": "Transform.scaleX",
+      "interpolation": "linear",
+      "keyframes": [
+        { "t": 0.0, "v": 1.0 },
+        { "t": 0.6, "v": 1.15 },
+        { "t": 1.2, "v": 1.0 }
+      ]
+    },
+    {
+      "target": "Transform.scaleY",
+      "interpolation": "linear",
+      "keyframes": [
+        { "t": 0.0, "v": 1.0 },
+        { "t": 0.6, "v": 1.15 },
+        { "t": 1.2, "v": 1.0 }
+      ]
+    }
+  ]
+}

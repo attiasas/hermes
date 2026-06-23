@@ -2,15 +2,30 @@
   "version": 1,
   "components": {
     "Transform": { "x": 0, "y": 0, "z": 0 },
-    "Drawables": { "mesh": "@cube", "sprite": "@logo" },
+    "Drawables": {
+      "parts": [
+        { "id": "cube", "kind": "mesh", "model": "@cube" },
+        {
+          "id": "logo",
+          "kind": "sprite",
+          "texture": "@logo",
+          "local": { "y": 1.4, "scaleX": 0.25, "scaleY": 0.25 }
+        }
+      ]
+    },
     "Material": { "shader": "default/lit" },
+    "AnimationController": {
+      "clips": {
+        "pulse": "animations/logo-pulse.json"
+      },
+      "default": "pulse"
+    },
     "SpinMarker": {
       "speed": 1.2,
       "centerX": { "$ref": "Transform.x" },
       "centerY": { "$ref": "Transform.y" },
       "radius": 1.5
     },
-    "BounceMarker": { "amplitude": 0.2, "speed": 3 },
     "Selectable": { "radius": 2.0, "layer": "WORLD" }
   }
 }

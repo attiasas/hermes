@@ -1,0 +1,51 @@
+{
+  "preload": {
+    "bundles": ["game"],
+    "async": true
+  },
+  "camera": {
+    "version": 1,
+    "projection": "perspective",
+    "x": 0,
+    "y": 1.5,
+    "z": 6,
+    "fieldOfView": 60,
+    "fitMode": "stretch",
+    "lookAt": { "x": 0, "y": 0.8, "z": 0 }
+  },
+  "inputContext": "gameplay",
+  "entities": [
+    {
+      "type": "walker",
+      "id": "walker-demo",
+      "components": {
+        "Transform": { "x": -1.6, "y": 0.3, "z": 0, "scaleX": 0.012, "scaleY": 0.012 }
+      }
+    },
+    {
+      "id": "logo-pulse",
+      "components": {
+        "Transform": { "x": 0, "y": -1.2, "z": 0, "scaleX": 0.01, "scaleY": 0.01 },
+        "Drawables": {
+          "sprite": "hermes-logo.png"
+        },
+        "Material": {
+          "shader": "default/unlit"
+        },
+        "AnimationController": {
+          "clips": {
+            "pulse": "animations/logo-pulse.json"
+          },
+          "default": "pulse"
+        }
+      }
+    },
+    {
+      "type": "gltf-character",
+      "id": "hero-placeholder",
+      "components": {
+        "Transform": { "x": 1.6, "y": 0, "z": 0 }
+      }
+    }
+  ]
+}
