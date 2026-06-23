@@ -33,7 +33,9 @@ import dev.hermes.core.animation.AnimationBackendRegistry;
 import dev.hermes.core.animation.AnimationServiceImpl;
 import dev.hermes.core.animation.AnimationTargetApplier;
 import dev.hermes.core.animation.AnimationTrackEvaluator;
+import dev.hermes.core.animation.GltfAnimationBackend;
 import dev.hermes.core.animation.HermesTrackBackend;
+import dev.hermes.core.animation.RigInstanceCache;
 import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.world.SpatialIndexRegistrations;
 
@@ -56,6 +58,7 @@ public final class HermesEngineImpl implements HermesEngine {
     private final InputServiceImpl input;
     private final SoundBackend soundBackend = AudioBackends.gdx();
     private final ResourceManagerImpl resources = ResourceManagerImpl.createDefault(soundBackend);
+    private final RigInstanceCache rigInstances = RigInstanceCache.shared(resources);
     private final AnimationBackendRegistry animationBackends = new AnimationBackendRegistry();
     private final List<AnimationTrackResolver> animationTrackResolvers = new ArrayList<>();
     private final UiServiceImpl ui;
@@ -76,6 +79,7 @@ public final class HermesEngineImpl implements HermesEngine {
                 new HermesTrackBackend(
                         new AnimationTrackEvaluator(),
                         new AnimationTargetApplier(animationTrackResolvers)));
+        animationBackends.register(new GltfAnimationBackend(rigInstances));
         BuiltinComponents.register(registry);
         BuiltinComponents.registerSystems(this);
         loadServiceRegistrations();

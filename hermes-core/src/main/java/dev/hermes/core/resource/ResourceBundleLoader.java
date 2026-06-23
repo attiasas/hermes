@@ -82,6 +82,10 @@ public final class ResourceBundleLoader {
                 return ResourceKind.TEXTURE;
             case "model":
                 return ResourceKind.MODEL;
+            case "gltf_model":
+            case "gltf-model":
+            case "gltfmodel":
+                return ResourceKind.GLTF_MODEL;
             case "sound":
                 return ResourceKind.SOUND;
             case "font":

@@ -12,6 +12,7 @@ import dev.hermes.api.Entity;
 import dev.hermes.api.ecs.Camera;
 import dev.hermes.api.ecs.DrawableKind;
 import dev.hermes.api.ecs.DrawablePart;
+import dev.hermes.api.ecs.DrawableRig;
 import dev.hermes.api.ecs.Drawables;
 import dev.hermes.api.ecs.Material;
 import dev.hermes.api.ecs.MaterialUniform;
@@ -22,6 +23,7 @@ import dev.hermes.api.ecs.EntityStore;
 import dev.hermes.api.resource.ResourceKind;
 import dev.hermes.api.resource.ResourceRef;
 import dev.hermes.core.lighting.LightingRuntime;
+import dev.hermes.core.animation.RigInstanceCache;
 import dev.hermes.core.render.ShaderCompileException;
 import dev.hermes.core.render.TransformComposer;
 import dev.hermes.core.render.resource.MaterialUniformBinder;
@@ -45,6 +47,7 @@ public final class World3dPass {
 
     private final ResourceManagerImpl resources;
     private final ShaderRegistry shaderRegistry;
+    private final RigInstanceCache rigInstances;
     private final ModelBatch modelBatch;
     private final Map<String, Shader> g3dShaderCache = new HashMap<>();
     private final RenderablePool renderablePool = new RenderablePool();
@@ -57,6 +60,7 @@ public final class World3dPass {
     public World3dPass(ResourceManagerImpl resources, ShaderRegistry shaderRegistry) {
         this.resources = Objects.requireNonNull(resources, "resources");
         this.shaderRegistry = shaderRegistry;
+        this.rigInstances = RigInstanceCache.shared(resources);
         this.modelBatch = new ModelBatch();
     }
 
@@ -102,8 +106,16 @@ public final class World3dPass {
             }
 
             ResourceRef ref = ResourceRef.of(modelPath);
-            resources.loadSync(ref, ResourceKind.MODEL);
-            ModelInstance instance = new ModelInstance(ResourceAccess.model(resources, ref));
+            ModelInstance instance;
+            if (part.rig() == DrawableRig.GLTF) {
+                instance =
+                        rigInstances
+                                .getOrCreate(entity.id(), part.id(), modelPath, resources)
+                                .instance();
+            } else {
+                resources.loadSync(ref, ResourceKind.MODEL);
+                instance = new ModelInstance(ResourceAccess.model(resources, ref));
+            }
             TransformComposer.composeInto(instance.transform, transform, part.local());
 
             Shader g3dShader = resolveG3dShader(shaderId, instance, environment);

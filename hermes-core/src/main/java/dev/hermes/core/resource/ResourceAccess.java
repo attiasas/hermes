@@ -22,6 +22,10 @@ public final class ResourceAccess {
         return require(mgr, ref, ResourceKind.MODEL, Model.class);
     }
 
+    public static Model gltfModel(ResourceManagerImpl mgr, ResourceRef ref) {
+        return require(mgr, ref, ResourceKind.GLTF_MODEL, Model.class);
+    }
+
     public static TextureRegion[] spriteSheetFrames(ResourceManagerImpl mgr, ResourceRef ref) {
         return require(mgr, ref, ResourceKind.SPRITE_SHEET, TextureRegion[].class);
     }
