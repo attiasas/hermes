@@ -2,10 +2,14 @@ package dev.hermes.core.ecs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.hermes.api.animation.AnimationClipType;
 import dev.hermes.api.ecs.System;
 import dev.hermes.api.ecs.SystemScope;
 import dev.hermes.api.ecs.WorldManager;
+import dev.hermes.core.animation.AnimationSystem;
+import dev.hermes.core.animation.HermesTrackBackend;
 import dev.hermes.core.TestGdx;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -63,5 +67,18 @@ final class HermesEngineImplTest {
         HermesEngineImpl.SystemEntry entry = engine.systems().get(engine.systems().size() - 1);
         assertSame(system, entry.system());
         assertEquals(SystemScope.GLOBAL, entry.scope());
+    }
+
+    @Test
+    void registersHermesAnimationBackendAndSystem() {
+        HermesEngineImpl engine = new HermesEngineImpl();
+
+        assertTrue(engine.animationBackends().require(AnimationClipType.HERMES) instanceof HermesTrackBackend);
+        assertTrue(
+                engine.systems().stream()
+                        .anyMatch(
+                                entry ->
+                                        entry.scope() == SystemScope.ACTIVE_SCENE
+                                                && entry.system() instanceof AnimationSystem));
     }
 }

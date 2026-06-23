@@ -104,4 +104,19 @@ public final class AnimationController implements Component {
     public void setFinished(boolean finished) {
         this.finished = finished;
     }
+
+    public void initPlayback() {
+        if (clips.isEmpty()) {
+            return;
+        }
+        String selected = defaultClip;
+        if (selected == null || selected.isBlank() || !clips.containsKey(selected)) {
+            selected = clips.keySet().iterator().next();
+        }
+        setCurrentClip(selected);
+        setActiveRef(clips.get(selected));
+        setPlaying(true);
+        setFinished(false);
+        setTimeSeconds(0f);
+    }
 }

@@ -38,11 +38,13 @@ import dev.hermes.core.audio.AudioActionSystem;
 import dev.hermes.core.audio.AudioServiceImpl;
 import dev.hermes.core.audio.FootstepSystem;
 import dev.hermes.core.audio.SoundEmitterSystem;
+import dev.hermes.core.animation.AnimationSystem;
 import dev.hermes.core.input.CameraControlSystem;
 import dev.hermes.core.input.EntityDragSystem;
 import dev.hermes.core.input.SelectionSystem;
 import dev.hermes.core.lighting.BuiltinLightingSystem;
 import dev.hermes.core.render.resource.PrimitiveModelDocument;
+import dev.hermes.core.resource.ResourceManagerImpl;
 import dev.hermes.core.ui.UiAttachSystem;
 import dev.hermes.core.ui.UiInputSystem;
 import dev.hermes.core.ui.UiServiceImpl;
@@ -306,6 +308,7 @@ public final class BuiltinComponents {
     }
 
     public static void registerSystems(HermesEngine engine) {
+        HermesEngineImpl impl = engine instanceof HermesEngineImpl ? (HermesEngineImpl) engine : null;
         if (engine instanceof HermesEngineImpl) {
             AudioServiceImpl audio = (AudioServiceImpl) engine.audio();
             engine.addSystem(new AmbientAudioSystem(audio), SystemScope.ACTIVE_SCENE);
@@ -314,6 +317,11 @@ public final class BuiltinComponents {
             engine.addSystem(new AudioActionSystem(engine.input().actions(), audio), SystemScope.GLOBAL);
         }
         engine.addSystem(new BuiltinLightingSystem(), SystemScope.ACTIVE_SCENE);
+        if (impl != null) {
+            engine.addSystem(
+                    new AnimationSystem(impl.animationBackends(), (ResourceManagerImpl) impl.resources()),
+                    SystemScope.ACTIVE_SCENE);
+        }
         engine.addSystem(new SpatialIndexSystem(), SystemScope.ACTIVE_SCENE);
         engine.addSystem(new SelectionSystem(engine.input()), SystemScope.GLOBAL);
         if (engine instanceof HermesEngineImpl) {
@@ -322,8 +330,7 @@ public final class BuiltinComponents {
             engine.addSystem(new CameraControlSystem(engine.input()), SystemScope.GLOBAL);
         }
         engine.addSystem(new EntityDragSystem(engine.viewport(), engine.input()), SystemScope.GLOBAL);
-        if (engine instanceof HermesEngineImpl) {
-            HermesEngineImpl impl = (HermesEngineImpl) engine;
+        if (impl != null) {
             engine.addSystem(new UiInputSystem(impl), SystemScope.GLOBAL);
             engine.addSystem(new UiAttachSystem((UiServiceImpl) impl.ui(), impl.viewport()), SystemScope.GLOBAL);
         }
@@ -391,11 +398,7 @@ public final class BuiltinComponents {
         controller.setSpeed(root.getFloat("speed", 1f));
         controller.setAutoPlay(root.getBoolean("autoPlay", true));
         if (controller.autoPlay()) {
-            controller.setCurrentClip(controller.defaultClip());
-            controller.setActiveRef(clips.get(controller.defaultClip()));
-            controller.setPlaying(true);
-            controller.setFinished(false);
-            controller.setTimeSeconds(0f);
+            controller.initPlayback();
         }
         return controller;
     }

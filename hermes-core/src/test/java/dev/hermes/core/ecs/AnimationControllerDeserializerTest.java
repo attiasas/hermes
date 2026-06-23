@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,6 +50,10 @@ final class AnimationControllerDeserializerTest {
         assertEquals("idle", controller.defaultClip());
         assertEquals(0.8f, controller.speed());
         assertTrue(controller.autoPlay());
+        assertEquals("idle", controller.currentClip());
+        assertNotNull(controller.activeRef());
+        assertTrue(controller.playing());
+        assertEquals(0f, controller.timeSeconds());
     }
 
     @Test

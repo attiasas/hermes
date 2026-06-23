@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "duration": 1.0,
+  "loop": true,
+  "tracks": [
+    {
+      "target": "Transform.scaleX",
+      "interpolation": "linear",
+      "keyframes": [
+        {"t": 0, "v": 1},
+        {"t": 1.0, "v": 2}
+      ]
+    }
+  ]
+}
